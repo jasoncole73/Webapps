@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit Card Payoff Calculator (Dual Mode)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      @font-face {
+        font-family: 'LucideIcons';
+        src: url(https://cdn.jsdelivr.net/npm/lucide-static@latest/font/Lucide.ttf) format('truetype');
+      }
+      .lucide {
+        font-family: 'LucideIcons';
+        font-size: 1.25rem; line-height: 1; vertical-align: middle; margin-right: 0.25rem;
+      }
+      body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+      input[type=number]::-webkit-inner-spin-button,
+      input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+      input[type=number] { -moz-appearance: textfield; }
+      th, td { padding: 0.75rem; text-align: right; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
+      th { background-color: #f9fafb; font-weight: 600; color: #374151; }
+      td { color: #4b5563; font-size: 0.875rem; }
+      thead th:first-child, tbody td:first-child { text-align: left; position: sticky; left: 0; background-color: inherit; z-index: 1; border-right: 1px solid #e5e7eb; }
+      thead th:first-child { background-color: #f9fafb; }
+      tbody tr:nth-child(even) { background-color: #f9fafb; }
+      tbody tr:nth-child(odd) { background-color: #ffffff; }
+      tbody tr:nth-child(even) td:first-child { background-color: #f9fafb; }
+      tbody tr:nth-child(odd) td:first-child { background-color: #ffffff; }
+      thead th { position: sticky; top: 0; z-index: 10; }
+      .paid-off-balance { color: #059669; font-weight: 500; background-color: #d1fae5 !important; }
+      /* Styling for mode selection */
+      .mode-label { display: inline-block; padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 0.375rem; cursor: pointer; transition: background-color 0.2s, border-color 0.2s; }
+      .mode-input:checked + .mode-label { background-color: #e0f2fe; border-color: #38bdf8; color: #0c4a6e; } /* Light blue bg, blue border */
+      .mode-input { display: none; } /* Hide actual radio button */
+    </style>
+</head>
+<body class="p-4 sm:p-6 md:p-8">
+
+    <div class="bg-white rounded-xl shadow-lg w-full max-w-6xl mx-auto p-5 sm:p-8 md:p-10">
+        <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-6 sm:mb-8 text-center">Credit Card Payoff Calculator</h1>
+
+        <div id="errorMessageContainer" class="hidden">
+            <div id="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6" role="alert"></div>
+        </div>
+        <div id="warningMessageContainer" class="hidden">
+             <div id="warningMessage" class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded-lg relative mb-6" role="alert"></div>
+        </div>
+
+
+        <div class="mb-8 p-4 sm:p-6 bg-gray-50 rounded-lg border border-gray-200">
+
+            <div class="mb-6 text-center">
+                <h2 class="text-lg sm:text-xl font-semibold text-gray-700 mb-4">Select Calculation Mode:</h2>
+                <div class="flex flex-wrap justify-center gap-4">
+                    <input type="radio" name="calcMode" id="modeTime" value="time" class="mode-input" checked>
+                    <label for="modeTime" class="mode-label">
+                        <span class="lucide">&#xe91f;</span> Calculate Payoff Time
+                    </label>
+
+                    <input type="radio" name="calcMode" id="modePayment" value="payment" class="mode-input">
+                    <label for="modePayment" class="mode-label">
+                         <span class="lucide">&#xea15;</span> Calculate Required Payment
+                    </label>
+                </div>
+            </div>
+
+            <h3 class="text-lg sm:text-xl font-semibold text-gray-700 mb-5 border-t pt-4">Enter Card Details</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-6 sm:gap-y-8 mb-6">
+                <div>
+                    <h4 class="text-base sm:text-lg font-medium text-gray-600 mb-3 border-b pb-2">Card 1</h4>
+                    <div class="space-y-3 mt-3">
+                        <div>
+                            <label for="balance1" class="block text-sm font-medium text-gray-600 mb-1">Balance ($)</label>
+                            <input type="number" id="balance1" name="balance1" min="0" step="0.01" class="card-balance w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-sm sm:text-base" placeholder="0">
+                        </div>
+                        <div>
+                            <label for="apr1" class="block text-sm font-medium text-gray-600 mb-1">APR (%)</label>
+                            <input type="number" id="apr1" name="apr1" min="0" step="0.01" class="card-apr w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-sm sm:text-base" placeholder="0">
+                        </div>
+                        <div class="mode-time-field">
+                            <label for="payment1" class="block text-sm font-medium text-gray-600 mb-1">Monthly Payment ($)</label>
+                            <input type="number" id="payment1" name="payment1" min="0" step="0.01" class="card-payment w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-sm sm:text-base" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+                 <div>
+                    <h4 class="text-base sm:text-lg font-medium text-gray-600 mb-3 border-b pb-2">Card 2</h4>
+                     <div class="space-y-3 mt-3">
+                        <div>
+                            <label for="balance2" class="block text-sm font-medium text-gray-600 mb-1">Balance ($)</label>
+                            <input type="number" id="balance2" name="balance2" min="0" step="0.01" class="card-balance w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-sm sm:text-base" placeholder="0">
+                        </div>
+                        <div>
+                            <label for="apr2" class="block text-sm font-medium text-gray-600 mb-1">APR (%)</label>
+                            <input type="number" id="apr2" name="apr2" min="0" step="0.01" class="card-apr w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-sm sm:text-base" placeholder="0">
+                        </div>
+                         <div class="mode-time-field">
+                            <label for="payment2" class="block text-sm font-medium text-gray-600 mb-1">Monthly Payment ($)</label>
+                            <input type="number" id="payment2" name="payment2" min="0" step="0.01" class="card-payment w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-sm sm:text-base" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+                 <div>
+                    <h4 class="text-base sm:text-lg font-medium text-gray-600 mb-3 border-b pb-2">Card 3</h4>
+                     <div class="space-y-3 mt-3">
+                        <div>
+                            <label for="balance3" class="block text-sm font-medium text-gray-600 mb-1">Balance ($)</label>
+                            <input type="number" id="balance3" name="balance3" min="0" step="0.01" class="card-balance w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-sm sm:text-base" placeholder="0">
+                        </div>
+                        <div>
+                            <label for="apr3" class="block text-sm font-medium text-gray-600 mb-1">APR (%)</label>
+                            <input type="number" id="apr3" name="apr3" min="0" step="0.01" class="card-apr w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-sm sm:text-base" placeholder="0">
+                        </div>
+                         <div class="mode-time-field">
+                            <label for="payment3" class="block text-sm font-medium text-gray-600 mb-1">Monthly Payment ($)</label>
+                            <input type="number" id="payment3" name="payment3" min="0" step="0.01" class="card-payment w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-sm sm:text-base" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="timeframeInputSection" class="hidden mt-6 border-t pt-6">
+                 <h3 class="text-lg sm:text-xl font-semibold text-gray-700 mb-4">Desired Payoff Timeframe</h3>
+                 <div class="flex flex-wrap items-center gap-4">
+                     <label for="payoffYears" class="text-sm font-medium text-gray-600">Pay off in:</label>
+                     <input type="number" id="payoffYears" name="payoffYears" min="0" step="1" class="w-20 px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-sm sm:text-base" placeholder="0">
+                     <span class="text-sm text-gray-600">years</span>
+                     <input type="number" id="payoffMonths" name="payoffMonths" min="0" max="11" step="1" class="w-20 px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-sm sm:text-base" placeholder="0">
+                      <span class="text-sm text-gray-600">months</span>
+                 </div>
+            </div>
+
+             <div class="mt-6 sm:mt-8 text-center border-t pt-6">
+                <button id="calculateBtn" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-md transition duration-150 ease-in-out flex items-center justify-center mx-auto text-sm sm:text-base">
+                    {/* Button text changes dynamically */}
+                </button>
+            </div>
+        </div>
+
+
+        <div id="resultsSection" class="hidden mt-8">
+             <h2 id="resultsTitle" class="text-lg sm:text-xl font-semibold text-gray-700 mb-4 text-center">Payoff Results</h2>
+             <div id="summary" class="mb-6 p-4 bg-green-50 border border-green-200 rounded-md text-green-800 text-center text-sm sm:text-base"></div>
+             <div class="mb-8 p-4 border border-gray-200 rounded-lg bg-white">
+                 <h3 class="text-base sm:text-lg font-semibold text-gray-700 mb-3 text-center">Balance Over Time</h3>
+                 <div class="relative h-56 sm:h-64 md:h-96"><canvas id="payoffChart"></canvas></div>
+             </div>
+             <div class="border border-gray-200 rounded-lg overflow-hidden">
+                 <h3 class="text-base sm:text-lg font-semibold text-gray-700 p-4 bg-gray-50 text-center">Amortization Schedule</h3>
+                 <div class="overflow-x-auto max-h-[600px]">
+                     <table id="payoffTable" class="min-w-full bg-white">
+                         <thead id="tableHeader" class="bg-gray-50"></thead>
+                         <tbody id="tableBody"></tbody>
+                     </table>
+                 </div>
+             </div>
+        </div>
+
+    </div> <script>
+        // --- DOM Elements ---
+        const calculateBtn = document.getElementById('calculateBtn');
+        const resultsSection = document.getElementById('resultsSection');
+        const errorMessageDiv = document.getElementById('errorMessage');
+        const warningMessageDiv = document.getElementById('warningMessage');
+        const summaryDiv = document.getElementById('summary');
+        const tableHeader = document.getElementById('tableHeader');
+        const tableBody = document.getElementById('tableBody');
+        const chartCanvas = document.getElementById('payoffChart');
+        const cardBalanceInputs = document.querySelectorAll('.card-balance');
+        const cardAprInputs = document.querySelectorAll('.card-apr');
+        const cardPaymentInputs = document.querySelectorAll('.card-payment');
+        const modeTimeFields = document.querySelectorAll('.mode-time-field'); // Divs containing payment inputs
+        const timeframeInputSection = document.getElementById('timeframeInputSection');
+        const payoffYearsInput = document.getElementById('payoffYears');
+        const payoffMonthsInput = document.getElementById('payoffMonths');
+        const modeRadios = document.querySelectorAll('input[name="calcMode"]');
+        const calculateBtnContent = document.getElementById('calculateBtn'); // Target button directly for content change
+        const resultsTitle = document.getElementById('resultsTitle');
+
+
+        let payoffChart = null; // Chart.js instance
+
+        // --- Helper Functions ---
+        function showError(message) {
+            errorMessageDiv.innerHTML = `<strong class="font-bold">Error:</strong> <span class="block sm:inline">${message}</span>`;
+            errorMessageDiv.classList.remove('hidden');
+            document.getElementById('errorMessageContainer').classList.remove('hidden');
+            warningMessageDiv.classList.add('hidden'); // Hide warning if error occurs
+            document.getElementById('warningMessageContainer').classList.add('hidden');
+            resultsSection.classList.add('hidden'); // Hide results on error
+        }
+         function showWarning(message) {
+            warningMessageDiv.innerHTML = `<strong class="font-bold">Warning:</strong> <span class="block sm:inline">${message}</span>`;
+            warningMessageDiv.classList.remove('hidden');
+            document.getElementById('warningMessageContainer').classList.remove('hidden');
+         }
+        function hideError() {
+             errorMessageDiv.classList.add('hidden');
+             document.getElementById('errorMessageContainer').classList.add('hidden');
+        }
+        function hideWarning() {
+            warningMessageDiv.classList.add('hidden');
+            document.getElementById('warningMessageContainer').classList.add('hidden');
+        }
+        function formatCurrency(amount) {
+            if (amount < 0 && amount > -0.005) amount = 0;
+            return amount.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        function formatTimeString(totalMonths) {
+             const years = Math.floor(totalMonths / 12);
+             const remainingMonths = totalMonths % 12;
+             let timeString = "";
+             if (years > 0) timeString += `${years} year${years > 1 ? 's' : ''}`;
+             if (remainingMonths > 0) {
+                 if (timeString.length > 0) timeString += " and ";
+                 timeString += `${remainingMonths} month${remainingMonths > 1 ? 's' : ''}`;
+             }
+             if (timeString.length === 0 && totalMonths > 0) timeString = `${totalMonths} month${totalMonths > 1 ? 's' : ''}`;
+             if (totalMonths <= 0) timeString = "Instantly (or no balance)"; // Handle 0 months case
+             return timeString;
+        }
+
+
+        // --- Mode Switching Logic ---
+        function updateFormForMode(mode) {
+            hideError();
+            hideWarning();
+            resultsSection.classList.add('hidden'); // Hide results when mode changes
+
+            if (mode === 'time') {
+                modeTimeFields.forEach(field => field.style.display = 'block');
+                timeframeInputSection.classList.add('hidden');
+                calculateBtnContent.innerHTML = `<span class="lucide">&#xe91f;</span> Calculate Payoff Time`;
+            } else { // mode === 'payment'
+                modeTimeFields.forEach(field => field.style.display = 'none');
+                timeframeInputSection.classList.remove('hidden');
+                calculateBtnContent.innerHTML = `<span class="lucide">&#xea15;</span> Calculate Required Payment`;
+            }
+        }
+
+        modeRadios.forEach(radio => {
+            radio.addEventListener('change', (event) => {
+                updateFormForMode(event.target.value);
+            });
+        });
+
+        // Initialize form based on default checked radio
+        updateFormForMode(document.querySelector('input[name="calcMode"]:checked').value);
+
+
+        // --- Core Simulation Function (used by both modes) ---
+        function simulatePayoff(cardsData, totalMonthlyPayment = null) {
+            let currentCards = JSON.parse(JSON.stringify(cardsData));
+            let month = 0;
+            let totalInterestPaid = 0;
+            const maxMonths = 1200;
+            let monthlyData = [];
+            let forceStop = false;
+
+            if (totalMonthlyPayment !== null) {
+                 currentCards.sort((a, b) => b.apr - a.apr);
+            }
+
+            while (currentCards.some(card => !card.paidOff && card.balance > 0) && month < maxMonths) {
+                month++;
+                let monthRecord = { month: month, totalBalance: 0, totalPaymentThisMonth: 0 };
+                let currentTotalBalance = 0;
+                let totalBalanceDecreased = false;
+
+                let totalInterestThisMonth = 0;
+                currentCards.forEach(card => {
+                    if (!card.paidOff) {
+                        card.interestThisMonth = card.balance * card.monthlyRate;
+                        totalInterestThisMonth += card.interestThisMonth;
+                        monthRecord[`card_${card.id}_interest`] = card.interestThisMonth;
+                    } else {
+                         monthRecord[`card_${card.id}_interest`] = 0;
+                    }
+                });
+
+                if (totalMonthlyPayment !== null) {
+                    let paymentAppliedThisMonth = 0;
+                    let paymentAfterInterest = totalMonthlyPayment;
+                    currentCards.forEach(card => {
+                        monthRecord[`card_${card.id}_payment`] = 0;
+                        if (!card.paidOff && paymentAfterInterest > 0) {
+                             let interestToPay = Math.min(paymentAfterInterest, card.interestThisMonth);
+                             interestToPay = Math.min(interestToPay, card.balance + card.interestThisMonth);
+                             monthRecord[`card_${card.id}_payment`] += interestToPay;
+                             paymentAfterInterest -= interestToPay;
+                             paymentAppliedThisMonth += interestToPay;
+                        }
+                    });
+                     currentCards.forEach(card => {
+                         if (!card.paidOff && paymentAfterInterest > 0) {
+                             let principalAvailable = card.balance + card.interestThisMonth - monthRecord[`card_${card.id}_payment`];
+                             principalAvailable = Math.max(0, principalAvailable);
+                             let principalPayment = Math.min(paymentAfterInterest, principalAvailable);
+                             monthRecord[`card_${card.id}_payment`] += principalPayment;
+                             paymentAfterInterest -= principalPayment;
+                             paymentAppliedThisMonth += principalPayment;
+                         }
+                     });
+                     monthRecord.totalPaymentThisMonth = paymentAppliedThisMonth;
+                } else {
+                    currentCards.forEach(card => {
+                        if (!card.paidOff) {
+                            const paymentApplied = Math.min(card.monthlyPayment, card.balance + card.interestThisMonth);
+                            monthRecord[`card_${card.id}_payment`] = paymentApplied;
+                            monthRecord.totalPaymentThisMonth += paymentApplied;
+                        } else {
+                             monthRecord[`card_${card.id}_payment`] = 0;
+                        }
+                    });
+                }
+
+                 currentCards.forEach(card => {
+                     if (!card.paidOff) {
+                         const interest = monthRecord[`card_${card.id}_interest`] || 0;
+                         const payment = monthRecord[`card_${card.id}_payment`] || 0;
+                         const principalPaid = payment - interest;
+                         if (principalPaid > 0.001) totalBalanceDecreased = true;
+                         card.balance -= principalPaid;
+                         totalInterestPaid += interest;
+                         if (card.balance <= 0.005) {
+                             card.balance = 0;
+                             card.paidOff = true;
+                         }
+                     }
+                     monthRecord[`card_${card.id}_balance`] = card.balance;
+                     currentTotalBalance += card.balance;
+                 });
+
+                monthRecord.totalBalance = currentTotalBalance;
+                monthlyData.push(monthRecord);
+
+                if (!totalBalanceDecreased && currentTotalBalance > 0.005 && month > 1) {
+                     const prevTotalBalance = monthlyData[month-2].totalBalance;
+                     if (Math.abs(currentTotalBalance - prevTotalBalance) < 0.01) {
+                         forceStop = true;
+                         console.warn("Simulation stopped: Balance not decreasing significantly.");
+                         break;
+                     }
+                }
+                if (currentTotalBalance <= 0.005) break;
+            }
+
+            return {
+                months: month, totalInterestPaid: totalInterestPaid, monthlyData: monthlyData,
+                finalCards: currentCards, stoppedEarly: forceStop, hitMaxMonths: month >= maxMonths
+            };
+        }
+
+        // --- Bisection Search for Required Payment (Mode 2) ---
+        function findRequiredPayment(cardsData, targetMonths) {
+            let lowPayment = 0;
+            let highPayment = cardsData.reduce((sum, card) => sum + card.balance, 0) + 5000; // Increased buffer
+            let midPayment = 0;
+            const precision = 0.01;
+            const maxIterations = 100;
+            let iterations = 0;
+            let lastSimResult = null;
+
+            lowPayment = cardsData.reduce((sum, card) => sum + (card.balance * card.monthlyRate), 0);
+            lowPayment += 0.01;
+
+            if (highPayment <= lowPayment) {
+                 highPayment = lowPayment + 1000;
+            }
+
+            console.log(`Starting bisection: low=${lowPayment}, high=${highPayment}, targetMonths=${targetMonths}`);
+
+            while (highPayment - lowPayment > precision && iterations < maxIterations) {
+                iterations++;
+                midPayment = lowPayment + (highPayment - lowPayment) / 2;
+                console.log(`Iteration ${iterations}: low=${lowPayment}, high=${highPayment}, mid=${midPayment}`);
+                lastSimResult = simulatePayoff(cardsData, midPayment);
+                console.log(`  Sim Result: months=${lastSimResult.months}, stoppedEarly=${lastSimResult.stoppedEarly}, hitMax=${lastSimResult.hitMaxMonths}`);
+
+                if (lastSimResult.hitMaxMonths || lastSimResult.stoppedEarly || lastSimResult.months > targetMonths) {
+                    lowPayment = midPayment;
+                } else {
+                    highPayment = midPayment;
+                }
+            }
+
+            console.log(`Bisection finished: low=${lowPayment}, high=${highPayment}, iterations=${iterations}`);
+
+            const finalPayment = Math.ceil(highPayment * 100) / 100;
+            console.log(`Final calculated payment (rounded up): ${finalPayment}`);
+            const finalSimResult = simulatePayoff(cardsData, finalPayment);
+            console.log(`Final Sim Result: months=${finalSimResult.months}, stoppedEarly=${finalSimResult.stoppedEarly}, hitMax=${finalSimResult.hitMaxMonths}`);
+
+             if (finalSimResult.months > targetMonths || finalSimResult.hitMaxMonths || finalSimResult.stoppedEarly) {
+                 const lowPaymentSim = simulatePayoff(cardsData, lowPayment);
+                  if (lowPaymentSim.months > targetMonths || lowPaymentSim.hitMaxMonths || lowPaymentSim.stoppedEarly) {
+                      console.error("Bisection search failed: Even the lowest bound payment takes too long.");
+                      return { payment: null, simulationResult: finalSimResult, error: "Cannot pay off within the target timeframe, even with very high payments. The timeframe might be too short for the given balances/APRs." };
+                  } else {
+                     console.error("Bisection search failed to find a suitable payment.", finalPayment, finalSimResult);
+                     // If highPayment simulation took too long, but lowPayment didn't, it implies highPayment was actually too low.
+                     // This can happen if the required payment is very close to lowPayment. Return lowPayment simulation.
+                     if(finalSimResult.months > targetMonths && lowPaymentSim.months <= targetMonths) {
+                         console.warn("Using lowPayment as final result due to precision issues near target.");
+                         return { payment: Math.ceil(lowPayment * 100) / 100, simulationResult: lowPaymentSim, error: null };
+                     }
+                     return { payment: null, simulationResult: finalSimResult, error: "Could not accurately determine the required payment to meet the target timeframe. Please check inputs or try a slightly longer timeframe." };
+                  }
+             }
+
+            return { payment: finalPayment, simulationResult: finalSimResult, error: null };
+        }
+
+
+        // --- Main Calculation Trigger ---
+        calculateBtn.addEventListener('click', () => {
+            hideError();
+            hideWarning();
+            resultsSection.classList.add('hidden');
+            const selectedMode = document.querySelector('input[name="calcMode"]:checked').value;
+            console.log(`Calculating in mode: ${selectedMode}`);
+
+            // --- FIX: Declare targetMonths in outer scope ---
+            let targetMonths = 0;
+
+            // 1. Gather Common Inputs (Balance, APR) & Validate
+            let cards = [];
+            let hasValidCard = false;
+            let commonValidationIssues = [];
+            for (let i = 0; i < cardBalanceInputs.length; i++) {
+                const balance = parseFloat(cardBalanceInputs[i].value) || 0;
+                const apr = parseFloat(cardAprInputs[i].value) || 0;
+                if (balance < 0 || apr < 0) commonValidationIssues.push(`Invalid balance or APR for Card ${i + 1}.`);
+                if (balance > 0) {
+                    hasValidCard = true;
+                    cards.push({
+                        id: i + 1, name: `Card ${i + 1}`, balance: balance, apr: apr,
+                        monthlyRate: (apr / 100) / 12, monthlyPayment: 0,
+                        paidOff: false, initialBalance: balance
+                    });
+                } else if (balance === 0) console.log(`Card ${i+1} has zero balance, skipping.`);
+            }
+            if (!hasValidCard) commonValidationIssues.push("Enter details for at least one card with a balance > 0.");
+            if (commonValidationIssues.length > 0) { showError(commonValidationIssues.join(' ')); return; }
+
+            let simulationResult = null;
+            let calculatedPayment = null;
+
+            // 2. Mode-Specific Logic
+            try {
+                if (selectedMode === 'time') {
+                    resultsTitle.textContent = "Payoff Time Results";
+                    let paymentValidationIssues = [];
+                    let warningMessages = [];
+                    cards.forEach((card, i) => {
+                        const paymentInput = document.getElementById(`payment${i + 1}`);
+                        const payment = parseFloat(paymentInput.value) || 0;
+                        if (payment < 0) paymentValidationIssues.push(`Invalid payment for Card ${i + 1}.`);
+                        card.monthlyPayment = payment;
+                        if (card.balance > 0) {
+                            const interestFirstMonth = card.balance * card.monthlyRate;
+                             if (payment < interestFirstMonth && interestFirstMonth > 0) paymentValidationIssues.push(`Card ${card.name} payment (${formatCurrency(payment)}) is less than its first month's interest (${formatCurrency(interestFirstMonth)}). Balance will increase.`);
+                             else if (payment === interestFirstMonth && interestFirstMonth > 0) warningMessages.push(`Card ${card.name} payment only covers interest; balance won't decrease.`);
+                             else if (payment <= 0 && card.apr > 0) paymentValidationIssues.push(`Card ${card.name} has balance and APR > 0, but payment is <= 0. Balance will increase.`);
+                             else if (payment <= 0 && card.apr === 0) warningMessages.push(`Card ${card.name} has balance but payment is <= 0; balance won't decrease.`);
+                        }
+                    });
+                    if (paymentValidationIssues.length > 0) { showError(paymentValidationIssues.join(' ')); return; }
+                    if (warningMessages.length > 0) showWarning(warningMessages.join(' '));
+                    simulationResult = simulatePayoff(cards);
+                } else { // mode === 'payment'
+                     resultsTitle.textContent = "Required Payment Results";
+                     const years = parseInt(payoffYearsInput.value, 10) || 0;
+                     const months = parseInt(payoffMonthsInput.value, 10) || 0;
+                     // --- FIX: Assign to outer scope variable ---
+                     targetMonths = years * 12 + months;
+                     if (targetMonths <= 0) { showError("Please enter a desired payoff timeframe greater than 0 months."); return; }
+                     const paymentSearchResult = findRequiredPayment(cards, targetMonths);
+                     if (paymentSearchResult.error) { showError(paymentSearchResult.error); return; }
+                     calculatedPayment = paymentSearchResult.payment;
+                     simulationResult = paymentSearchResult.simulationResult;
+                }
+
+                // 3. Process Simulation Results
+                if (!simulationResult) { showError("Calculation could not be completed."); return; }
+                if (simulationResult.hitMaxMonths) { showError(`Calculation stopped after ${maxMonths / 12} years. Please check inputs.`); return; }
+                if (simulationResult.stoppedEarly) showWarning(`Calculation stopped early at month ${simulationResult.months} as balances were no longer decreasing significantly.`);
+
+                // 4. Display Results
+                // --- Summary ---
+                if (selectedMode === 'time') {
+                     const timeString = formatTimeString(simulationResult.months);
+                     summaryDiv.innerHTML = `
+                        <p class="text-base sm:text-lg mb-1">All cards will be paid off in: <strong class="font-semibold">${timeString}</strong> (${simulationResult.months} months)</p>
+                        <p>Total Interest Paid: <strong class="font-semibold">${formatCurrency(simulationResult.totalInterestPaid)}</strong></p>
+                    `;
+                } else { // mode === 'payment'
+                     // --- FIX: targetMonths is now accessible here ---
+                     const targetTimeString = formatTimeString(targetMonths);
+                     summaryDiv.innerHTML = `
+                        <p class="text-base sm:text-lg mb-1">Required Total Monthly Payment (to payoff in ${targetTimeString}): <strong class="font-semibold">${formatCurrency(calculatedPayment)}</strong></p>
+                        <p>With this payment, payoff occurs in: <strong class="font-semibold">${formatTimeString(simulationResult.months)}</strong> (${simulationResult.months} months)</p>
+                        <p>Total Interest Paid: <strong class="font-semibold">${formatCurrency(simulationResult.totalInterestPaid)}</strong></p>
+                    `;
+                }
+
+                // --- Table ---
+                tableHeader.innerHTML = '';
+                tableBody.innerHTML = '';
+                const headerRow = tableHeader.insertRow();
+                let th = document.createElement('th'); th.textContent = 'Month'; th.className = 'sticky left-0 bg-gray-50 z-10 border-r border-gray-200'; headerRow.appendChild(th);
+                const initialCardsForColumns = [];
+                 for (let i = 0; i < cardBalanceInputs.length; i++) {
+                     const balance = parseFloat(cardBalanceInputs[i].value) || 0;
+                     if (balance > 0) initialCardsForColumns.push({ id: i + 1, name: `Card ${i + 1}` });
+                 }
+                initialCardsForColumns.forEach(card => {
+                    th = document.createElement('th'); th.textContent = `${card.name} Payment`; headerRow.appendChild(th);
+                    th = document.createElement('th'); th.textContent = `${card.name} Interest`; headerRow.appendChild(th);
+                    th = document.createElement('th'); th.textContent = `${card.name} Balance`; headerRow.appendChild(th);
+                });
+                th = document.createElement('th'); th.textContent = 'Total Payment'; headerRow.appendChild(th);
+                th = document.createElement('th'); th.textContent = 'Total Balance'; headerRow.appendChild(th);
+
+                simulationResult.monthlyData.forEach((data, index) => {
+                    const row = tableBody.insertRow();
+                    let cell = row.insertCell(); cell.textContent = data.month; cell.className = 'sticky left-0 border-r border-gray-200';
+                    const initialBalances = {}; cards.forEach(c => initialBalances[c.id] = c.initialBalance);
+                    initialCardsForColumns.forEach(card => {
+                        const cardId = card.id;
+                        const payment = data[`card_${cardId}_payment`] === undefined ? 0 : data[`card_${cardId}_payment`];
+                        const interest = data[`card_${cardId}_interest`] === undefined ? 0 : data[`card_${cardId}_interest`];
+                        const balance = data[`card_${cardId}_balance`] === undefined ? 0 : data[`card_${cardId}_balance`];
+                        row.insertCell().textContent = formatCurrency(payment);
+                        row.insertCell().textContent = formatCurrency(interest);
+                        cell = row.insertCell(); cell.textContent = formatCurrency(balance);
+                        const prevBalance = index > 0 ? (simulationResult.monthlyData[index-1][`card_${cardId}_balance`] === undefined ? initialBalances[cardId] : simulationResult.monthlyData[index-1][`card_${cardId}_balance`]) : initialBalances[cardId];
+                        if (balance <= 0.005 && prevBalance > 0.005) cell.classList.add('paid-off-balance');
+                        else cell.classList.remove('paid-off-balance');
+                    });
+                    row.insertCell().textContent = formatCurrency(data.totalPaymentThisMonth || 0);
+                    row.insertCell().textContent = formatCurrency(data.totalBalance || 0);
+                });
+
+                // --- Graph ---
+                const labels = simulationResult.monthlyData.map(d => `Month ${d.month}`);
+                const dataPoints = simulationResult.monthlyData.map(d => d.totalBalance);
+                labels.unshift("Start");
+                dataPoints.unshift(cards.reduce((sum, card) => sum + card.initialBalance, 0));
+                if (payoffChart) payoffChart.destroy();
+                const ctx = chartCanvas.getContext('2d');
+                payoffChart = new Chart(ctx, {
+                     type: 'line',
+                     data: { labels: labels, datasets: [{ label: 'Total Remaining Balance', data: dataPoints, borderColor: 'rgb(22, 163, 74)', backgroundColor: 'rgba(34, 197, 94, 0.1)', tension: 0.1, fill: true, pointRadius: 2, pointHoverRadius: 5 }] },
+                     options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { callback: (v) => formatCurrency(v), font: { size: 10 } } }, x: { ticks: { autoSkip: true, maxTicksLimit: 10, font: { size: 10 } } } }, plugins: { tooltip: { callbacks: { label: (c) => `${c.dataset.label || ''}: ${formatCurrency(c.parsed.y)}` } } } }
+                });
+
+                resultsSection.classList.remove('hidden');
+                resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            } catch (error) {
+                 console.error("Calculation Error:", error);
+                 showError(`An unexpected error occurred during calculation: ${error.message}. Please check your inputs or browser console.`);
+            }
+
+        }); // End calculateBtn listener
+
+    </script>
+
+</body>
+</html>

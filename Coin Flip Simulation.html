@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coin Flip Simulator</title>
+    <style>
+        /* --- CSS Styling --- */
+        :root {
+            --heads-color: #E8AA42; /* Gold/Orange for Heads */
+            --tails-color: #E91E63; /* Bright Pink for Tails */
+            --neutral-coin-color: #ccc; /* Neutral color before first flip */
+            --button-color: #333;
+            --reset-button-color: #f0ad4e; /* Orange for Reset */
+            --reset-button-hover-color: #ec971f; /* Darker Orange */
+            --text-light: #fff;
+            --text-dark: #333;
+            --text-muted: #777;
+            --border-color: #ddd;
+            --bg-light: #f9f9f9;
+            --bg-page: #fff;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--bg-page);
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        #coinFlipperContainer {
+            text-align: center;
+            padding: 40px;
+            border: none;
+            border-radius: 10px;
+            background-color: var(--bg-light);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            perspective: 1200px;
+            width: 90%;
+            max-width: 450px;
+        }
+
+        h2 {
+            margin-top: 0;
+            margin-bottom: 5px;
+            color: var(--text-dark);
+            font-size: 2em;
+        }
+
+        #subtitle {
+            color: var(--text-muted);
+            font-size: 0.9em;
+            margin-bottom: 30px;
+        }
+
+        /* The coin display div */
+        #coinDisplay {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 30px auto;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background-color: var(--neutral-coin-color);
+            color: var(--text-light);
+            font-size: 2.8em;
+            font-weight: bold;
+            border: 6px solid var(--text-light);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2), inset 0 0 10px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.7s cubic-bezier(0.4, 0.0, 0.2, 1), background-color 0.5s ease-out;
+            transform-style: preserve-3d;
+        }
+
+        /* Class to apply the flip animation */
+        #coinDisplay.flipping {
+            transform: rotateX(720deg); /* Vertical flip */
+        }
+
+        /* Color classes for coin result - Specific selectors */
+        #coinDisplay.heads-bg {
+            background-color: var(--heads-color);
+        }
+        #coinDisplay.tails-bg {
+            background-color: var(--tails-color);
+        }
+
+
+        #instructions {
+            color: var(--text-muted);
+            font-size: 0.8em;
+            margin-top: 10px;
+            margin-bottom: 25px;
+        }
+
+        /* Container for buttons */
+        .button-area {
+            margin-bottom: 30px; /* Space below buttons before table */
+        }
+
+        #flipButton {
+            padding: 15px 40px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: var(--text-light);
+            background-color: var(--button-color);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            /* margin-bottom: 10px; Removed margin-bottom */
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            text-transform: uppercase;
+        }
+
+        #flipButton:hover {
+            background-color: #555;
+        }
+
+        #flipButton:active {
+            transform: scale(0.98);
+        }
+
+        /* Styles for the reset button */
+        #resetButton {
+            padding: 10px 20px; /* Slightly smaller */
+            font-size: 0.9em;
+            color: var(--text-light);
+            background-color: var(--reset-button-color);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px; /* Space above reset button */
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            text-transform: uppercase;
+        }
+
+        #resetButton:hover {
+            background-color: var(--reset-button-hover-color);
+        }
+
+        #resetButton:active {
+            transform: scale(0.98);
+        }
+
+
+        #result {
+           display: none;
+        }
+
+        /* --- Styles for the results table --- */
+        #resultsTable {
+            width: 90%;
+            max-width: 300px;
+            margin: 30px auto 0;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+
+        #resultsTable th,
+        #resultsTable td {
+            border: 1px solid var(--border-color);
+            padding: 10px 12px;
+            text-align: center;
+        }
+
+        #resultsTable th {
+            background-color: #e9e9e9;
+            font-weight: bold;
+            color: var(--text-dark);
+        }
+
+        #resultsTable td:first-child {
+            text-align: left;
+            font-weight: bold;
+            color: #555;
+        }
+        /* --- End table styles --- */
+
+    </style>
+</head>
+<body>
+
+    <div id="coinFlipperContainer">
+        <h2>COIN FLIP SIMULATOR</h2>
+        <p id="subtitle">Flip a coin to get heads or tails randomly</p>
+
+        <div id="coinDisplay">
+            FLIP
+        </div>
+
+        <p id="instructions">(Press Button or Click Coin / Spacebar)</p>
+
+        <div class="button-area">
+            <button id="flipButton">FLIP IT</button>
+            <br> <button id="resetButton">Reset Counts</button> </div>
+
+        <div id="result"></div>
+
+        <table id="resultsTable">
+            <thead>
+                <tr>
+                    <th>Outcome</th>
+                    <th>Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Heads</td>
+                    <td id="headsCount">0</td>
+                </tr>
+                <tr>
+                    <td>Tails</td>
+                    <td id="tailsCount">0</td>
+                </tr>
+            </tbody>
+        </table>
+        </div>
+
+    <script>
+        // --- JavaScript Logic ---
+
+        // --- Get HTML Elements ---
+        const flipButton = document.getElementById('flipButton');
+        const coinDisplay = document.getElementById('coinDisplay');
+        const headsCountCell = document.getElementById('headsCount');
+        const tailsCountCell = document.getElementById('tailsCount');
+        const resetButton = document.getElementById('resetButton'); // Get Reset Button
+
+        // --- Initialize Counters ---
+        let heads = 0;
+        let tails = 0;
+        let isFlipping = false;
+
+        // --- Core Flip Function ---
+        function handleFlip() {
+            // Exit if already flipping or button is disabled (e.g., during reset)
+            if (isFlipping || flipButton.disabled) {
+                return;
+            }
+            isFlipping = true;
+
+            // 1. Indicate flipping is happening
+            coinDisplay.textContent = ''; // Clear text
+            flipButton.disabled = true; // Disable flip button
+            resetButton.disabled = true; // Disable reset button during flip
+            coinDisplay.classList.remove('heads-bg', 'tails-bg');
+            coinDisplay.classList.add('flipping'); // Start animation
+
+            // 2. Simulate the coin flip logic
+            const randomChoice = Math.floor(Math.random() * 2);
+            let outcome = '';
+
+            if (randomChoice === 0) {
+                outcome = 'HEADS';
+            } else {
+                outcome = 'TAILS';
+            }
+
+            // 3. Wait for animation, then update everything
+            setTimeout(() => {
+                // Update coin text
+                coinDisplay.textContent = outcome;
+
+                // Remove previous color classes and add the new one
+                coinDisplay.classList.remove('heads-bg', 'tails-bg');
+                if (outcome === 'HEADS') {
+                    heads++;
+                    headsCountCell.textContent = heads;
+                    coinDisplay.classList.add('heads-bg');
+                } else { // TAILS
+                    tails++;
+                    tailsCountCell.textContent = tails;
+                    coinDisplay.classList.add('tails-bg');
+                }
+
+                // Reset animation state
+                coinDisplay.classList.remove('flipping');
+                flipButton.disabled = false; // Re-enable flip button
+                resetButton.disabled = false; // Re-enable reset button
+                isFlipping = false;
+
+            }, 700); // Match CSS transition duration for transform
+        }
+
+        // --- Reset Counts Function ---
+        function resetCounts() {
+            // Prevent resetting during a flip
+            if (isFlipping) {
+                return;
+            }
+            heads = 0;
+            tails = 0;
+            headsCountCell.textContent = heads; // Update table
+            tailsCountCell.textContent = tails; // Update table
+
+            // Reset coin display visually to initial state
+            coinDisplay.classList.remove('heads-bg', 'tails-bg', 'flipping');
+            coinDisplay.textContent = 'FLIP';
+            // Ensure buttons are enabled if reset is clicked while not flipping
+            flipButton.disabled = false;
+            resetButton.disabled = false;
+        }
+
+        // --- Event Listeners ---
+        flipButton.addEventListener('click', handleFlip);
+        coinDisplay.addEventListener('click', handleFlip);
+        resetButton.addEventListener('click', resetCounts); // Add listener for reset button
+        window.addEventListener('keydown', (event) => {
+            if (event.code === 'Space' && event.target === document.body) {
+                event.preventDefault();
+                handleFlip();
+            }
+        });
+
+        document.body.focus(); // Allow spacebar press immediately
+
+    </script>
+
+</body>
+</html>
