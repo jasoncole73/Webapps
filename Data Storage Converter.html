@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Storage Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Use Inter font */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom styles for converter */
+        .converter-container {
+            max-width: 600px; /* Max width for larger screens */
+        }
+        /* Style for the result display */
+        #result {
+            word-wrap: break-word; /* Ensure long results wrap */
+            overflow-wrap: break-word; /* More robust word wrapping */
+        }
+        /* Hide default number input spinners */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        input[type=number] {
+          -moz-appearance: textfield; /* Firefox */
+        }
+        /* Custom dropdown arrow using SVG for better control */
+        .select-wrapper {
+            position: relative;
+        }
+        .select-wrapper::after {
+            content: '';
+            position: absolute;
+            right: 0.85rem; /* Adjusted spacing */
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1rem; /* Arrow width */
+            height: 1rem; /* Arrow height */
+            /* Updated SVG for a simple down arrow */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='2' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5' /%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-size: contain;
+            pointer-events: none; /* Prevent arrow from interfering with select */
+            opacity: 0.6; /* Adjust arrow visibility */
+        }
+        /* Style select to remove default arrow and add padding for custom arrow */
+        select {
+            appearance: none; /* Remove default system appearance */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            padding-right: 2.8rem; /* Make space for the custom arrow */
+        }
+        /* Add subtle focus ring */
+        select:focus, input:focus {
+             outline: 2px solid transparent;
+             outline-offset: 2px;
+             --tw-ring-inset: var(--tw-empty,/*!*/ /*!*/);
+             --tw-ring-offset-width: 0px;
+             --tw-ring-offset-color: #fff;
+             --tw-ring-color: #3b82f6; /* Blue-500 */
+             --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+             --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+             box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+        }
+    </style>
+     <link rel="preconnect" href="https://fonts.googleapis.com">
+     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-slate-100 flex items-center justify-center min-h-screen p-4">
+
+    <div class="converter-container w-full bg-white p-8 rounded-xl shadow-lg">
+        <h1 class="text-2xl sm:text-3xl font-bold text-center text-slate-800 mb-2">Data Storage Converter</h1>
+        <p class="text-center text-slate-600 text-sm mb-8">Convert a data storage measurement using the conversion calculator below.</p>
+
+        <div class="mb-5">
+            <label for="fromUnit" class="block text-sm font-medium text-slate-600 mb-1">Convert From:</label>
+            <div class="select-wrapper">
+                <select id="fromUnit" name="fromUnit" class="mt-1 block w-full pl-3 pr-10 py-2.5 text-base border border-slate-300 bg-slate-50 focus:outline-none focus:border-blue-500 sm:text-sm rounded-md transition duration-150 ease-in-out">
+                    </select>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <label for="toUnit" class="block text-sm font-medium text-slate-600 mb-1">Convert To:</label>
+             <div class="select-wrapper">
+                <select id="toUnit" name="toUnit" class="mt-1 block w-full pl-3 pr-10 py-2.5 text-base border border-slate-300 bg-slate-50 focus:outline-none focus:border-blue-500 sm:text-sm rounded-md transition duration-150 ease-in-out">
+                    </select>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <label for="valueInput" class="block text-sm font-medium text-slate-600 mb-1">Value:</label>
+            <input type="number" id="valueInput" name="valueInput" placeholder="Enter value to convert" class="mt-1 block w-full px-3 py-2.5 border border-slate-300 bg-slate-50 rounded-md shadow-sm focus:outline-none focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out" step="any">
+             <p id="inputError" class="text-red-500 text-xs mt-1 h-4"></p> </div>
+
+        <div class="text-center mb-8">
+            <button id="convertButton" class="w-full sm:w-auto inline-flex justify-center items-center px-8 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                Convert
+            </button>
+        </div>
+
+        <div id="resultContainer" class="bg-slate-100 p-5 rounded-lg text-center min-h-[70px] flex items-center justify-center">
+             <p id="result" class="text-xl font-medium text-slate-800">Result will appear here</p>
+        </div>
+    </div>
+
+    <script>
+        // --- Unit Definitions ---
+        // Defines units and their conversion factors relative to a base unit (bits).
+        // Uses BINARY prefixes (1024-based) for both bits and bytes, matching the user's latest table.
+        const KIBI = 1024; // Define 1024 constant for clarity
+        const units = {
+            'Bits (b)': { factor: 1, type: 'bit' },
+            'Kilobits (kb)': { factor: Math.pow(KIBI, 1), type: 'bit' },       // 1024^1 bits
+            'Megabits (Mb)': { factor: Math.pow(KIBI, 2), type: 'bit' },       // 1024^2 bits
+            'Gigabits (Gb)': { factor: Math.pow(KIBI, 3), type: 'bit' },       // 1024^3 bits
+            'Terabits (Tb)': { factor: Math.pow(KIBI, 4), type: 'bit' },       // 1024^4 bits
+            'Petabits (Pb)': { factor: Math.pow(KIBI, 5), type: 'bit' },       // 1024^5 bits
+            'Exabits (Eb)': { factor: Math.pow(KIBI, 6), type: 'bit' },        // 1024^6 bits
+            'Nibbles': { factor: 4, type: 'bit' },                             // 4 bits
+            'Bytes (B)': { factor: 8, type: 'bit' },                             // 8 bits
+            // --- Binary Prefixes for Bytes (powers of 1024) ---
+            'Kilobytes (KB)': { factor: 8 * Math.pow(KIBI, 1), type: 'byte' }, // 8 * 1024^1 bits
+            'Megabytes (MB)': { factor: 8 * Math.pow(KIBI, 2), type: 'byte' }, // 8 * 1024^2 bits
+            'Gigabytes (GB)': { factor: 8 * Math.pow(KIBI, 3), type: 'byte' }, // 8 * 1024^3 bits
+            'Terabytes (TB)': { factor: 8 * Math.pow(KIBI, 4), type: 'byte' }, // 8 * 1024^4 bits
+            'Petabytes (PB)': { factor: 8 * Math.pow(KIBI, 5), type: 'byte' }, // 8 * 1024^5 bits
+            'Exabytes (EB)': { factor: 8 * Math.pow(KIBI, 6), type: 'byte' }  // 8 * 1024^6 bits
+        };
+
+        // --- DOM Element References ---
+        const fromUnitSelect = document.getElementById('fromUnit');
+        const toUnitSelect = document.getElementById('toUnit');
+        const valueInput = document.getElementById('valueInput');
+        const convertButton = document.getElementById('convertButton');
+        const resultDisplay = document.getElementById('result');
+        const resultContainer = document.getElementById('resultContainer');
+        const inputError = document.getElementById('inputError');
+
+        // --- Populate Dropdowns ---
+        function populateDropdowns() {
+            const unitNames = Object.keys(units);
+            unitNames.forEach(unitName => {
+                // Create option for 'From' dropdown
+                const fromOption = document.createElement('option');
+                fromOption.value = unitName;
+                fromOption.textContent = unitName;
+                fromUnitSelect.appendChild(fromOption);
+
+                // Create option for 'To' dropdown
+                const toOption = document.createElement('option');
+                toOption.value = unitName;
+                toOption.textContent = unitName;
+                toUnitSelect.appendChild(toOption);
+            });
+            // Set default selections (using the standard names KB, MB, GB etc.)
+            fromUnitSelect.value = 'Megabytes (MB)'; // Default From
+            toUnitSelect.value = 'Gigabytes (GB)'; // Default To
+        }
+
+        // --- Conversion Logic ---
+        function convertUnits() {
+            const fromUnitName = fromUnitSelect.value;
+            const toUnitName = toUnitSelect.value;
+            const inputValue = parseFloat(valueInput.value);
+
+            // Clear previous error and result
+            inputError.textContent = '';
+            resultDisplay.textContent = 'Result will appear here';
+            resultContainer.classList.remove('bg-red-100', 'border', 'border-red-400'); // Remove potential error styling
+
+            // Input validation
+            if (isNaN(inputValue) || valueInput.value.trim() === '') {
+                inputError.textContent = 'Please enter a valid number.';
+                valueInput.focus();
+                return;
+            }
+             if (inputValue < 0) {
+                inputError.textContent = 'Value cannot be negative.';
+                valueInput.focus();
+                return;
+            }
+
+            // Get conversion factors from the updated units object (now using 1024-based factors)
+            const fromFactor = units[fromUnitName].factor;
+            const toFactor = units[toUnitName].factor;
+
+            // Perform conversion: Value -> Base Unit (bits) -> Target Unit
+            const valueInBits = inputValue * fromFactor;
+            const resultValue = valueInBits / toFactor;
+
+            // --- Format the result for better readability ---
+            let formattedResult;
+            // Use exponential notation for very large or very small numbers outside a reasonable range
+            if ((Math.abs(resultValue) > 1e12 || (Math.abs(resultValue) < 1e-9 && resultValue !== 0)) && resultValue !== 0) {
+                 formattedResult = resultValue.toExponential(6); // 6 decimal places in scientific notation
+            } else {
+                 // Otherwise, format with commas and a reasonable number of decimal places
+                 formattedResult = resultValue.toLocaleString(undefined, { // Use default locale (adds commas)
+                     maximumFractionDigits: 9 // Limit decimal places
+                 });
+            }
+
+            // --- Format the input value for consistency ---
+            const formattedInputValue = inputValue.toLocaleString(undefined, {
+                maximumFractionDigits: 9 // Limit decimal places for input display too
+            });
+
+            // Display the result using the correct unit names and formatted numbers
+            resultDisplay.textContent = `${formattedInputValue} ${fromUnitName} = ${formattedResult} ${toUnitName}`;
+        }
+
+        // --- Event Listeners ---
+        convertButton.addEventListener('click', convertUnits);
+        // Optional: Convert on pressing Enter in the input field
+        valueInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent potential form submission if wrapped in a form
+                convertUnits();
+            }
+        });
+         // Optional: Clear error when user starts typing again
+        valueInput.addEventListener('input', () => {
+             if (inputError.textContent) {
+                 inputError.textContent = '';
+             }
+        });
+
+        // --- Initial Setup ---
+        window.onload = () => {
+            populateDropdowns();
+        };
+
+    </script>
+
+</body>
+</html>
