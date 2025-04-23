@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flip Countdown</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flipdown@0.3.2/dist/flipdown.min.css">
+  <style>
+    /* CSS Variables for Theming */
+    :root {
+      --clock-color: #333; /* Darker gray for clock background */
+      --bg-color: #f4f4f4; /* Light gray background */
+      --text-color: #fff; /* White text on clock (digits) */
+      --label-color: #555; /* Dark gray for input labels */
+      --heading-color: #333; /* Dark gray for main heading & timer title */
+      --button-bg: #555;
+      --button-text: #fff;
+      --input-border: #ccc;
+      --input-bg: #fff;
+      --input-text: #333;
+      --complete-color: #28a745; /* Green for complete message */
+    }
+
+    body.dark {
+      --clock-color: #000;
+      --bg-color: #1a1a1a; /* Very dark gray background */
+      --text-color: #fff; /* White text on clock (digits) */
+      --label-color: #aaa; /* Lighter gray for input labels */
+      --heading-color: #eee; /* Light gray for main heading & timer title */
+      --button-bg: #444;
+      --button-text: #fff;
+      --input-border: #555;
+      --input-bg: #333;
+      --input-text: #eee;
+      --complete-color: #00cc88; /* Brighter green */
+    }
+
+    /* General Body Styles */
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--heading-color); /* Use heading color for default text */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    h1 {
+      color: var(--heading-color);
+      margin-bottom: 20px;
+    }
+
+    /* Controls Section */
+    .controls, .theme-toggle {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap; /* Allow wrapping on smaller screens */
+      gap: 15px; /* Slightly larger gap */
+      margin-bottom: 20px; /* Consistent margin */
+      width: 100%;
+      max-width: 800px; /* Limit width */
+    }
+
+    .controls label {
+        display: flex;
+        flex-direction: column; /* Stack label text above input */
+        align-items: flex-start;
+        gap: 3px;
+        font-size: 0.9em;
+        color: var(--label-color); /* Color for input labels */
+    }
+
+    button, input[type="text"], input[type="datetime-local"] {
+      padding: 10px 15px; /* More padding */
+      font-size: 1em;
+      border-radius: 5px; /* Slightly more rounded */
+      border: 1px solid var(--input-border);
+      background-color: var(--input-bg);
+      color: var(--input-text);
+      box-sizing: border-box;
+    }
+
+     input[type="text"], input[type="datetime-local"] {
+         min-width: 200px; /* Ensure inputs have decent width */
+     }
+
+
+    button {
+      background-color: var(--button-bg);
+      color: var(--button-text);
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      min-width: 120px; /* Minimum width for buttons */
+    }
+
+    button:hover {
+      opacity: 0.85; /* Hover effect */
+    }
+
+    .theme-toggle {
+        margin-top: 0; /* Remove extra top margin */
+    }
+
+    /* Timer Title */
+    .timer-title {
+      font-size: 1.8em;
+      font-weight: bold;
+      margin-top: 15px;
+      margin-bottom: 15px;
+      text-align: center;
+      color: var(--heading-color); /* Use heading color variable */
+      min-height: 1.2em; /* Reserve space even when empty */
+    }
+
+    /* Flipdown Timer Container */
+    .flipdown-container {
+      margin-top: 10px; /* Adjusted margin */
+      margin-bottom: 20px; /* Add margin below */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+
+    /* Flipdown Timer Styling */
+    .flipdown {
+      /* The scale transform remains */
+      margin: 10px auto 10px auto; /* Add margin top/bottom */
+      transform: scale(1.1);
+      transform-origin: center top;
+    }
+
+    /* Flipdown Theme Adjustments (Only basic overrides) */
+    .flipdown .rotor,
+    .flipdown .rotor-top,
+    .flipdown .rotor-bottom,
+    .flipdown .rotor-leaf-front,
+    .flipdown .rotor-leaf-rear {
+      background-color: var(--clock-color) !important; /* Use variable */
+      color: var(--text-color) !important; /* Use variable for digit color */
+    }
+    /* Ensure digits are visible */
+    .flipdown .rotor-top, .flipdown .rotor-bottom, .flipdown .rotor-leaf-front, .flipdown .rotor-leaf-rear{
+        font-size: 3rem; /* Adjust size if needed */
+    }
+
+    /* --- Internal element CSS rules removed to prevent conflicts --- */
+
+
+    /* Labels Styling - HIDE BOTTOM LABELS */
+    .labels {
+      display: none; /* Hide the bottom labels container */
+    }
+
+    /* Fullscreen Mode */
+    body.fullscreen {
+        overflow: hidden; /* Hide scrollbars */
+    }
+    .fullscreen .flipdown-container {
+      transform: scale(2.2); /* Slightly smaller fullscreen scale */
+      margin-top: 15vh; /* Adjust vertical position slightly */
+      transition: transform 0.3s ease;
+    }
+     .fullscreen .flipdown {
+         margin-top: 0; /* Remove margin in fullscreen */
+         margin-bottom: 0;
+     }
+
+    .fullscreen .controls,
+    .fullscreen .theme-toggle,
+    .fullscreen h1,
+    .fullscreen #message /* Hide controls, title, message in fullscreen */ {
+      display: none;
+    }
+    .fullscreen .timer-title {
+        margin-top: 0;
+        margin-bottom: 20px; /* Adjust Space between title and timer in FS */
+        font-size: 2em; /* Larger title in fullscreen */
+        color: var(--text-color); /* Ensure title is visible in dark mode fullscreen */
+    }
+
+
+    /* Completion Message */
+    .complete-message {
+      text-align: center;
+      margin-top: 25px;
+      font-size: 1.5em;
+      font-weight: bold;
+      color: var(--complete-color); /* Use variable */
+      display: none; /* Hidden by default */
+    }
+
+    /* --- Responsive Adjustments --- */
+
+    @media (max-width: 768px) {
+        h1 {
+            font-size: 1.8em;
+        }
+        .flipdown {
+            transform: scale(1.0); /* Adjust scale for tablets */
+        }
+        .fullscreen .flipdown-container {
+            transform: scale(1.8);
+            margin-top: 18vh;
+        }
+         .timer-title {
+             font-size: 1.6em;
+         }
+    }
+
+
+    @media (max-width: 480px) {
+        body {
+            padding: 10px; /* Less padding */
+        }
+        h1 {
+            font-size: 1.5em;
+        }
+
+        .controls {
+            gap: 10px; /* Reduce gap */
+        }
+         button, input[type="text"], input[type="datetime-local"] {
+            padding: 8px 12px; /* Smaller padding */
+            font-size: 0.9em;
+         }
+        input[type="text"], input[type="datetime-local"] {
+            min-width: 150px; /* Adjust min-width */
+         }
+
+        .flipdown {
+            transform: scale(0.75); /* Further reduce scale */
+        }
+        .fullscreen .flipdown-container {
+            transform: scale(1.3); /* Reduce fullscreen scale */
+            margin-top: 15vh;
+        }
+         .timer-title {
+             font-size: 1.3em;
+         }
+        .fullscreen .timer-title {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+        }
+        .complete-message {
+            font-size: 1.2em;
+        }
+    }
+    @media (max-width: 360px) {
+         .flipdown {
+            transform: scale(0.65); /* Even smaller scale */
+        }
+         .fullscreen .flipdown-container {
+            transform: scale(1.1);
+         }
+          .timer-title {
+             font-size: 1.1em;
+         }
+    }
+
+  </style>
+</head>
+<body class="dark"> <h1>🕒 Flip Countdown</h1>
+
+  <div class="controls">
+    <label>Title: <input type="text" id="title" placeholder="e.g., New Year Countdown"></label>
+    <label>Date & Time: <input type="datetime-local" id="datetime"></label>
+    <button onclick="startCountdown()">Start</button>
+    <button onclick="resetCountdown()">Reset</button>
+    <button onclick="toggleFullscreen()">Full Screen</button>
+  </div>
+
+  <div class="theme-toggle">
+    <button onclick="toggleTheme()">Toggle Theme</button>
+  </div>
+
+  <div class="timer-title" id="timerTitleDisplay"></div>
+
+  <div class="flipdown-container">
+    <div id="flipdown" class="flipdown"></div>
+    <div class="labels">
+      <span>Days</span><span>Hours</span><span>Minutes</span><span>Seconds</span>
+    </div>
+  </div>
+
+  <div id="message" class="complete-message">🎉 Countdown Complete!</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/flipdown@0.3.2/dist/flipdown.min.js"></script>
+  <script>
+    // Make sure all functions are defined before they are used by event listeners or DOMContentLoaded
+
+    let flipdownInstance; // Store the FlipDown instance
+
+    // Function to get current timestamp in seconds
+    function getNowTimestamp() {
+        return Math.floor(Date.now() / 1000);
+    }
+
+    // Definition of startCountdown
+    function startCountdown() {
+        const datetimeInput = document.getElementById("datetime");
+        const titleInput = document.getElementById("title");
+        const timerTitleDisplay = document.getElementById("timerTitleDisplay");
+        const messageDiv = document.getElementById("message");
+        const flipdownDiv = document.getElementById("flipdown");
+
+        const datetimeValue = datetimeInput.value;
+        if (!datetimeValue) {
+            // Use a more user-friendly message box instead of alert
+            timerTitleDisplay.textContent = "Please select a future date and time.";
+            timerTitleDisplay.style.color = "red"; // Make the message stand out
+            setTimeout(() => { // Clear message after a few seconds
+                // Check if the message is still the error message before clearing
+                if (timerTitleDisplay.textContent === "Please select a future date and time.") {
+                   timerTitleDisplay.textContent = titleInput.value || "Countdown Timer";
+                   timerTitleDisplay.style.color = ""; // Reset color
+                }
+            }, 3000);
+            return;
+        }
+
+        // Use current date but the selected time for timestamp calculation
+        const inputDate = new Date(datetimeValue);
+        const targetTimestamp = Math.floor(inputDate.getTime() / 1000);
+        const nowTimestamp = getNowTimestamp();
+
+        if (targetTimestamp <= nowTimestamp) {
+             // Use a more user-friendly message box instead of alert
+            timerTitleDisplay.textContent = "Please select a date and time in the future.";
+            timerTitleDisplay.style.color = "orange"; // Make the message stand out
+             setTimeout(() => { // Clear message after a few seconds
+                 // Check if the message is still the error message before clearing
+                if (timerTitleDisplay.textContent === "Please select a date and time in the future.") {
+                   timerTitleDisplay.textContent = titleInput.value || "Countdown Timer";
+                   timerTitleDisplay.style.color = ""; // Reset color
+                }
+            }, 3000);
+            return;
+        }
+
+        // Clear previous instance if exists
+        if (flipdownInstance) {
+            // FlipDown library doesn't have a destroy method,
+            // so we clear the container and create a new instance.
+            flipdownDiv.innerHTML = "";
+        }
+
+        // Clear complete message and any error messages
+        messageDiv.style.display = "none";
+        timerTitleDisplay.style.color = ""; // Reset title color
+
+        // Initialize FlipDown
+        try {
+            console.log("Attempting FlipDown Init. Target:", targetTimestamp, "Element ID:", "flipdown"); // Log before init
+            flipdownInstance = new FlipDown(targetTimestamp, "flipdown")
+            .start() // Start the countdown
+            .ifEnded(() => { // Callback when countdown ends
+                console.log("FlipDown ended."); // Log end
+                messageDiv.style.display = "block"; // Show completion message
+                timerTitleDisplay.textContent = titleInput.value ? `${titleInput.value} Complete!` : "Countdown Complete!";
+            });
+            console.log("FlipDown instance created/started:", flipdownInstance); // Log after init
+
+            // Display the title
+            timerTitleDisplay.textContent = titleInput.value || "Countdown Timer";
+
+            // Check if the div is populated shortly after
+            setTimeout(() => {
+                if(flipdownDiv.children.length === 0) {
+                    console.warn("Flipdown div appears empty after init.");
+                } else {
+                    console.log("Flipdown div has content.");
+                }
+            }, 200);
+
+        } catch (error) {
+             console.error("Error initializing FlipDown:", error);
+             timerTitleDisplay.textContent = "Error starting timer. Check console.";
+             timerTitleDisplay.style.color = "red";
+        }
+    }
+
+    // Definition of resetCountdown
+    function resetCountdown() {
+        // A full reload is the simplest way to reset everything
+        location.reload();
+    }
+
+    // Definition of toggleFullscreen
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen()
+                .catch(err => {
+                    console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                    // Fallback or alert user if needed
+                    alert("Fullscreen mode failed to activate."); // Simple fallback alert
+                });
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+    }
+
+    // Definition of toggleTheme
+    function toggleTheme() {
+        document.body.classList.toggle('dark');
+        // Optional: Store theme preference in localStorage
+        // if (document.body.classList.contains('dark')) {
+        //     localStorage.setItem('countdownTheme', 'dark');
+        // } else {
+        //     localStorage.setItem('countdownTheme', 'light');
+        // }
+    }
+
+    // Update body class when fullscreen state changes
+    document.addEventListener('fullscreenchange', () => {
+        document.body.classList.toggle('fullscreen', !!document.fullscreenElement);
+        // Optional: Re-adjust layout slightly if needed after fullscreen change
+    });
+
+    // Set default date/time on page load
+     document.addEventListener('DOMContentLoaded', () => {
+        // Get current date and time
+        const now = new Date();
+
+        // Set default time to the start of the next hour
+        const defaultDate = new Date(now);
+        defaultDate.setHours(now.getHours() + 1); // Move to the next hour
+        defaultDate.setMinutes(0); // Set minutes to 00
+        defaultDate.setSeconds(0); // Set seconds to 00
+
+        // Format for datetime-local input: YYYY-MM-DDTHH:mm
+        const year = defaultDate.getFullYear();
+        const month = (defaultDate.getMonth() + 1).toString().padStart(2, '0'); // Month is 0-indexed
+        const day = defaultDate.getDate().toString().padStart(2, '0');
+        const hours = defaultDate.getHours().toString().padStart(2, '0');
+        const minutes = defaultDate.getMinutes().toString().padStart(2, '0'); // Will be '00'
+        const defaultDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+
+        // Set the value of the input field
+        document.getElementById('datetime').value = defaultDateTime;
+
+        // Set default theme (ensure class is set on load)
+         if (!document.body.classList.contains('dark') && !document.body.classList.contains('light')) {
+             document.body.classList.add('dark'); // Default to dark if neither is set
+         }
+     });
+
+  </script>
+</body>
+</html>
