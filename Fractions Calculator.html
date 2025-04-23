@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fraction Calculator (Add/Subtract)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Use Inter font */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* bg-gray-100 */
+        }
+        /* Container for each fraction input group */
+        .fraction-input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        /* Input fields for numerator/denominator */
+        .fraction-input {
+            width: 5rem; /* Increased width slightly */
+            text-align: center;
+            border: 1px solid #d1d5db; /* border-gray-300 */
+            border-radius: 0.375rem; /* rounded-md */
+            padding: 0.5rem; /* p-2 */
+            margin-top: 0.25rem; /* mt-1 */
+            margin-bottom: 0.25rem; /* mb-1 */
+            box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        /* Line between numerator and denominator */
+        .fraction-line {
+            border-top: 2px solid black;
+            width: 5rem; /* Match input width */
+            margin: 0.1rem 0; /* Adjust vertical margin */
+        }
+        /* Style for the operation selector */
+        .operation-selector {
+            margin: 0 0.75rem; /* mx-3 */
+            padding: 0.5rem; /* p-2 */
+            border: 1px solid #d1d5db; /* border-gray-300 */
+            border-radius: 0.375rem; /* rounded-md */
+            font-weight: bold;
+            height: 2.5rem; /* Match button height */
+            align-self: center; /* Align vertically */
+        }
+        /* Style for the output fraction display */
+        .fraction-output {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 0.5rem;
+            font-size: 1.25rem; /* text-xl */
+            vertical-align: middle;
+            line-height: 1.1; /* Adjust line height for compactness */
+        }
+        .fraction-output .num, .fraction-output .den {
+            padding: 0 0.25rem;
+        }
+        .fraction-output .line {
+            border-top: 2px solid black;
+            width: 100%;
+            min-width: 2rem;
+            margin: 0.05rem 0; /* Tighter margin */
+        }
+        /* Style for inline fractions in text */
+        .fraction-inline {
+            display: inline-flex;
+            flex-direction: column;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 0.9em; /* Slightly smaller */
+            margin: 0 0.15em;
+            line-height: 1;
+        }
+        .fraction-inline .line-inline {
+            border-top: 1px solid black;
+            display: block;
+            margin-top: 1px;
+            margin-bottom: 1px;
+        }
+        /* General button styling */
+        button {
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            padding: 0.6rem 1.2rem; /* Adjusted padding */
+            border-radius: 0.375rem; /* rounded-md */
+            font-weight: 600; /* font-semibold */
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        button:hover {
+             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        /* Specific button colors */
+        #clearBtn {
+            background-color: #e5e7eb; /* bg-gray-200 */
+            color: #374151; /* text-gray-700 */
+        }
+        #clearBtn:hover {
+             background-color: #d1d5db; /* hover:bg-gray-300 */
+        }
+         #calculateBtn {
+            background-color: #3b82f6; /* bg-blue-500 */
+            color: white;
+        }
+        #calculateBtn:hover {
+             background-color: #2563eb; /* hover:bg-blue-600 */
+        }
+        /* Styling for the results sections */
+        .result-section {
+             margin-top: 1.5rem; /* mt-6 */
+             padding: 1rem; /* p-4 */
+             border: 1px solid #e5e7eb; /* border-gray-200 */
+             border-radius: 0.5rem; /* rounded-lg */
+             background-color: #f9fafb; /* bg-gray-50 */
+        }
+        .result-section h2 {
+            margin-bottom: 0.75rem; /* mb-3 */
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 600; /* font-semibold */
+            color: #4b5563; /* text-gray-600 */
+        }
+         /* Container for dynamic fraction inputs */
+        #fractionsContainer {
+            display: flex;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            align-items: flex-end; /* Align bottoms of inputs/selectors */
+            justify-content: center;
+            margin-bottom: 1.5rem; /* mb-6 */
+            gap: 0.5rem; /* Add gap between items */
+        }
+        /* Styling for the number of fractions selector */
+        #numFractionsSelect {
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+        }
+        /* Styling for work steps */
+        #workSteps p {
+            margin-bottom: 0.5rem; /* Add space between paragraphs */
+        }
+        #workSteps .text-center {
+             text-align: center;
+             margin-top: 0.25rem;
+             margin-bottom: 0.75rem; /* More space after centered math */
+        }
+         #workSteps strong {
+             font-weight: 600; /* font-semibold */
+         }
+
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white p-6 rounded-lg shadow-xl max-w-3xl w-full">
+        <h1 class="text-2xl font-bold mb-4 text-center text-gray-800">Fraction Calculator</h1>
+
+        <div class="mb-5 flex justify-center items-center space-x-2">
+            <label for="numFractionsSelect" class="text-gray-700 font-medium">How many fractions?</label>
+            <select id="numFractionsSelect" class="bg-white">
+                <option value="2" selected>2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+            </select>
+        </div>
+
+        <div id="fractionsContainer">
+            </div>
+
+        <div class="flex justify-center space-x-4 mb-6">
+            <button id="clearBtn">Clear</button>
+            <button id="calculateBtn">Calculate</button>
+        </div>
+
+        <div id="answerSection" class="result-section hidden">
+             <h2>Answer:</h2>
+             <div id="answerOutput" class="text-center text-2xl font-medium text-gray-800">
+                 </div>
+        </div>
+
+        <div id="workSection" class="result-section hidden">
+            <h2>Showing the Work:</h2>
+            <div id="workSteps" class="text-gray-700 space-y-1 text-sm">
+                </div>
+        </div>
+
+        <div id="errorMsg" class="mt-4 text-red-600 text-center font-medium hidden"></div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const numFractionsSelect = document.getElementById('numFractionsSelect');
+        const fractionsContainer = document.getElementById('fractionsContainer');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const answerSection = document.getElementById('answerSection');
+        const answerOutput = document.getElementById('answerOutput');
+        const workSection = document.getElementById('workSection');
+        const workSteps = document.getElementById('workSteps');
+        const errorMsg = document.getElementById('errorMsg');
+
+        // --- Initial Setup ---
+        generateFractionInputs(parseInt(numFractionsSelect.value)); // Generate initial 2 inputs
+
+        // --- Helper Functions ---
+
+        // Greatest Common Divisor (GCD)
+        function gcd(a, b) {
+            a = Math.abs(a);
+            b = Math.abs(b);
+            while (b) {
+                let t = b;
+                b = a % b;
+                a = t;
+            }
+            return a === 0 ? 1 : a; // Return 1 if gcd is 0 (e.g., gcd(0,0))
+        }
+
+        // Least Common Multiple (LCM) for multiple numbers
+        function findLcmOfArray(arr) {
+            if (!arr || arr.length === 0) return 1;
+            let result = Math.abs(arr[0]);
+            if (result === 0) return 0;
+            for (let i = 1; i < arr.length; i++) {
+                let current = Math.abs(arr[i]);
+                if (current === 0) return 0;
+                // Prevent potential division by zero if gcd is 0 (though gcd function handles this)
+                const currentGcd = gcd(result, current);
+                if (currentGcd === 0) return null; // Should not happen if gcd returns 1 for gcd(0,x)
+                result = (result * current) / currentGcd;
+                 if (!Number.isFinite(result) || result > Number.MAX_SAFE_INTEGER) {
+                    console.error("LCM calculation resulted in non-finite or unsafe number.");
+                    return null; // Indicate error for very large numbers
+                 }
+            }
+            return result;
+        }
+
+        // Format fraction for final display
+        function formatFraction(num, den) {
+            if (den === 1) {
+                return `${num}`;
+            }
+            if (num === 0) {
+                return '0';
+            }
+            // Handle potential floating point issues after division in simplify step
+            num = Math.round(num);
+            den = Math.round(den);
+             // Re-simplify if rounding caused issues (e.g. 2.000../4.000..)
+            const commonDivisor = gcd(num, den);
+            num = num / commonDivisor;
+            den = den / commonDivisor;
+
+             // Ensure denominator is positive *again* after potential re-simplification
+             if (den < 0) {
+                num = -num;
+                den = -den;
+            }
+
+            if (den === 1) return `${num}`; // Check again if it simplified to whole number
+
+            return `<div class="fraction-output">
+                        <span class="num">${num}</span>
+                        <div class="line"></div>
+                        <span class="den">${den}</span>
+                    </div>`;
+        }
+
+         // Format fraction for inline display in steps
+        function formatFractionInline(num, den) {
+             if (den === 1) {
+                return `${num}`;
+            }
+             if (num === 0) {
+                return '0';
+            }
+             // Handle potential floating point issues
+            num = Math.round(num);
+            den = Math.round(den);
+             // Don't simplify here, just display
+            return `<span class="fraction-inline">
+                        <span>${num}</span>
+                        <span class="line-inline"></span>
+                        <span>${den}</span>
+                    </span>`;
+        }
+
+        // Function to generate fraction input fields dynamically
+        function generateFractionInputs(count) {
+            fractionsContainer.innerHTML = ''; // Clear existing inputs
+            for (let i = 0; i < count; i++) {
+                // Add operator selector before the second, third, etc. fraction
+                if (i > 0) {
+                    const operatorSelect = document.createElement('select');
+                    operatorSelect.className = 'operation-selector operator'; // Add 'operator' class
+                    operatorSelect.innerHTML = `
+                        <option value="+" selected>+</option>
+                        <option value="-">-</option>
+                    `;
+                    fractionsContainer.appendChild(operatorSelect);
+                }
+
+                // Create fraction input group
+                const group = document.createElement('div');
+                group.className = 'fraction-input-group'; // Add class for targeting
+                group.innerHTML = `
+                    <input type="number" placeholder="Num" class="fraction-input numerator">
+                    <div class="fraction-line"></div>
+                    <input type="number" placeholder="Den" class="fraction-input denominator">
+                `;
+                fractionsContainer.appendChild(group);
+            }
+        }
+
+        // --- Event Listeners ---
+
+        // Update inputs when number of fractions changes
+        numFractionsSelect.addEventListener('change', (e) => {
+            const count = parseInt(e.target.value);
+            generateFractionInputs(count);
+            clearResults(); // Clear results when structure changes
+        });
+
+        // Calculation logic
+        calculateBtn.addEventListener('click', () => {
+            clearResults(); // Clear previous results and errors first
+
+            const fractionGroups = fractionsContainer.querySelectorAll('.fraction-input-group');
+            const operators = Array.from(fractionsContainer.querySelectorAll('.operator')).map(sel => sel.value);
+            const fractions = [];
+            let isValid = true;
+
+            // --- Read and Validate Inputs ---
+            fractionGroups.forEach((group, index) => {
+                const numInput = group.querySelector('.numerator');
+                const denInput = group.querySelector('.denominator');
+                // Use parseFloat to allow non-integer inputs if needed, but treat as integers for calculation logic
+                const nVal = numInput.value.trim();
+                const dVal = denInput.value.trim();
+                const n = parseInt(nVal);
+                const d = parseInt(dVal);
+
+                if (nVal === '' || dVal === '' || isNaN(n) || isNaN(d)) {
+                    showError(`Please enter valid whole numbers for Fraction ${index + 1}.`);
+                    isValid = false;
+                    return;
+                }
+                 // Optional: Check if input was actually an integer
+                 if (n !== parseFloat(nVal) || d !== parseFloat(dVal)) {
+                     showError(`Please enter whole numbers (no decimals) for Fraction ${index + 1}.`);
+                     isValid = false;
+                     return;
+                 }
+                if (d === 0) {
+                    showError(`Denominator cannot be zero for Fraction ${index + 1}.`);
+                    isValid = false;
+                    return;
+                }
+                fractions.push({ n, d });
+            });
+
+            if (!isValid) return; // Stop calculation if any input is invalid
+
+            // --- Detailed Calculation Steps ---
+            let stepsHtml = '';
+            const denominators = fractions.map(f => f.d);
+            const numFractions = fractions.length;
+
+            // Step 1: Explain and Find LCD
+            stepsHtml += `<p>1. With potentially different denominators (${denominators.join(', ')}), find the Least Common Denominator (LCD).</p>`;
+            const commonDenominator = findLcmOfArray(denominators);
+
+            if (commonDenominator === null) {
+                 showError("Could not calculate LCD (result too large). Please check inputs.");
+                 return;
+             }
+             if (commonDenominator === 0) { // Should be caught by denominator validation, but double check
+                 showError("Cannot calculate with a zero denominator.");
+                 return;
+             }
+            stepsHtml += `<p style="padding-left: 1em;">LCD = <strong>${commonDenominator}</strong></p>`; // Indent LCD result
+
+            // Step 2: Explain & Show Multiplication for Equivalent Fractions
+            stepsHtml += `<p>2. Multiply numerators and denominators to get the LCD (${commonDenominator}) in all fractions:</p>`;
+            let multiplicationStr = '';
+            const equivalentNumerators = [];
+            fractions.forEach((f, i) => {
+                // Ensure factor calculation is safe
+                if (f.d === 0) { // Should already be caught, but defensive check
+                     showError("Internal error: Division by zero denominator detected.");
+                     isValid = false;
+                     return;
+                }
+                const factor = commonDenominator / f.d;
+                 // Check if factor is an integer (it should be if LCM is correct)
+                 if (!Number.isInteger(factor)) {
+                     console.error(`Non-integer factor ${factor} calculated for fraction ${f.n}/${f.d} with LCD ${commonDenominator}`);
+                     showError("Internal calculation error finding equivalent fractions.");
+                     isValid = false;
+                     return;
+                 }
+                const equivN = f.n * factor;
+                equivalentNumerators.push(equivN);
+
+                if (i > 0) {
+                    multiplicationStr += ` ${operators[i-1]} `; // Add operator between fractions
+                }
+                // Show the multiplication step clearly
+                multiplicationStr += `<span class="fraction-inline">
+                                        <span>${f.n}&times;${factor}</span>
+                                        <span class="line-inline"></span>
+                                        <span>${f.d}&times;${factor}</span>
+                                     </span>`;
+            });
+
+             if (!isValid) return; // Stop if error occurred during factor calculation
+
+            stepsHtml += `<p class="text-center">${multiplicationStr}</p>`;
+
+            // Step 3: Show Equivalent Fractions
+            stepsHtml += `<p>3. Rewrite the problem with these equivalent fractions:</p>`;
+            let equivalentFractionsStr = '';
+            equivalentNumerators.forEach((equivN, i) => {
+                 if (i > 0) {
+                    equivalentFractionsStr += ` ${operators[i-1]} `; // Add operator
+                }
+                equivalentFractionsStr += formatFractionInline(equivN, commonDenominator);
+            });
+            stepsHtml += `<p class="text-center">= ${equivalentFractionsStr}</p>`;
+
+
+            // Step 4: Explain & Show Numerator Operation
+            stepsHtml += `<p>4. With common denominators, perform the operation(s) on the numerators:</p>`;
+            let numeratorCalcStr = '';
+            let sumN = 0; // Initialize sumN
+
+            if (equivalentNumerators.length > 0) {
+                sumN = equivalentNumerators[0]; // Start with the first numerator
+                numeratorCalcStr = `${equivalentNumerators[0]}`; // Start building the string representation
+
+                if (numFractions > 1) {
+                    numeratorCalcStr = `( ${equivalentNumerators[0]}`; // Add opening parenthesis if more than one fraction
+                     for (let i = 0; i < operators.length; i++) {
+                         const nextNum = equivalentNumerators[i + 1];
+                         // Append operator and next number to string
+                         numeratorCalcStr += ` ${operators[i]} ${nextNum}`;
+                         // Perform the actual calculation
+                         if (operators[i] === '+') {
+                             sumN += nextNum;
+                         } else { // Subtraction
+                             sumN -= nextNum;
+                         }
+                     }
+                    numeratorCalcStr += ` )`; // Add closing parenthesis
+                }
+                 // Else (only one fraction), numeratorCalcStr and sumN are already correct
+            } else {
+                 // Handle edge case of zero fractions? Should not happen with UI constraints.
+                 showError("No fractions entered.");
+                 return;
+            }
+
+
+            stepsHtml += `<p class="text-center">= <span class="fraction-inline">
+                                        <span>${numeratorCalcStr}</span>
+                                        <span class="line-inline"></span>
+                                        <span>${commonDenominator}</span>
+                                     </span></p>`;
+
+            // Step 5: Show Result Before Simplification
+             stepsHtml += `<p class="text-center">= ${formatFractionInline(sumN, commonDenominator)}</p>`;
+
+
+            // Step 6: Simplify Result (if needed)
+            const commonDivisor = gcd(sumN, commonDenominator);
+            let finalN = sumN / commonDivisor;
+            let finalD = commonDenominator / commonDivisor;
+
+            // Ensure denominator is positive (important!)
+             if (finalD < 0) {
+                finalN = -finalN;
+                finalD = -finalD;
+            }
+
+             // Check if simplification actually changed the fraction (ignoring sign)
+            const simplified = Math.abs(commonDivisor) !== 1;
+
+            if (simplified) {
+                stepsHtml += `<p>5. Simplify the result by dividing numerator and denominator by their Greatest Common Divisor (GCD = ${Math.abs(commonDivisor)}):</p>`;
+                stepsHtml += `<p class="text-center">= ${formatFractionInline(finalN, finalD)}</p>`;
+            } else {
+                 stepsHtml += `<p>5. Result is already in simplest form.</p>`;
+            }
+
+            // --- Display Final Answer ---
+            answerOutput.innerHTML = `= ${formatFraction(finalN, finalD)}`; // Use the robust formatting function
+            workSteps.innerHTML = stepsHtml;
+
+            answerSection.classList.remove('hidden');
+            workSection.classList.remove('hidden');
+        });
+
+        // Clear button logic
+        clearBtn.addEventListener('click', () => {
+            const fractionGroups = fractionsContainer.querySelectorAll('.fraction-input-group');
+            fractionGroups.forEach(group => {
+                group.querySelector('.numerator').value = '';
+                group.querySelector('.denominator').value = '';
+            });
+            fractionsContainer.querySelectorAll('.operator').forEach(sel => sel.value = '+');
+            // numFractionsSelect.value = '2'; // Optionally reset dropdown
+            // generateFractionInputs(2); // Optionally regenerate inputs
+             clearResults();
+        });
+
+        // Function to clear results and error messages
+        function clearResults() {
+            answerOutput.innerHTML = '';
+            workSteps.innerHTML = '';
+            errorMsg.textContent = '';
+            errorMsg.classList.add('hidden');
+            answerSection.classList.add('hidden');
+            workSection.classList.add('hidden');
+        }
+
+        // Function to display error messages
+        function showError(message) {
+             errorMsg.textContent = message;
+             errorMsg.classList.remove('hidden');
+             answerSection.classList.add('hidden');
+             workSection.classList.add('hidden');
+        }
+
+    </script>
+</body>
+</html>

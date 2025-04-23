@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mulch Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Basic styling */
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; padding: 1rem; }
+        .disclaimer { max-width: 600px; margin: 1rem auto; text-align: center; color: #4b5563; font-size: 0.9rem; }
+        .calculator-container { max-width: 600px; margin: 1rem auto 2rem auto; padding: 2rem; background-color: white; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+        .input-group label, .dimension-label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151; }
+        .input-field, .select-field { width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.375rem; box-sizing: border-box; }
+        .input-field:focus, .select-field:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); }
+        .input-field:disabled { background-color: #e5e7eb; cursor: not-allowed; }
+        .radio-group label { margin-right: 1rem; cursor: pointer; }
+        .btn { padding: 0.75rem 1.5rem; border-radius: 0.375rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s ease; text-align: center; }
+        .btn-primary { background-color: #166534; color: white; border: none; }
+        .btn-primary:hover { background-color: #15803d; }
+        .btn-secondary { background-color: #d1d5db; color: #374151; border: none; }
+        .btn-secondary:hover { background-color: #9ca3af; }
+        .btn-link { background: none; border: none; color: #3b82f6; text-decoration: underline; cursor: pointer; padding: 0.25rem 0; font-weight: 500; }
+        .btn-link:hover { color: #1d4ed8; }
+        .btn-remove { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.9rem; padding: 0.5rem; line-height: 1; }
+        .btn-remove:hover { color: #b91c1c; }
+        .results-box { margin-top: 1.5rem; padding: 1rem; background-color: #e5e7eb; border-radius: 0.375rem; border: 1px solid #d1d5db; }
+        .results-box p { margin-bottom: 0.5rem; font-size: 1.1rem; }
+        /* Style for secondary result units / area */
+        .secondary-result { font-size: 0.9rem; color: #4b5563; /* Gray-600 */ }
+        .dimension-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+        .dimension-row .input-field { flex-grow: 1; }
+        .custom-input-group { display: flex; align-items: center; gap: 0.5rem; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<p class="disclaimer">
+    The following calculator helps estimate the amount of mulch needed to cover an area such as a garden based on the necessary depth of the mulch layer. It also estimates the cost of the mulch.
+</p>
+
+<div class="calculator-container">
+    <h1 class="text-2xl font-bold mb-6 text-center text-gray-800">Mulch Calculator</h1>
+
+    <div class="mb-4 input-group">
+        <label class="font-semibold text-gray-700">Area to Cover:</label>
+        <div class="flex items-center mt-2 radio-group">
+            <input type="radio" id="useTotalArea" name="areaType" value="totalArea" checked class="mr-2 accent-green-700">
+            <label for="useTotalArea" class="text-gray-700">Use Total Area</label>
+            <input type="radio" id="useDimensions" name="areaType" value="dimensions" class="ml-4 mr-2 accent-green-700">
+            <label for="useDimensions" class="text-gray-700">Use Dimensions</label>
+        </div>
+    </div>
+
+    <div id="totalAreaSection" class="mb-4 input-group">
+        <label for="totalArea" class="font-semibold text-gray-700">Total Area:</label>
+        <div class="flex items-center space-x-2">
+            <input type="number" id="totalArea" class="input-field flex-grow" placeholder="e.g., 200" step="any" min="0">
+            <select id="totalAreaUnit" class="select-field w-auto">
+                <option value="sq_meters">square meters</option>
+                <option value="sq_feet">square feet</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="dimensionsSection" class="mb-4 hidden">
+         <div class="grid grid-cols-2 gap-2 mb-1 px-1">
+             <label class="dimension-label text-sm">Length</label>
+             <label class="dimension-label text-sm">Width</label>
+         </div>
+         <div id="dimensionRowsContainer" class="mb-2">
+             <div class="dimension-row">
+                 <input type="number" class="input-field length-input" placeholder="Length" step="any" min="0">
+                 <input type="number" class="input-field width-input" placeholder="Width" step="any" min="0">
+                 <button type="button" class="btn-remove remove-area-btn" title="Remove Area" disabled>&times;</button>
+             </div>
+         </div>
+         <button type="button" id="addAreaBtn" class="btn-link text-sm">+ Add Area</button>
+         <div class="input-group mt-3">
+             <label for="dimensionUnit" class="font-semibold text-gray-700">Units for Dimensions:</label>
+             <select id="dimensionUnit" class="select-field w-full">
+                <option value="meters">meters</option>
+                <option value="feet">feet</option>
+            </select>
+         </div>
+    </div>
+
+    <div class="mb-4 input-group">
+        <label for="depth" class="font-semibold text-gray-700">Mulch Layer Depth:</label>
+        <div class="flex items-center space-x-2">
+            <input type="number" id="depth" class="input-field flex-grow" placeholder="e.g., 5" step="any" min="0">
+            <select id="depthUnit" class="select-field w-auto">
+                <option value="cm">cm</option>
+                <option value="inches">inches</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="mb-4 input-group">
+        <label for="price" class="font-semibold text-gray-700">Price (optional):</label>
+        <div class="flex items-center space-x-2">
+            <span class="text-gray-500 text-lg">$</span>
+            <input type="number" id="price" class="input-field flex-grow" placeholder="e.g., 5 or 35" step="any" min="0">
+            <select id="priceUnit" class="select-field w-auto">
+                <option value="cubic_meters">per cubic meter</option>
+                <option value="cubic_yards">per cubic yard</option>
+                <option value="cubic_feet">per cubic foot</option>
+                <option value="per_bag">per bag</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="bagSizeSection" class="mb-6 input-group hidden">
+        <label for="bagSizeTypeSelect" class="font-semibold text-gray-700">Bag Size:</label>
+        <select id="bagSizeTypeSelect" class="select-field mb-2">
+            <option value="2_cu_ft">2 cubic feet</option>
+            <option value="1.5_cu_ft">1.5 cubic feet</option>
+            <option value="0.8_cu_ft">0.8 cubic feet</option>
+            <option value="custom">Custom Size</option>
+        </select>
+        <div id="customBagInputGroup" class="custom-input-group hidden">
+            <input type="number" id="bagSize" class="input-field flex-grow" placeholder="Enter size" step="any" min="0">
+            <select id="customBagSizeUnit" class="select-field w-auto">
+                <option value="cubic_feet">cubic feet</option>
+                <option value="cubic_meters">cubic meters</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="flex justify-center space-x-4">
+        <button id="calculateBtn" class="btn btn-primary">Calculate</button>
+        <button id="clearBtn" class="btn btn-secondary">Clear</button>
+    </div>
+
+    <div id="results" class="results-box hidden">
+        <h2 class="text-xl font-semibold mb-3 text-gray-800">Results:</h2>
+        <p id="totalAreaResult" class="secondary-result hidden"></p> <p id="mulchNeededPrimary" class="font-medium mt-1"></p> <p id="mulchNeededFt3" class="secondary-result hidden"></p>
+        <p id="mulchNeededM3" class="secondary-result hidden"></p>
+        <p id="mulchNeededYd3" class="secondary-result hidden"></p>
+        <p id="bagsNeeded" class="mt-2 hidden"></p>
+        <p id="totalCost" class="mt-2"></p>
+    </div>
+     <div id="messageBox" class="mt-4 p-3 text-center rounded-md hidden"></div>
+
+</div>
+
+<script>
+    // --- DOM Elements ---
+    const useTotalAreaRadio = document.getElementById('useTotalArea');
+    const useDimensionsRadio = document.getElementById('useDimensions');
+    const totalAreaSection = document.getElementById('totalAreaSection');
+    const dimensionsSection = document.getElementById('dimensionsSection');
+    const dimensionRowsContainer = document.getElementById('dimensionRowsContainer');
+    const addAreaBtn = document.getElementById('addAreaBtn');
+    const dimensionUnitSelect = document.getElementById('dimensionUnit');
+    const totalAreaInput = document.getElementById('totalArea');
+    const totalAreaUnitSelect = document.getElementById('totalAreaUnit');
+    const depthInput = document.getElementById('depth');
+    const depthUnitSelect = document.getElementById('depthUnit');
+    const priceInput = document.getElementById('price');
+    const priceUnitSelect = document.getElementById('priceUnit');
+    const bagSizeSection = document.getElementById('bagSizeSection');
+    const bagSizeTypeSelect = document.getElementById('bagSizeTypeSelect');
+    const customBagInputGroup = document.getElementById('customBagInputGroup');
+    const bagSizeInput = document.getElementById('bagSize');
+    const customBagSizeUnit = document.getElementById('customBagSizeUnit');
+    const calculateBtn = document.getElementById('calculateBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const resultsDiv = document.getElementById('results');
+    // Result paragraphs
+    const totalAreaResultP = document.getElementById('totalAreaResult'); // New paragraph for area
+    const mulchNeededPrimaryP = document.getElementById('mulchNeededPrimary');
+    const mulchNeededFt3P = document.getElementById('mulchNeededFt3');
+    const mulchNeededM3P = document.getElementById('mulchNeededM3');
+    const mulchNeededYd3P = document.getElementById('mulchNeededYd3');
+    const bagsNeededP = document.getElementById('bagsNeeded');
+    const totalCostP = document.getElementById('totalCost');
+    const messageBox = document.getElementById('messageBox');
+
+    // --- Constants for Conversions ---
+    const SQMETERS_TO_SQFEET = 10.7639;
+    const SQFEET_TO_SQMETERS = 1 / SQMETERS_TO_SQFEET;
+    // const METERS_TO_FEET = 3.28084; // Not directly needed now
+    // const FEET_TO_METERS = 1 / METERS_TO_FEET; // Not directly needed now
+    const CM_TO_METERS = 0.01;
+    const CUBICMETERS_TO_CUBICYARDS = 1.30795;
+    // const CUBICYARDS_TO_CUBICMETERS = 1 / CUBICMETERS_TO_CUBICYARDS; // Not directly needed now
+    const INCHES_TO_METERS = 0.0254;
+    const CUBICMETERS_TO_CUBICFEET = 35.3147;
+    const CUBICFEET_TO_CUBICMETERS = 1 / CUBICMETERS_TO_CUBICFEET;
+
+    // --- Event Listeners ---
+    useTotalAreaRadio.addEventListener('change', toggleInputSections);
+    useDimensionsRadio.addEventListener('change', toggleInputSections);
+    priceUnitSelect.addEventListener('change', toggleBagSizeSection);
+    bagSizeTypeSelect.addEventListener('change', toggleCustomBagInput);
+    calculateBtn.addEventListener('click', calculateMulch);
+    clearBtn.addEventListener('click', clearForm);
+    addAreaBtn.addEventListener('click', addDimensionRow);
+    dimensionRowsContainer.addEventListener('click', function(event) {
+        if (event.target.classList.contains('remove-area-btn')) {
+            removeDimensionRow(event.target);
+        }
+    });
+
+
+    // --- Functions ---
+
+    function addDimensionRow() {
+        const rows = dimensionRowsContainer.querySelectorAll('.dimension-row');
+        const newRow = rows[0].cloneNode(true);
+        newRow.querySelector('.length-input').value = '';
+        newRow.querySelector('.width-input').value = '';
+        newRow.querySelector('.remove-area-btn').disabled = false;
+        dimensionRowsContainer.appendChild(newRow);
+        updateRemoveButtonStates();
+    }
+
+    function removeDimensionRow(button) {
+        if (dimensionRowsContainer.querySelectorAll('.dimension-row').length > 1) {
+             button.closest('.dimension-row').remove();
+             updateRemoveButtonStates();
+        }
+    }
+
+    function updateRemoveButtonStates() {
+        const rows = dimensionRowsContainer.querySelectorAll('.dimension-row');
+        rows.forEach((row) => {
+            const removeBtn = row.querySelector('.remove-area-btn');
+            if (removeBtn) removeBtn.disabled = (rows.length === 1);
+        });
+    }
+
+    function toggleInputSections() {
+        clearResults();
+        if (useTotalAreaRadio.checked) {
+            totalAreaSection.classList.remove('hidden');
+            dimensionsSection.classList.add('hidden');
+        } else {
+            totalAreaSection.classList.add('hidden');
+            dimensionsSection.classList.remove('hidden');
+             const currentTotalAreaUnit = totalAreaUnitSelect.value;
+             dimensionUnitSelect.value = (currentTotalAreaUnit === 'sq_feet') ? 'feet' : 'meters';
+        }
+    }
+
+    function toggleBagSizeSection() {
+        if (priceUnitSelect.value === 'per_bag') {
+            bagSizeSection.classList.remove('hidden');
+            toggleCustomBagInput();
+        } else {
+            bagSizeSection.classList.add('hidden');
+        }
+    }
+
+    function toggleCustomBagInput() {
+        if (bagSizeTypeSelect.value === 'custom') {
+            customBagInputGroup.classList.remove('hidden');
+            bagSizeInput.disabled = false;
+            customBagSizeUnit.disabled = false;
+        } else {
+            customBagInputGroup.classList.add('hidden');
+            bagSizeInput.disabled = true;
+            customBagSizeUnit.disabled = true;
+            bagSizeInput.value = '';
+        }
+    }
+
+    function showMessage(message, type = 'error') {
+        messageBox.textContent = message;
+        messageBox.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-blue-100', 'text-blue-700');
+        messageBox.classList.add(type === 'error' ? 'bg-red-100' : 'bg-blue-100', type === 'error' ? 'text-red-700' : 'text-blue-700');
+        messageBox.classList.remove('hidden');
+        setTimeout(() => messageBox.classList.add('hidden'), 5000);
+    }
+
+    function formatVolume(volume) { // Keep for volume formatting
+        if (volume < 0.1 && volume > 0) return volume.toFixed(3);
+        if (volume < 10) return volume.toFixed(2);
+        return volume.toFixed(1);
+    }
+
+     function formatArea(area) { // New helper for area formatting
+        return area.toFixed(1); // Simple formatting for area
+    }
+
+    // Main calculation function
+    function calculateMulch() {
+        hideMessage();
+        clearResults();
+        bagsNeededP.classList.add('hidden');
+
+        let areaInSqMeters = 0;
+        let areaInSqFeet = 0; // Variable to store area in sq feet
+        let inputAreaUnit = ''; // 'sq_feet' or 'sq_meters'
+
+        try {
+            // --- 1. Determine Area (convert to Square Meters AND Square Feet) ---
+            if (useTotalAreaRadio.checked) {
+                const totalAreaValue = parseFloat(totalAreaInput.value);
+                inputAreaUnit = totalAreaUnitSelect.value;
+                if (isNaN(totalAreaValue) || totalAreaValue <= 0) throw new Error('Please enter a valid positive number for Total Area.');
+                // Calculate both metric and imperial area
+                if (inputAreaUnit === 'sq_feet') {
+                    areaInSqFeet = totalAreaValue;
+                    areaInSqMeters = totalAreaValue * SQFEET_TO_SQMETERS;
+                } else { // sq_meters
+                    areaInSqMeters = totalAreaValue;
+                    areaInSqFeet = totalAreaValue * SQMETERS_TO_SQFEET;
+                }
+            } else { // Calculate from dimensions
+                let totalAreaFromDimensions = 0;
+                const dimUnit = dimensionUnitSelect.value; // 'feet' or 'meters'
+                inputAreaUnit = (dimUnit === 'feet') ? 'sq_feet' : 'sq_meters';
+                const rows = dimensionRowsContainer.querySelectorAll('.dimension-row');
+                let validRowFound = false;
+                rows.forEach((row, index) => {
+                    const lInput = row.querySelector('.length-input');
+                    const wInput = row.querySelector('.width-input');
+                    const lVal = parseFloat(lInput.value);
+                    const wVal = parseFloat(wInput.value);
+                    if (!lInput.value && !wInput.value) return;
+                    if (isNaN(lVal) || lVal <= 0 || isNaN(wVal) || wVal <= 0) {
+                        if (lInput.value || wInput.value) throw new Error(`Invalid input in area row ${index + 1}.`);
+                        return;
+                    }
+                    totalAreaFromDimensions += lVal * wVal; // Area in original dimension unit (sq ft or sq m)
+                    validRowFound = true;
+                });
+                if (!validRowFound && rows.length > 0) throw new Error('Please enter valid dimensions for at least one area row.');
+                if (totalAreaFromDimensions <= 0 && validRowFound) throw new Error('Total calculated area from dimensions is zero or less.');
+
+                // Calculate both metric and imperial area based on dimension unit
+                if (dimUnit === 'feet') {
+                    areaInSqFeet = totalAreaFromDimensions;
+                    areaInSqMeters = totalAreaFromDimensions * SQFEET_TO_SQMETERS;
+                } else { // meters
+                    areaInSqMeters = totalAreaFromDimensions;
+                    areaInSqFeet = totalAreaFromDimensions * SQMETERS_TO_SQFEET;
+                }
+            }
+            if (areaInSqMeters <= 0 || areaInSqFeet <= 0) throw new Error('Calculated area is zero or negative.');
+
+            // --- 2. Get Depth (convert to Meters) ---
+            const depthValue = parseFloat(depthInput.value);
+            if (isNaN(depthValue) || depthValue <= 0) throw new Error('Please enter a valid positive number for Mulch Depth.');
+            const depthInMeters = (depthUnitSelect.value === 'inches') ? depthValue * INCHES_TO_METERS : depthValue * CM_TO_METERS;
+
+            // --- 3. Calculate Volume ---
+            const volumeInCubicMeters = areaInSqMeters * depthInMeters;
+            if (volumeInCubicMeters <= 0) throw new Error('Calculated volume is zero. Check Area and Depth.');
+            const volumeInCubicYards = volumeInCubicMeters * CUBICMETERS_TO_CUBICYARDS;
+            const volumeInCubicFeet = volumeInCubicMeters * CUBICMETERS_TO_CUBICFEET;
+
+            // --- 4. Handle Price and Cost Calculation ---
+            const priceValue = parseFloat(priceInput.value);
+            const priceUnit = priceUnitSelect.value;
+            let cost = 0;
+            let costString = "N/A (Price not provided)";
+            let numberOfBags = 0;
+
+            if (!isNaN(priceValue) && priceValue > 0) {
+                if (priceUnit === 'per_bag') {
+                    const bagType = bagSizeTypeSelect.value;
+                    let bagSizeInCubicMeters = 0;
+                    if (bagType === 'custom') {
+                        const customSizeValue = parseFloat(bagSizeInput.value);
+                        if (isNaN(customSizeValue) || customSizeValue <= 0) throw new Error('Please enter a valid positive Custom Bag Size.');
+                        bagSizeInCubicMeters = (customBagSizeUnit.value === 'cubic_feet') ? customSizeValue * CUBICFEET_TO_CUBICMETERS : customSizeValue;
+                    } else {
+                        const parts = bagType.split('_');
+                        const specificSizeValue = parseFloat(parts[0]);
+                        if (isNaN(specificSizeValue) || specificSizeValue <= 0) throw new Error('Invalid predefined bag size.');
+                        bagSizeInCubicMeters = specificSizeValue * CUBICFEET_TO_CUBICMETERS;
+                    }
+                    if (bagSizeInCubicMeters <= 0) throw new Error('Bag size volume must be greater than zero.');
+                    numberOfBags = Math.ceil(volumeInCubicMeters / bagSizeInCubicMeters);
+                    cost = numberOfBags * priceValue;
+                    costString = `$${cost.toFixed(2)}`;
+                    bagsNeededP.textContent = `Estimated Bags Needed: ${numberOfBags}`;
+                    bagsNeededP.classList.remove('hidden');
+                } else if (priceUnit === 'cubic_yards') { cost = volumeInCubicYards * priceValue; costString = `$${cost.toFixed(2)}`; }
+                  else if (priceUnit === 'cubic_feet') { cost = volumeInCubicFeet * priceValue; costString = `$${cost.toFixed(2)}`; }
+                  else { cost = volumeInCubicMeters * priceValue; costString = `$${cost.toFixed(2)}`; }
+            } else if (priceInput.value.trim() !== '' && (isNaN(priceValue) || priceValue <= 0)) {
+                 showMessage('Price entered is invalid. Cost calculation skipped.', 'info');
+            }
+
+            // --- 5. Display Results ---
+            // Display Total Area
+            totalAreaResultP.textContent = `Total Calculated Area: ${formatArea(areaInSqFeet)} square feet`;
+            totalAreaResultP.classList.remove('hidden');
+
+            // Display Volume
+            let primaryVolume, primaryUnit, secondaryVolume, secondaryUnit;
+            if (inputAreaUnit === 'sq_feet') { // Imperial input -> Yards primary
+                primaryVolume = volumeInCubicYards; primaryUnit = 'cubic yards';
+                secondaryVolume = volumeInCubicMeters; secondaryUnit = 'cubic meters';
+                mulchNeededM3P.textContent = `(${formatVolume(secondaryVolume)} ${secondaryUnit})`;
+                mulchNeededM3P.classList.remove('hidden');
+                mulchNeededYd3P.classList.add('hidden');
+            } else { // Metric input -> Meters primary
+                primaryVolume = volumeInCubicMeters; primaryUnit = 'cubic meters';
+                secondaryVolume = volumeInCubicYards; secondaryUnit = 'cubic yards';
+                mulchNeededYd3P.textContent = `(${formatVolume(secondaryVolume)} ${secondaryUnit})`;
+                mulchNeededYd3P.classList.remove('hidden');
+                mulchNeededM3P.classList.add('hidden');
+            }
+            mulchNeededPrimaryP.textContent = `Total Mulch Needed: ${formatVolume(primaryVolume)} ${primaryUnit}`;
+            mulchNeededFt3P.textContent = `(${formatVolume(volumeInCubicFeet)} cubic feet)`;
+            mulchNeededFt3P.classList.remove('hidden');
+
+            // Display Cost
+            totalCostP.textContent = `Estimated Cost: ${costString}`;
+            resultsDiv.classList.remove('hidden');
+
+        } catch (error) {
+            showMessage(error.message);
+            clearResults();
+        }
+    }
+
+    function clearResults() {
+        resultsDiv.classList.add('hidden');
+        // Clear all result paragraphs
+        totalAreaResultP.textContent = ''; // Clear area result
+        mulchNeededPrimaryP.textContent = '';
+        mulchNeededFt3P.textContent = '';
+        mulchNeededM3P.textContent = '';
+        mulchNeededYd3P.textContent = '';
+        bagsNeededP.textContent = '';
+        totalCostP.textContent = '';
+        // Hide secondary/optional paragraphs
+        totalAreaResultP.classList.add('hidden'); // Hide area result
+        mulchNeededFt3P.classList.add('hidden');
+        mulchNeededM3P.classList.add('hidden');
+        mulchNeededYd3P.classList.add('hidden');
+        bagsNeededP.classList.add('hidden');
+    }
+
+    function hideMessage() {
+        messageBox.classList.add('hidden');
+        messageBox.textContent = '';
+    }
+
+    function clearForm() {
+        // Clear inputs
+        totalAreaInput.value = '';
+        depthInput.value = '';
+        priceInput.value = '';
+        bagSizeInput.value = '';
+        const rows = dimensionRowsContainer.querySelectorAll('.dimension-row');
+        rows.forEach((row, index) => {
+            if (index === 0) {
+                 row.querySelector('.length-input').value = '';
+                 row.querySelector('.width-input').value = '';
+            } else { row.remove(); }
+        });
+        updateRemoveButtonStates();
+
+        // Reset selects
+        totalAreaUnitSelect.value = 'sq_meters';
+        dimensionUnitSelect.value = 'meters';
+        depthUnitSelect.value = 'cm';
+        priceUnitSelect.value = 'cubic_meters';
+        bagSizeTypeSelect.value = '2_cu_ft';
+        customBagSizeUnit.value = 'cubic_feet';
+
+        // Reset radio/visibility
+        useTotalAreaRadio.checked = true;
+        toggleInputSections();
+        toggleBagSizeSection();
+        toggleCustomBagInput();
+
+        clearResults();
+        hideMessage();
+    }
+
+    // --- Initial Setup ---
+    toggleInputSections();
+    toggleBagSizeSection();
+    toggleCustomBagInput();
+    updateRemoveButtonStates();
+
+</script>
+
+</body>
+</html>

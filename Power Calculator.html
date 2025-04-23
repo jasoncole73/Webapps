@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Basic styling and font */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom focus styles - standard blue theme */
+        input[type="number"]:focus,
+        select:focus {
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+            --tw-ring-inset: var(--tw-empty,/*!*/ /*!*/);
+            --tw-ring-offset-width: 0px;
+            --tw-ring-offset-color: #fff;
+            --tw-ring-color: #60a5fa; /* blue-400 */
+            --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+            --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+            box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+            border-color: #60a5fa; /* blue-400 */
+        }
+        /* Style selects - slightly softer arrow */
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); /* gray-400 arrow */
+            background-position: right 0.75rem center; /* Adjusted position */
+            background-repeat: no-repeat;
+            background-size: 1.25em 1.25em; /* Slightly smaller arrow */
+            padding-right: 3rem; /* Ensure space */
+        }
+        /* Enhance button transition */
+        #convertButton {
+            transition: all 0.2s ease-in-out; /* Smoother transition for hover/focus */
+        }
+         #convertButton:hover {
+             transform: translateY(-1px); /* Subtle lift on hover */
+             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Enhanced shadow on hover */
+         }
+          #convertButton:active {
+              transform: translateY(0px); /* Press down effect */
+              box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+          }
+         /* Style for individual result lines (used when showing all HP) */
+         .result-line {
+             margin-bottom: 0.75rem; /* space between HP results */
+             line-height: 1.4;
+         }
+         .result-line:last-child {
+              margin-bottom: 0; /* Remove margin from last item */
+         }
+         .result-line strong {
+             display: block; /* Ensure name is on its own line */
+             margin-bottom: 0.1rem;
+         }
+         /* Ensure single result is centered */
+         #resultDisplay.single-result {
+             text-align: center;
+             justify-content: center; /* Center content vertically */
+             flex-direction: row; /* Override column direction if set */
+         }
+          #resultDisplay.multi-result {
+             text-align: left;
+             justify-content: flex-start; /* Align content top */
+             flex-direction: column; /* Ensure column layout for multi */
+         }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-sky-100 to-blue-100 flex items-center justify-center min-h-screen p-4 antialiased">
+
+    <div class="bg-white p-7 md:p-10 rounded-2xl shadow-lg w-full max-w-lg backdrop-blur-sm bg-opacity-95">
+        <h1 class="text-3xl font-bold mb-10 text-center text-blue-800">Power Converter</h1>
+
+        <div class="space-y-6">
+            <div>
+                <label for="fromUnitSelect" class="block text-sm font-medium text-gray-600 mb-1.5">Convert From:</label>
+                <select id="fromUnitSelect" name="fromUnit" class="mt-1 block w-full pl-4 pr-12 py-3 text-base border border-gray-200 bg-gray-50 rounded-lg shadow-sm focus:outline-none sm:text-sm appearance-none">
+                    </select>
+            </div>
+
+             <div>
+                <label for="toUnitSelect" class="block text-sm font-medium text-gray-600 mb-1.5">Convert To:</label>
+                <select id="toUnitSelect" name="toUnit" class="mt-1 block w-full pl-4 pr-12 py-3 text-base border border-gray-200 bg-gray-50 rounded-lg shadow-sm focus:outline-none sm:text-sm appearance-none">
+                    </select>
+            </div>
+
+            <div>
+                <label for="valueInput" class="block text-sm font-medium text-gray-600 mb-1.5">Value:</label>
+                <input type="number" id="valueInput" name="valueInput" step="any" class="mt-1 block w-full px-4 py-3 border border-gray-200 bg-gray-50 rounded-lg shadow-sm focus:outline-none sm:text-sm" placeholder="Enter value">
+            </div>
+
+            <div>
+                <button id="convertButton" class="w-full mt-3 flex justify-center py-3.5 px-4 border border-transparent rounded-lg shadow-md text-base font-semibold text-white bg-gradient-to-r from-blue-500 to-sky-500 hover:from-blue-600 hover:to-sky-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    CONVERT
+                </button>
+            </div>
+        </div>
+
+        <div class="mt-10">
+             <h2 id="resultTitle" class="text-lg font-semibold mb-3 text-blue-700">Result:</h2> <div id="resultDisplay" class="p-5 bg-gradient-to-r from-sky-50 to-blue-50 border border-blue-100 rounded-lg text-center min-h-[100px] flex items-center justify-center shadow-inner"> <span class="text-gray-500 italic">Result will appear here after conversion.</span>
+             </div>
+        </div>
+
+
+         <div id="errorBox" class="hidden mt-6 p-3 bg-red-100 border border-red-200 text-red-700 rounded-lg text-sm font-medium text-center shadow-sm">
+             </div>
+
+         <p class="mt-8 text-xs text-gray-500 text-center">
+             Disclaimer: While these calculations use highly precise conversion factors, results may differ slightly from other converters due to variations in rounding or the specific definitions used.
+         </p>
+
+    </div>
+
+    <script>
+        // --- Conversion Factors (relative to Watts) ---
+        const conversionFactors = {
+            'microwatt': 1e-6,
+            'milliwatt': 1e-3,
+            'watt': 1,
+            'kilowatt': 1e3,
+            'megawatt': 1e6,
+            'gigawatt': 1e9,
+            'horsepower_mechanical': 745.699872,
+            'horsepower_metric': 735.49875,
+            'horsepower_electric': 746,
+            'horsepower_boiler': 9809.5,
+            'btu_per_hour': 0.29307107,
+            'foot_pound_per_second': 1.35581795,
+            'kilocalorie_per_hour': 1.163
+        };
+
+        // --- Unit Definitions (Full list - used for results logic) ---
+        const units = {
+            'microwatt': 'Microwatts (µW)',
+            'milliwatt': 'Milliwatts (mW)',
+            'watt': 'Watts (W)',
+            'kilowatt': 'Kilowatts (kW)',
+            'megawatt': 'Megawatts (MW)',
+            'gigawatt': 'Gigawatts (GW)',
+            'horsepower_mechanical': 'Horsepower - Mechanical (hp(I))',
+            'horsepower_metric': 'Horsepower - Metric (hp(M))',
+            'horsepower_electric': 'Horsepower - Electric (hp(E))',
+            'horsepower_boiler': 'Horsepower - Boiler (hp(S))',
+            'btu_per_hour': 'BTU/hour (BTU/h)',
+            'foot_pound_per_second': 'Foot-pound/second (ft⋅lb/s)',
+            'kilocalorie_per_hour': 'Kilocalorie/hour (kcal/h)'
+        };
+
+         // --- List of Horsepower unit keys (Used for conditional result logic) ---
+         const hpUnitKeys = [
+            'horsepower_mechanical',
+            'horsepower_metric',
+            'horsepower_electric',
+            'horsepower_boiler'
+        ];
+
+        // --- List of units to EXCLUDE from dropdowns ---
+        const unitsToExclude = [
+            'horsepower_metric',
+            'horsepower_electric',
+            'horsepower_boiler'
+        ];
+
+
+        // --- DOM Elements ---
+        const fromUnitSelect = document.getElementById('fromUnitSelect');
+        const toUnitSelect = document.getElementById('toUnitSelect');
+        const valueInput = document.getElementById('valueInput');
+        const convertButton = document.getElementById('convertButton');
+        const resultTitle = document.getElementById('resultTitle');
+        const resultDisplay = document.getElementById('resultDisplay');
+        const errorBox = document.getElementById('errorBox');
+
+        // --- Populate Dropdowns (Excluding specified units and modifying HP text) ---
+        function populateDropdowns() {
+            fromUnitSelect.innerHTML = '';
+            toUnitSelect.innerHTML = '';
+
+            // Iterate over all defined units
+            for (const key in units) {
+                // Check if the current unit should be excluded
+                if (!unitsToExclude.includes(key)) {
+                    // Create option for 'From' dropdown
+                    const fromOption = document.createElement('option');
+                    fromOption.value = key;
+                    // --- MODIFICATION START ---
+                    // Set display text: Use "Horsepower" for mechanical HP, otherwise use the default text
+                    if (key === 'horsepower_mechanical') {
+                        fromOption.textContent = 'Horsepower';
+                    } else {
+                        fromOption.textContent = units[key];
+                    }
+                    // --- MODIFICATION END ---
+                    fromUnitSelect.appendChild(fromOption);
+
+                    // Create option for 'To' dropdown
+                    const toOption = document.createElement('option');
+                    toOption.value = key;
+                     // --- MODIFICATION START ---
+                    // Set display text: Use "Horsepower" for mechanical HP, otherwise use the default text
+                    if (key === 'horsepower_mechanical') {
+                        toOption.textContent = 'Horsepower';
+                    } else {
+                        toOption.textContent = units[key];
+                    }
+                    // --- MODIFICATION END ---
+                    toUnitSelect.appendChild(toOption);
+                }
+            }
+
+            // Set default selections (ensure they are not excluded)
+            fromUnitSelect.value = 'watt'; // 'watt' is not excluded
+            toUnitSelect.value = 'horsepower_mechanical'; // 'horsepower_mechanical' is not excluded
+        }
+
+        // --- Conversion Logic (Triggered by Button) ---
+        // This function remains unchanged as the underlying value 'horsepower_mechanical' is still used
+        function convertPower() {
+            const fromUnit = fromUnitSelect.value;
+            const toUnit = toUnitSelect.value;
+            const valueStr = valueInput.value.trim();
+
+            errorBox.classList.add('hidden');
+            resultDisplay.innerHTML = `<span class="text-gray-500 italic text-center">Calculating...</span>`;
+            resultDisplay.classList.remove('single-result', 'multi-result');
+            resultTitle.textContent = "Result:";
+
+
+             if (valueStr === '' || isNaN(valueStr)) {
+                errorBox.textContent = 'Please enter a valid number in the Value field.';
+                errorBox.classList.remove('hidden');
+                resultDisplay.innerHTML = `<span class="text-gray-500 italic text-center">Result will appear here after conversion.</span>`;
+                valueInput.focus();
+                return;
+            }
+
+            const value = parseFloat(valueStr);
+            const factorFrom = conversionFactors[fromUnit];
+            const valueInWatts = value * factorFrom;
+            const formattedInput = formatNumber(value);
+            // Extract symbol for 'From' unit (including parentheses if defined)
+            const fromUnitMatch = units[fromUnit].match(/\((.*?)\)/);
+            const fromUnitShort = fromUnitMatch ? fromUnitMatch[1] : fromUnit;
+
+            // --- Conditional Result Display ---
+            // Check if the selected 'toUnit' is ANY of the horsepower types (even those not in dropdown)
+            if (hpUnitKeys.includes(toUnit)) {
+                // --- Display ALL Horsepower Equivalents ---
+                resultTitle.textContent = "Horsepower Equivalents:";
+                resultDisplay.classList.add('multi-result');
+
+                let resultsHTML = '';
+                hpUnitKeys.forEach(hpKey => {
+                    const factorToHP = conversionFactors[hpKey];
+                    const resultInHP = valueInWatts / factorToHP;
+                    const formattedHPResult = formatNumber(resultInHP);
+                    const hpUnitName = units[hpKey].split('(')[0].trim();
+
+                    // Extract the letter (I, E, S, M) from the inner parentheses
+                    const hpInnerMatch = units[hpKey].match(/\(hp\(([IESM])\)\)/);
+                    // Reconstruct the symbol like hp(I), hp(M), hp(E), hp(S)
+                    // Use Unicode \u0029 for closing parenthesis as a forced measure.
+                    const hpUnitShort = hpInnerMatch ? `hp(${hpInnerMatch[1]}\u0029` : hpKey;
+
+                    resultsHTML += `
+                        <p class="result-line text-sm">
+                            <strong class="font-semibold text-blue-700">${hpUnitName}:</strong>
+                            <span class="font-medium text-blue-900">
+                                ${formattedInput} ${fromUnitShort} &nbsp;=&nbsp; ${formattedHPResult} ${hpUnitShort}
+                            </span>
+                        </p>
+                    `;
+                });
+                resultDisplay.innerHTML = resultsHTML;
+
+            } else {
+                // --- Display Single Conversion Result ---
+                resultTitle.textContent = "Conversion Result:";
+                resultDisplay.classList.add('single-result');
+
+                const factorTo = conversionFactors[toUnit];
+                const resultValue = valueInWatts / factorTo;
+                const formattedResult = formatNumber(resultValue);
+                // Extract symbol for 'To' unit (including parentheses if defined)
+                const toUnitMatch = units[toUnit].match(/\((.*?)\)/);
+                const toUnitShort = toUnitMatch ? toUnitMatch[1] : toUnit;
+
+                resultDisplay.innerHTML = `
+                    <span class="font-semibold text-blue-800 text-xl tracking-tight">
+                        ${formattedInput} ${fromUnitShort} &nbsp;=&nbsp; ${formattedResult} ${toUnitShort}
+                    </span>
+                `;
+            }
+        }
+
+        // --- Helper function to format numbers for display ---
+        function formatNumber(num) {
+            if (isNaN(num)) return 'Error';
+
+            if (Math.abs(num) > 1e12 || (Math.abs(num) < 1e-9 && num !== 0)) {
+                return num.toExponential(6);
+            }
+            if (Math.abs(num) < 0.000001 && num !== 0) {
+                 return num.toExponential(6);
+            }
+            return num.toLocaleString(undefined, { maximumFractionDigits: 8 });
+        }
+
+        // --- Event Listeners ---
+        convertButton.addEventListener('click', convertPower);
+        valueInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                 event.preventDefault();
+                 convertPower();
+            }
+        });
+
+        // --- Initial Setup ---
+        populateDropdowns(); // Populate dropdowns with filtered units and modified text
+        // Initial placeholder text is set in the HTML
+
+    </script>
+
+</body>
+</html>

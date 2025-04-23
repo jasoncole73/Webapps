@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decimal to Percent Converter</title>
+    <style>
+        /* Basic styling for layout and appearance */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Full viewport height */
+            background-color: #f0f2f5; /* Light grey background */
+            margin: 0; /* Remove default body margin */
+            padding: 15px; /* Add padding for small screens */
+            box-sizing: border-box; /* Include padding in width/height calculations */
+        }
+        .converter-container {
+            background-color: #ffffff; /* White container background */
+            padding: 25px 30px; /* Padding inside the container */
+            border-radius: 8px; /* Rounded corners */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            text-align: center;
+            width: 100%; /* Full width within padding */
+            max-width: 400px; /* Max width for larger screens */
+            box-sizing: border-box;
+        }
+        h1 {
+            margin-top: 0; /* Remove default top margin */
+            margin-bottom: 25px; /* Space below heading */
+            color: #1c1e21; /* Darker text color */
+            font-size: 1.5rem; /* Adjust heading size */
+        }
+        label {
+            display: block; /* Label on its own line */
+            margin-bottom: 8px; /* Space below label */
+            font-weight: 600; /* Bolder label */
+            color: #606770; /* Medium grey text color */
+            text-align: left; /* Align label text left */
+        }
+        input[type="number"] {
+            width: 100%; /* Full width of container */
+            padding: 12px 10px; /* Padding inside input */
+            margin-bottom: 20px; /* Space below input */
+            border: 1px solid #ccd0d5; /* Standard border color */
+            border-radius: 6px; /* Slightly rounded input corners */
+            font-size: 1rem; /* Standard text size */
+            box-sizing: border-box; /* Include padding/border in width */
+            line-height: 1.4; /* Improve text line height */
+        }
+        /* Style overrides for number input appearance */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none; /* Hide spinners in Chrome/Safari/Edge */
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield; /* Hide spinners in Firefox */
+        }
+        .result-area {
+            margin-top: 20px; /* Space above result */
+            padding: 15px; /* Padding around result */
+            background-color: #e7f3ff; /* Light blue background for result */
+            border: 1px solid #cce0ff; /* Lighter blue border */
+            border-radius: 6px; /* Rounded corners for result area */
+            font-size: 1.1rem; /* Slightly larger result text */
+            color: #1c1e21; /* Dark text color */
+            line-height: 1.5; /* Spacing for result text */
+        }
+        #percentOutput {
+            font-weight: bold;
+            color: #056be1; /* Primary blue color for emphasis */
+            min-height: 1.5em; /* Prevent layout shift when value is empty */
+            display: inline-block; /* Needed for min-height to apply */
+            margin-left: 5px; /* Space before the percentage value */
+            transition: color 0.2s ease-in-out; /* Smooth color change if needed */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="converter-container">
+        <h1>Decimal to Percent Converter</h1>
+
+        <label for="decimalInput">Enter Decimal Value:</label>
+        <input type="number" id="decimalInput" placeholder="e.g., 0.75" step="any" aria-label="Decimal Input">
+        <div class="result-area">
+            Percentage: <span id="percentOutput">--- %</span>
+        </div>
+    </div>
+
+    <script>
+        // Select the input and output elements from the DOM
+        const decimalInput = document.getElementById('decimalInput');
+        const percentOutput = document.getElementById('percentOutput');
+
+        // Function to perform the conversion and update the display
+        function convertDecimalToPercent() {
+            // Get the raw value from the input field
+            const decimalValue = decimalInput.value;
+
+            // Check if the input is not empty, is a valid finite number
+            // parseFloat handles leading/trailing spaces and returns NaN for non-numeric strings
+            // isFinite checks against Infinity, -Infinity, and NaN
+            if (decimalValue.trim() !== '' && isFinite(parseFloat(decimalValue))) {
+                // Convert the input string to a floating-point number
+                const decimalNumber = parseFloat(decimalValue);
+
+                // Calculate the percentage
+                const percentage = decimalNumber * 100;
+
+                // Format the percentage for display
+                // Using Number.prototype.toLocaleString() can help with formatting based on locale,
+                // but for simple percentage, direct conversion is often fine.
+                // Let's keep it simple:
+                const formattedPercentage = percentage + '%';
+
+                // Update the text content of the output span
+                percentOutput.textContent = formattedPercentage;
+
+            } else {
+                // If input is empty or not a valid finite number, show the placeholder
+                percentOutput.textContent = '--- %';
+            }
+        }
+
+        // Add an event listener to the input field
+        // The 'input' event fires immediately whenever the value of the element changes
+        // This provides the auto-calculate feature without needing a button
+        decimalInput.addEventListener('input', convertDecimalToPercent);
+
+        // Optional: Initialize the display on page load in case the browser autofills the input
+        // document.addEventListener('DOMContentLoaded', convertDecimalToPercent);
+        // However, 'input' event usually covers this adequately for user interaction.
+
+    </script>
+
+</body>
+</html>

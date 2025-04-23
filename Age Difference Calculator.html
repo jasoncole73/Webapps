@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Age Calculator</title>
+    <style>
+        /* --- Basic Reset & Variables --- */
+        :root {
+            --primary-color: #4CAF50; /* Green accent */
+            --primary-hover: #3e8e41;
+            --content-bg: #1a2639;    /* Dark blue/slate */
+            --content-text: #ffffff;
+            --container-bg: #ffffff;
+            --body-bg: #f2f2f2;
+            --tab-inactive-bg: #e0e0e0;
+            --tab-inactive-hover: #d0d0d0;
+            --subtab-bg: #333333;
+            --input-bg: #f9f9f9;
+            --input-border: #dddddd;
+            --input-text: #333333;
+            --result-bg: rgba(255, 255, 255, 0.08);
+            --heading-color: #FFA500; /* Orange */
+            --border-light: rgba(255, 255, 255, 0.1);
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: var(--body-bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; color: #333; line-height: 1.6; }
+        /* --- Layout & Container --- */
+        .container { width: 100%; max-width: 650px; background-color: var(--container-bg); border-radius: 10px; box-shadow: 0 5px 15px var(--shadow-color); overflow: hidden; }
+        /* --- Tabs --- */
+        .tabs { display: flex; background-color: var(--tab-inactive-bg); }
+        .tab { padding: 14px 10px; cursor: pointer; background-color: var(--tab-inactive-bg); border: none; outline: none; font-size: 14px; font-weight: 500; flex-grow: 1; text-align: center; transition: background-color 0.3s, color 0.3s; border-bottom: 3px solid transparent; }
+        .tab.active { background-color: var(--container-bg); color: var(--primary-color); border-bottom-color: var(--primary-color); }
+        .tab:hover:not(.active) { background-color: var(--tab-inactive-hover); }
+        /* --- Content Area --- */
+        .content {
+            padding: 25px 30px;
+            background-color: var(--content-bg);
+            color: var(--content-text);
+            min-height: 530px; /* Added min-height for consistent size */
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        /* --- Subtabs (for Age Difference) --- */
+         .subtabs { display: flex; background-color: var(--subtab-bg); border-radius: 6px; overflow: hidden; margin-bottom: 20px; }
+        .subtab { padding: 10px 15px; cursor: pointer; background-color: var(--subtab-bg); border: none; outline: none; color: var(--content-text); flex-grow: 1; text-align: center; font-size: 13px; transition: background-color 0.3s; }
+        .subtab.active { background-color: var(--primary-color); }
+         .subtab-content { display: none; }
+         .subtab-content.active { display: block; }
+        /* --- Forms & Inputs --- */
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; margin-bottom: 8px; font-size: 15px; font-weight: 500; color: #ccc; }
+        .date-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 15px; }
+        select, input[type="number"] { padding: 10px 12px; border-radius: 6px; border: 1px solid var(--input-border); background-color: var(--input-bg); font-size: 15px; width: 100%; color: var(--input-text); appearance: none; }
+         select { background-image: url('data:image/svg+xml;utf8,<svg fill="%23333" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>'); background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px; cursor: pointer; }
+        /* --- Buttons --- */
+        .calculate-btn { display: block; width: fit-content; margin-left: auto; margin-top: 10px; padding: 10px 25px; border: none; border-radius: 6px; background-color: var(--primary-color); color: white; font-size: 15px; font-weight: 600; cursor: pointer; transition: background-color 0.3s; }
+        .calculate-btn:hover { background-color: var(--primary-hover); }
+        /* --- Results Area --- */
+        .result { margin-top: 25px; padding: 20px; border-radius: 8px; background-color: var(--result-bg); display: none; }
+        .result h3 { margin-bottom: 15px; color: var(--heading-color); font-size: 1.3em; font-weight: 600; border-bottom: 1px solid var(--border-light); padding-bottom: 10px; }
+        .result p { margin: 8px 0; font-size: 15px; }
+        .result-row { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-light); font-size: 15px; }
+        .result-row:last-child { border-bottom: none; }
+        /* Class to hide/show person age rows */
+        .person-age-row { display: flex; } /* Default display */
+        .person-age-row.hidden { display: none; }
+
+        .result-label { flex-grow: 1; opacity: 0.9; padding-left: 15px; }
+        .result-value { font-weight: 600; color: var(--primary-color); margin-right: 10px; text-align: right; }
+        .result-copy { cursor: pointer; opacity: 0.7; transition: opacity 0.3s; font-size: 12px; color: #aaa; background: none; border: none; padding: 2px 5px; position: relative; /* For feedback positioning */ }
+        .result-copy:hover { opacity: 1; color: #fff; }
+        /* --- General Text & Headings --- */
+        h2 { font-size: 1.6em; font-weight: 700; margin-bottom: 5px; }
+        p { font-size: 0.95em; margin-bottom: 20px; color: #ccc; max-width: 90%; }
+        /* --- Copy Feedback --- */
+        .copy-feedback { position: absolute; right: -15px; top: 50%; transform: translateY(-50%); color: limegreen; font-size: 1.2em; animation: fadeCheck 1s ease-out forwards; }
+        @keyframes fadeCheck { 0% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
+        /* --- Responsive --- */
+        @media (max-width: 500px) { .tabs { flex-direction: column; } .tab { font-size: 13px; padding: 12px 10px; border-bottom: 1px solid #ccc; } .tab.active { border-bottom-color: var(--primary-color); } .date-inputs { grid-template-columns: 1fr; gap: 10px; } .content { padding: 20px; min-height: 480px; /* Adjust min-height for smaller screens if needed */ } h2 { font-size: 1.4em; } p { font-size: 0.9em; max-width: 100%; } .result-row { flex-wrap: wrap; } .result-label { padding-left: 0; margin-left: 10px; } }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" data-tab="age-calculator">Age Calculator</button>
+            <button class="tab" data-tab="age-difference">Age Difference</button>
+            <button class="tab" data-tab="birthday-calculator">Birthday Calculator</button>
+            <button class="tab" data-tab="generations">Generations</button>
+        </div>
+
+        <div class="content">
+            <div class="tab-content active" id="age-calculator">
+                <h2>Age Calculator</h2>
+                <p>Calculate your age based on your birthdate.</p>
+                <div class="input-group">
+                    <label for="month-ac">Birthdate:</label>
+                    <div class="date-inputs">
+                        <select id="month-ac"> <option value="0">January</option> <option value="1">February</option> <option value="2">March</option> <option value="3">April</option> <option value="4">May</option> <option value="5">June</option> <option value="6">July</option> <option value="7">August</option> <option value="8">September</option> <option value="9">October</option> <option value="10">November</option> <option value="11">December</option> </select>
+                        <select id="day-ac"></select>
+                        <select id="year-ac"></select>
+                    </div>
+                </div>
+                <button class="calculate-btn" id="calculate-age">Calculate</button>
+                <div class="result" id="age-result">
+                    <h3>Age Calculation Results</h3>
+                    <div class="result-row"> <span class="result-label">Your age (Y/M/D)</span> <span class="result-value" id="years-months-days-age"></span> <button class="result-copy" data-target="years-months-days-age">[Copy]</button> </div>
+                    <div class="result-row"> <span class="result-label">Duration in Days</span> <span class="result-value" id="duration-days-age"></span> <button class="result-copy" data-target="duration-days-age">[Copy]</button> </div>
+                    <div class="result-row"> <span class="result-label">Total Months & Days</span> <span class="result-value" id="total-months-age"></span> <button class="result-copy" data-target="total-months-age">[Copy]</button> </div>
+                    <div class="result-row"> <span class="result-label">Total Weeks</span> <span class="result-value" id="total-weeks-age"></span> <button class="result-copy" data-target="total-weeks-age">[Copy]</button> </div>
+                    <div class="result-row"> <span class="result-label">Total Hours (approx)</span> <span class="result-value" id="total-hours-age"></span> <button class="result-copy" data-target="total-hours-age">[Copy]</button> </div>
+                    <div class="result-row"> <span class="result-label">Total Minutes (approx)</span> <span class="result-value" id="total-minutes-age"></span> <button class="result-copy" data-target="total-minutes-age">[Copy]</button> </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="age-difference">
+                 <h2>Age Difference Calculator</h2>
+                 <p>Calculate the difference between two dates or years.</p>
+                 <div class="subtabs">
+                     <button class="subtab active" data-subtab="birthdates">Birthdates</button>
+                     <button class="subtab" data-subtab="years">Years</button>
+                 </div>
+                 <div class="subtab-content active" id="birthdates-content">
+                      <div class="input-group"> <label for="month1-ad">Birthdate 1:</label> <div class="date-inputs"> <select id="month1-ad"> <option value="0">January</option> <option value="1">February</option> <option value="2">March</option> <option value="3">April</option> <option value="4">May</option> <option value="5">June</option> <option value="6">July</option> <option value="7">August</option> <option value="8">September</option> <option value="9">October</option> <option value="10">November</option> <option value="11">December</option> </select> <select id="day1-ad"></select> <select id="year1-ad"></select> </div> </div>
+                      <div class="input-group"> <label for="month2-ad">Birthdate 2:</label> <div class="date-inputs"> <select id="month2-ad"> <option value="0">January</option> <option value="1">February</option> <option value="2">March</option> <option value="3">April</option> <option value="4">May</option> <option value="5">June</option> <option value="6">July</option> <option value="7">August</option> <option value="8">September</option> <option value="9">October</option> <option value="10">November</option> <option value="11">December</option> </select> <select id="day2-ad"></select> <select id="year2-ad"></select> </div> </div>
+                 </div>
+                 <div class="subtab-content" id="years-content">
+                      <div class="input-group"> <label for="year1-years">Year 1:</label> <select id="year1-years"></select> </div>
+                      <div class="input-group"> <label for="year2-years">Year 2:</label> <select id="year2-years"></select> </div>
+                 </div>
+                 <button class="calculate-btn" id="calculate-difference">Calculate</button>
+                 <div class="result" id="difference-result">
+                     <h3>Age Difference Results</h3>
+                     <div class="result-row"> <span class="result-label">Difference (Y/M/D)</span> <span class="result-value" id="years-months-days-diff"></span> <button class="result-copy" data-target="years-months-days-diff">[Copy]</button> </div>
+                     <div class="result-row"> <span class="result-label">Duration in Days</span> <span class="result-value" id="duration-days-diff"></span> <button class="result-copy" data-target="duration-days-diff">[Copy]</button> </div>
+                     <div class="result-row"> <span class="result-label">Difference in Weeks & Days</span> <span class="result-value" id="weeks-days-diff"></span> <button class="result-copy" data-target="weeks-days-diff">[Copy]</button> </div>
+                     <div class="result-row person-age-row"> <span class="result-label">Age of person 1 (Y/M/D)</span> <span class="result-value" id="age-person1"></span> <button class="result-copy" data-target="age-person1">[Copy]</button> </div>
+                     <div class="result-row person-age-row"> <span class="result-label">Age of person 2 (Y/M/D)</span> <span class="result-value" id="age-person2"></span> <button class="result-copy" data-target="age-person2">[Copy]</button> </div>
+                 </div>
+            </div>
+
+            <div class="tab-content" id="birthday-calculator">
+                 <h2>Birthday Calculator</h2> <p>Find details about any birthdate.</p> <div class="input-group"> <label for="month-bc">Enter Birthdate:</label> <div class="date-inputs"> <select id="month-bc"> <option value="0">January</option> <option value="1">February</option> <option value="2">March</option> <option value="3">April</option> <option value="4">May</option> <option value="5">June</option> <option value="6">July</option> <option value="7">August</option> <option value="8">September</option> <option value="9">October</option> <option value="10">November</option> <option value="11">December</option> </select> <select id="day-bc"></select> <select id="year-bc"></select> </div> </div> <button class="calculate-btn" id="calculate-birthday">Calculate</button> <div class="result" id="birthday-result"> <h3>Birthday Information</h3> <p id="day-of-week"></p> <p id="exact-age"></p> <p id="zodiac-sign"></p> <p id="days-to-birthday"></p> <p id="age-next-birthday"></p> </div>
+            </div>
+
+            <div class="tab-content" id="generations">
+                  <h2>Generations Calculator</h2> <p>Find out which generation a birth year belongs to.</p> <div class="input-group"> <label for="year-gen">Birth Year:</label> <select id="year-gen"></select> </div> <button class="calculate-btn" id="calculate-generation">Calculate</button> <div class="result" id="generation-result"> <h3>Your Generation</h3> <p id="generation-name"></p> <p id="generation-range"></p> <p id="generation-info"></p> </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Constants ---
+        const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+        // --- Helper Functions ---
+        function populateDays(monthSelect, daySelect, yearSelect) { try { if (!monthSelect || !daySelect || !yearSelect || !monthSelect.value || !yearSelect.value) { if(daySelect) daySelect.innerHTML = ''; return; } const month = parseInt(monthSelect.value), year = parseInt(yearSelect.value); if (isNaN(month) || isNaN(year)) { daySelect.innerHTML = ''; return; } const selectedDay = daySelect.value ? parseInt(daySelect.value) : 1; const daysInMonth = new Date(year, month + 1, 0).getDate(); daySelect.innerHTML = ''; for (let i = 1; i <= daysInMonth; i++) { const option = document.createElement('option'); option.value = i; option.textContent = i; if (i === selectedDay) option.selected = true; daySelect.appendChild(option); } if (parseInt(daySelect.value) > daysInMonth) daySelect.value = daysInMonth.toString(); else if (!daySelect.value && daysInMonth > 0) daySelect.value = '1'; } catch (e) { console.error("Error populating days:", e); if(daySelect) daySelect.innerHTML = ''; } }
+        function populateYears(yearSelect, startYear, endYear) { try { if (!yearSelect) return; yearSelect.innerHTML = ''; const selectedYear = yearSelect.value ? parseInt(yearSelect.value) : endYear; for (let i = endYear; i >= startYear; i--) { const option = document.createElement('option'); option.value = i; option.textContent = i; if (i === selectedYear) option.selected = true; yearSelect.appendChild(option); } if (!yearSelect.value && endYear >= startYear) yearSelect.value = endYear.toString(); } catch (e) { console.error("Error populating years:", e); } }
+        function calculateAgeYMD(startDate, endDate) { try { if (!(startDate instanceof Date && !isNaN(startDate)) || !(endDate instanceof Date && !isNaN(endDate))) throw new Error("Invalid date objects"); startDate.setHours(0, 0, 0, 0); endDate.setHours(0, 0, 0, 0); if (startDate > endDate) [startDate, endDate] = [endDate, startDate]; if (startDate.getTime() === endDate.getTime()) return { years: 0, months: 0, days: 0 }; let years = endDate.getFullYear() - startDate.getFullYear(); let months = endDate.getMonth() - startDate.getMonth(); let days = endDate.getDate() - startDate.getDate(); if (days < 0) { months--; days += new Date(endDate.getFullYear(), endDate.getMonth(), 0).getDate(); } if (months < 0) { years--; months += 12; } return { years, months, days }; } catch (e) { console.error("Error in calculateAgeYMD:", e); return null; } }
+        function calculateDurationDays(startDate, endDate) { try { if (!(startDate instanceof Date && !isNaN(startDate)) || !(endDate instanceof Date && !isNaN(endDate))) throw new Error("Invalid date objects"); startDate.setHours(0, 0, 0, 0); endDate.setHours(0, 0, 0, 0); if (startDate > endDate) [startDate, endDate] = [endDate, startDate]; const diffTime = endDate.getTime() - startDate.getTime(); if (diffTime === 0) return 0; return Math.floor(diffTime / MS_PER_DAY); } catch(e) { console.error("Error in calculateDurationDays:", e); return null; } }
+        function formatYMD(ageData) { if (!ageData) return "N/A"; if (ageData.years === 0 && ageData.months === 0 && ageData.days === 0) return "0d"; const parts = []; if (ageData.years > 0) parts.push(`${ageData.years}y`); if (ageData.months > 0) parts.push(`${ageData.months}m`); if (ageData.days > 0) parts.push(`${ageData.days}d`); return parts.length > 0 ? parts.join(', ') : "0d"; }
+        // Removed makeAgeInclusive function
+        function showCopyFeedback(copyButton) { const button = copyButton; if (!button) return; const existingFeedback = button.querySelector('.copy-feedback'); if (existingFeedback) existingFeedback.remove(); const feedback = document.createElement('span'); feedback.innerHTML = '&#10003;'; feedback.className = 'copy-feedback'; button.appendChild(feedback); setTimeout(() => { if (feedback.parentNode === button) button.removeChild(feedback); }, 1000); }
+
+        // --- Initialization and Event Listeners ---
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentYear = new Date().getFullYear(); const earliestYear = 1900;
+            // --- Get DOM Elements ---
+            const monthAC = document.getElementById('month-ac'), dayAC = document.getElementById('day-ac'), yearAC = document.getElementById('year-ac'), calculateAgeBtn = document.getElementById('calculate-age'), ageResultDiv = document.getElementById('age-result'), ymdAgeEl = document.getElementById('years-months-days-age'), durationDaysAgeEl = document.getElementById('duration-days-age'), totalMonthsAgeEl = document.getElementById('total-months-age'), totalWeeksAgeEl = document.getElementById('total-weeks-age'), totalHoursAgeEl = document.getElementById('total-hours-age'), totalMinutesAgeEl = document.getElementById('total-minutes-age');
+            const month1AD = document.getElementById('month1-ad'), day1AD = document.getElementById('day1-ad'), year1AD = document.getElementById('year1-ad'), month2AD = document.getElementById('month2-ad'), day2AD = document.getElementById('day2-ad'), year2AD = document.getElementById('year2-ad'), year1Years = document.getElementById('year1-years'), year2Years = document.getElementById('year2-years'), calculateDiffBtn = document.getElementById('calculate-difference'), diffResultDiv = document.getElementById('difference-result'), ymdDiffEl = document.getElementById('years-months-days-diff'), durationDaysDiffEl = document.getElementById('duration-days-diff'), weeksDaysDiffEl = document.getElementById('weeks-days-diff'), age1El = document.getElementById('age-person1'), age2El = document.getElementById('age-person2');
+            const monthBC = document.getElementById('month-bc'), dayBC = document.getElementById('day-bc'), yearBC = document.getElementById('year-bc'), calculateBirthdayBtn = document.getElementById('calculate-birthday'), birthdayResultDiv = document.getElementById('birthday-result'), dayOfWeekEl = document.getElementById('day-of-week'), exactAgeEl = document.getElementById('exact-age'), zodiacEl = document.getElementById('zodiac-sign'), daysToBdayEl = document.getElementById('days-to-birthday'), ageNextBdayEl = document.getElementById('age-next-birthday');
+            const yearGen = document.getElementById('year-gen'), calculateGenBtn = document.getElementById('calculate-generation'), genResultDiv = document.getElementById('generation-result'), genNameEl = document.getElementById('generation-name'), genRangeEl = document.getElementById('generation-range'), genInfoEl = document.getElementById('generation-info');
+            const tabs = document.querySelectorAll('.tab'), tabContents = document.querySelectorAll('.tab-content'), subtabs = document.querySelectorAll('.subtab'), subtabContents = document.querySelectorAll('.subtab-content');
+            const personAgeRows = document.querySelectorAll('#difference-result .person-age-row');
+
+            // --- Populate Dropdowns ---
+            try { /* ... dropdown population ... */
+                populateYears(yearAC, earliestYear, currentYear); populateDays(monthAC, dayAC, yearAC); monthAC.addEventListener('change', () => populateDays(monthAC, dayAC, yearAC)); yearAC.addEventListener('change', () => populateDays(monthAC, dayAC, yearAC));
+                populateYears(year1AD, earliestYear, currentYear); populateDays(month1AD, day1AD, year1AD); month1AD.addEventListener('change', () => populateDays(month1AD, day1AD, year1AD)); year1AD.addEventListener('change', () => populateDays(month1AD, day1AD, year1AD));
+                populateYears(year2AD, earliestYear, currentYear); populateDays(month2AD, day2AD, year2AD); month2AD.addEventListener('change', () => populateDays(month2AD, day2AD, year2AD)); year2AD.addEventListener('change', () => populateDays(month2AD, day2AD, year2AD));
+                populateYears(year1Years, earliestYear, currentYear); populateYears(year2Years, earliestYear, currentYear); if (year1Years.options.length > 0) year1Years.value = Math.max(earliestYear, currentYear - 30); if (year2Years.options.length > 0) year2Years.value = Math.max(earliestYear, currentYear - 5);
+                populateYears(yearBC, earliestYear, currentYear); populateDays(monthBC, dayBC, yearBC); monthBC.addEventListener('change', () => populateDays(monthBC, dayBC, yearBC)); yearBC.addEventListener('change', () => populateDays(monthBC, dayBC, yearBC));
+                populateYears(yearGen, earliestYear, currentYear); if (yearGen.options.length > 0) yearGen.value = Math.max(earliestYear, currentYear - 25);
+             } catch (e) { console.error("Error during dropdown initialization:", e) }
+
+            // --- Tab/Subtab Switching ---
+            tabs.forEach(tab => { tab.addEventListener('click', function() { try { tabs.forEach(t => t.classList.remove('active')); this.classList.add('active'); const targetTabId = this.getAttribute('data-tab'); tabContents.forEach(content => content.classList.toggle('active', content.id === targetTabId)); [ageResultDiv, diffResultDiv, birthdayResultDiv, genResultDiv].forEach(div => { if (div) div.style.display = 'none'; }); } catch(e) { console.error("Error switching tabs:", e); } }); });
+            subtabs.forEach(subtab => {
+                subtab.addEventListener('click', function() {
+                    try {
+                        subtabs.forEach(st => st.classList.remove('active'));
+                        this.classList.add('active');
+                        const targetSubtab = this.getAttribute('data-subtab');
+                        const targetSubtabId = targetSubtab + '-content';
+                        subtabContents.forEach(content => content.classList.toggle('active', content.id === targetSubtabId));
+                        if (diffResultDiv) diffResultDiv.style.display = 'none';
+                        // Show/hide person age rows based on active subtab
+                        personAgeRows.forEach(row => {
+                            row.style.display = (targetSubtab === 'birthdates') ? 'flex' : 'none';
+                        });
+                    } catch(e) { console.error("Error switching subtabs:", e); }
+                });
+             });
+
+             // --- Calculation Event Listeners ---
+            if (calculateAgeBtn) calculateAgeBtn.addEventListener('click', function() {
+                 try { const month = parseInt(monthAC.value), day = parseInt(dayAC.value), year = parseInt(yearAC.value); if (isNaN(month+day+year)) throw new Error("Invalid date selected"); const birthDate = new Date(year, month, day), today = new Date(); if(ymdAgeEl) ymdAgeEl.textContent = ""; if(durationDaysAgeEl) durationDaysAgeEl.textContent = ""; if(totalMonthsAgeEl) totalMonthsAgeEl.textContent = ""; if(totalWeeksAgeEl) totalWeeksAgeEl.textContent = ""; if(totalHoursAgeEl) totalHoursAgeEl.textContent = ""; if(totalMinutesAgeEl) totalMinutesAgeEl.textContent = ""; if (birthDate > today) { if(ymdAgeEl) ymdAgeEl.textContent = "Birthdate is in the future!"; } else { const ageDataYMD = calculateAgeYMD(birthDate, today); const durationDays = calculateDurationDays(birthDate, today); if (ageDataYMD === null || durationDays === null) throw new Error("Calculation failed"); const totalMonths = ageDataYMD.years * 12 + ageDataYMD.months; const totalWeeks = Math.floor(durationDays / 7); const remainingDaysInWeek = durationDays % 7; const totalHours = durationDays * 24; const totalMinutes = totalHours * 60; if(ymdAgeEl) ymdAgeEl.textContent = formatYMD(ageDataYMD); if(durationDaysAgeEl) durationDaysAgeEl.textContent = `${durationDays.toLocaleString()} days`; if(totalMonthsAgeEl) totalMonthsAgeEl.textContent = `${totalMonths.toLocaleString()} months, ${ageDataYMD.days} days`; if(totalWeeksAgeEl) totalWeeksAgeEl.textContent = `${totalWeeks.toLocaleString()} weeks, ${remainingDaysInWeek} days`; if(totalHoursAgeEl) totalHoursAgeEl.textContent = `${totalHours.toLocaleString()} hours`; if(totalMinutesAgeEl) totalMinutesAgeEl.textContent = `${totalMinutes.toLocaleString()} minutes`; } if(ageResultDiv) ageResultDiv.style.display = 'block'; } catch (error) { console.error("Age Calc Error:", error); if(ymdAgeEl) ymdAgeEl.textContent = "Error"; if(durationDaysAgeEl) durationDaysAgeEl.textContent = error.message || "Calculation failed"; if(totalMonthsAgeEl) totalMonthsAgeEl.textContent = "-"; if(totalWeeksAgeEl) totalWeeksAgeEl.textContent = "-"; if(totalHoursAgeEl) totalHoursAgeEl.textContent = "-"; if(totalMinutesAgeEl) totalMinutesAgeEl.textContent = "-"; if(ageResultDiv) ageResultDiv.style.display = 'block'; }
+            });
+            if (calculateDiffBtn) calculateDiffBtn.addEventListener('click', function() {
+                let date1, date2; const today = new Date(); const activeSubtabEl = document.querySelector('#age-difference .subtab.active'); if (!activeSubtabEl) { console.error("No active age diff subtab found"); return; } const activeSubtab = activeSubtabEl.getAttribute('data-subtab');
+                try {
+                    // Determine dates based on the active subtab
+                    if (activeSubtab === 'birthdates') { const m1=parseInt(month1AD.value), d1=parseInt(day1AD.value), y1=parseInt(year1AD.value); const m2=parseInt(month2AD.value), d2=parseInt(day2AD.value), y2=parseInt(year2AD.value); if(isNaN(m1+d1+y1+m2+d2+y2)) throw new Error("Invalid date input"); date1 = new Date(y1, m1, d1); date2 = new Date(y2, m2, d2); }
+                    else if (activeSubtab === 'years') { const y1=parseInt(year1Years.value), y2=parseInt(year2Years.value); if(isNaN(y1+y2)) throw new Error("Invalid year input"); date1 = new Date(y1, 0, 1); date2 = new Date(y2, 0, 1); }
+                    // Removed 'ages' logic block
+                    else throw new Error("Unknown or unsupported subtab for calculation: " + activeSubtab);
+
+                    // Normalize dates and ensure date1 is earlier
+                    date1.setHours(0,0,0,0); date2.setHours(0,0,0,0); today.setHours(0,0,0,0);
+                    if (date1 > date2) [date1, date2] = [date2, date1];
+
+                    const diffDataYMD = calculateAgeYMD(date1, date2);
+                    // Always use exclusive duration calculation now
+                    const durationDays = calculateDurationDays(date1, date2);
+                    let age1Data = null; let age2Data = null; // Use standard age calculation
+
+                    // Calculate weeks & days difference based on durationDays
+                    const totalWeeksDiff = Math.floor(durationDays / 7);
+                    const remainingDaysInWeekDiff = durationDays % 7;
+
+                    // Show/hide person age rows and calculate only if needed (birthdates only)
+                    const showPersonAges = (activeSubtab === 'birthdates');
+                    personAgeRows.forEach(row => { row.style.display = showPersonAges ? 'flex' : 'none'; });
+
+                    if (showPersonAges) {
+                        // Calculate standard Y/M/D age
+                        age1Data = calculateAgeYMD(date1, today);
+                        age2Data = calculateAgeYMD(date2, today);
+                        if (age1Data === null || age2Data === null) throw new Error("Person age calculation failed");
+                        const formatCurrentAge = (ageData, birthDate) => { if (!ageData) return "Error"; if (birthDate > today) return "Born in future"; return formatYMD(ageData); };
+                        if(age1El) age1El.textContent = formatCurrentAge(age1Data, date1); // Display standard age
+                        if(age2El) age2El.textContent = formatCurrentAge(age2Data, date2); // Display standard age
+                    } else { if(age1El) age1El.textContent = ""; if(age2El) age2El.textContent = ""; }
+
+                    if (diffDataYMD === null || durationDays === null) throw new Error("Difference calculation failed");
+
+                    // Display results
+                    if(ymdDiffEl) ymdDiffEl.textContent = formatYMD(diffDataYMD);
+                    if(durationDaysDiffEl) durationDaysDiffEl.textContent = `${durationDays.toLocaleString()} days`; // Display duration days
+                    if(weeksDaysDiffEl) weeksDaysDiffEl.textContent = `${totalWeeksDiff.toLocaleString()} weeks, ${remainingDaysInWeekDiff} days`; // Display weeks/days diff
+                    if(diffResultDiv) diffResultDiv.style.display = 'block';
+
+                } catch (error) { console.error("Age Diff Error:", error); if(ymdDiffEl) ymdDiffEl.textContent = "Error"; if(durationDaysDiffEl) durationDaysDiffEl.textContent = error.message || "Calculation failed"; if(weeksDaysDiffEl) weeksDaysDiffEl.textContent = "-"; if(age1El) age1El.textContent = "-"; if(age2El) age2El.textContent = "-"; if(diffResultDiv) diffResultDiv.style.display = 'block'; }
+            });
+            if (calculateBirthdayBtn) calculateBirthdayBtn.addEventListener('click', function() {
+                 try {
+                    const month=parseInt(monthBC.value), day=parseInt(dayBC.value), year=parseInt(yearBC.value); if(isNaN(month+day+year)) throw new Error("Invalid date selected");
+                    const birthDate = new Date(year, month, day), today = new Date();
+                    birthDate.setHours(0,0,0,0); today.setHours(0,0,0,0);
+                    const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']; const dayOfWeek = daysOfWeek[birthDate.getDay()];
+                    let zodiacSign = ''; if ((month === 0 && day >= 20) || (month === 1 && day <= 18)) zodiacSign = '♒ Aquarius'; else if ((month === 1 && day >= 19) || (month === 2 && day <= 20)) zodiacSign = '♓ Pisces'; else if ((month === 2 && day >= 21) || (month === 3 && day <= 19)) zodiacSign = '♈ Aries'; else if ((month === 3 && day >= 20) || (month === 4 && day <= 20)) zodiacSign = '♉ Taurus'; else if ((month === 4 && day >= 21) || (month === 5 && day <= 20)) zodiacSign = '♊ Gemini'; else if ((month === 5 && day >= 21) || (month === 6 && day <= 22)) zodiacSign = '♋ Cancer'; else if ((month === 6 && day >= 23) || (month === 7 && day <= 22)) zodiacSign = '♌ Leo'; else if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) zodiacSign = '♍ Virgo'; else if ((month === 8 && day >= 23) || (month === 9 && day <= 22)) zodiacSign = '♎ Libra'; else if ((month === 9 && day >= 23) || (month === 10 && day <= 21)) zodiacSign = '♏ Scorpio'; else if ((month === 10 && day >= 22) || (month === 11 && day <= 21)) zodiacSign = '♐ Sagittarius'; else zodiacSign = '♑ Capricorn';
+                    let daysUntilText = "", ageNextText = "";
+                    if (birthDate <= today) {
+                        const nextBirthday = new Date(today.getFullYear(), month, day); nextBirthday.setHours(0,0,0,0);
+                        if (today.getTime() === nextBirthday.getTime()) { daysUntilText = "🎉 Happy Birthday! 🎉"; ageNextText = `Turning: ${today.getFullYear() - birthDate.getFullYear()}`; }
+                        else { let targetBday = new Date(nextBirthday); if (today > targetBday) targetBday.setFullYear(today.getFullYear() + 1);
+                            const daysUntilBirthday = calculateDurationDays(today, targetBday); // Use duration
+                            if (daysUntilBirthday === null) throw new Error("Birthday calculation failed");
+                            const ageAtNextBirthday = targetBday.getFullYear() - birthDate.getFullYear(); daysUntilText = `Next birthday in: ${daysUntilBirthday} days`; ageNextText = `Turning: ${ageAtNextBirthday}`;
+                         }
+                    }
+                    const ageDataYMD = calculateAgeYMD(birthDate, today); if (ageDataYMD === null) throw new Error("Age calculation failed");
+                    const exactAgeText = birthDate <= today ? `Current Age: ${formatYMD(ageDataYMD)}` : "Birthdate is in the future.";
+                    if(dayOfWeekEl) dayOfWeekEl.textContent = `Born on: ${dayOfWeek}`; if(exactAgeEl) exactAgeEl.textContent = exactAgeText; if(zodiacEl) zodiacEl.textContent = `Zodiac: ${zodiacSign}`; if(daysToBdayEl) daysToBdayEl.textContent = daysUntilText; if(ageNextBdayEl) ageNextBdayEl.textContent = ageNextText; if(birthdayResultDiv) birthdayResultDiv.style.display = 'block';
+                } catch(error) { console.error("Birthday Calc Error:", error); if(dayOfWeekEl) dayOfWeekEl.textContent = "Error"; if(exactAgeEl) exactAgeEl.textContent = error.message || "Calculation failed"; if(zodiacEl) zodiacEl.textContent = ""; if(daysToBdayEl) daysToBdayEl.textContent = ""; if(ageNextBdayEl) ageNextBdayEl.textContent = ""; if(birthdayResultDiv) birthdayResultDiv.style.display = 'block'; }
+            });
+            if (calculateGenBtn) calculateGenBtn.addEventListener('click', function() { /* ... Generations Logic ... */
+                 try { const year = parseInt(yearGen.value); if(isNaN(year)) throw new Error("Invalid year"); let generation = '', range = '', info = ''; const currentCalcYear = new Date().getFullYear(); if (year >= 1901 && year <= 1927) { generation = 'Greatest Generation'; range = '1901-1927'; info = 'Experienced the Great Depression and World War II.'; } else if (year >= 1928 && year <= 1945) { generation = 'Silent Generation'; range = '1928-1945'; info = 'Grew up during times of war and economic hardship.'; } else if (year >= 1946 && year <= 1964) { generation = 'Baby Boomers'; range = '1946-1964'; info = 'Born during the post–World War II baby boom.'; } else if (year >= 1965 && year <= 1980) { generation = 'Generation X'; range = '1965-1980'; info = 'Often characterized by independence and skepticism.'; } else if (year >= 1981 && year <= 1996) { generation = 'Millennials (Gen Y)'; range = '1981-1996'; info = 'Came of age around the turn of the millennium; digital pioneers.'; } else if (year >= 1997 && year <= 2012) { generation = 'Generation Z'; range = '1997-2012'; info = 'Digital natives, grew up with the internet and social media.'; } else if (year >= 2013 && year <= currentCalcYear) { generation = 'Generation Alpha'; range = `2013-${currentCalcYear}`; info = 'The first generation born entirely in the 21st century.'; } else if (year < 1901) { generation = 'Lost Generation (or earlier)'; range = '< 1901'; info = 'Generations preceding the Greatest Generation.';} else { generation = 'Future Generation'; range = `> ${currentCalcYear}`; info = 'Born after the current year.'; } if(genNameEl) genNameEl.textContent = generation; if(genRangeEl) genRangeEl.textContent = `Born: ${range}`; if(genInfoEl) genInfoEl.textContent = info; if(genResultDiv) genResultDiv.style.display = 'block'; } catch (error) { console.error("Generations Calc Error:", error); if(genNameEl) genNameEl.textContent = "Error"; if(genRangeEl) genRangeEl.textContent = error.message || "Calculation failed"; if(genInfoEl) genInfoEl.textContent = ""; if(genResultDiv) genResultDiv.style.display = 'block'; }
+            });
+
+            // --- Clipboard Copy ---
+            document.querySelectorAll('.result-copy').forEach(btn => { btn.addEventListener('click', function(event) { try { event.stopPropagation(); const targetId = this.getAttribute('data-target'); const valueElement = document.getElementById(targetId); const textToCopy = valueElement?.textContent; if (navigator.clipboard && textToCopy) { navigator.clipboard.writeText(textToCopy).then(() => showCopyFeedback(this)).catch(err => console.error('Failed to copy: ', err)); } else if (!textToCopy) console.error('No text content found to copy for ID:', targetId); else console.error('Clipboard API not available.'); } catch(e) { console.error("Error copying to clipboard:", e); } }); });
+             // --- Initial State Trigger ---
+             try { document.querySelector('.tab.active')?.click(); document.querySelector('#age-difference .subtab.active')?.click(); } catch(e) { console.error("Error triggering initial state:", e); }
+
+        }); // End DOMContentLoaded
+    </script>
+
+</body>
+</html>

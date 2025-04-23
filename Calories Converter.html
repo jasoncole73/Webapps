@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calorie <=> Pounds & Ounces Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style type="text/tailwindcss">
+        @tailwind base;
+        @tailwind components;
+        @tailwind utilities;
+
+        body {
+            font-family: 'Inter', sans-serif;
+            @apply bg-gradient-to-br from-blue-50 to-blue-200 min-h-screen flex items-center justify-center p-4;
+        }
+        .converter-card {
+            @apply bg-white p-6 sm:p-8 rounded-xl shadow-lg max-w-md w-full transition-all duration-300 ease-in-out;
+        }
+        .input-field {
+            @apply w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500 focus:border-blue-500 transition duration-200 shadow-sm;
+        }
+        .input-group {
+             @apply flex gap-3 items-end;
+        }
+         .input-group > div {
+            @apply flex-1;
+         }
+        .action-button {
+            @apply flex-1 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out shadow hover:shadow-md disabled:opacity-50;
+        }
+        .convert-button {
+            @apply bg-blue-600 hover:bg-blue-700;
+        }
+        .reset-button {
+            @apply bg-gray-500 hover:bg-gray-600;
+        }
+        .swap-button {
+            @apply w-full bg-indigo-500 hover:bg-indigo-600 mb-4;
+        }
+        .result-area {
+            @apply mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg transition-opacity duration-500 ease-in-out opacity-0 min-h-[80px];
+        }
+        .result-area.show {
+            @apply opacity-100;
+        }
+        .result-table {
+            @apply w-full table-fixed;
+        }
+        .result-table td {
+            @apply p-2 text-lg;
+        }
+        .result-table td:first-child {
+            @apply font-medium text-gray-600 text-right pr-3;
+        }
+         .result-table td:last-child {
+            @apply font-semibold text-blue-800 text-left pl-3;
+        }
+        .calorie-result-value {
+             @apply text-2xl font-semibold text-blue-800;
+        }
+        .calorie-result-label {
+            @apply text-sm text-blue-600 uppercase tracking-wider;
+        }
+        /* Fallback just in case Tailwind hidden doesn't apply */
+         .hidden {
+             display: none !important; /* Use important to override potential conflicts */
+         }
+
+    </style>
+</head>
+<body>
+    <div class="converter-card">
+        <h1 id="converter-title" class="text-2xl sm:text-3xl font-bold text-center text-blue-800 mb-4">Calorie Converter</h1>
+
+        <button id="swapBtn" class="action-button swap-button">Switch Units</button>
+
+        <div id="input-section" class="mb-5">
+            <div id="calorie-input-group">
+                <label id="input-label-cal" for="calories" class="block text-sm font-medium text-gray-700 mb-1">Calorie Value:</label>
+                <input type="number" id="calories" name="calories" class="input-field" min="0">
+            </div>
+
+            <div id="pounds-input-group" class="hidden">
+                 <label id="input-label-lbs" class="block text-sm font-medium text-gray-700 mb-1">Enter Weight:</label>
+                 <div class="input-group">
+                     <div>
+                         <label for="pounds-input" class="block text-xs font-medium text-gray-500 mb-1">Pounds (LBS)</label>
+                         <input type="number" id="pounds-input" name="pounds" class="input-field" min="0">
+                     </div>
+                     <div>
+                         <label for="ounces-input" class="block text-xs font-medium text-gray-500 mb-1">Ounces (OZ)</label>
+                         <input type="number" id="ounces-input" name="ounces" class="input-field" min="0" max="15.9" step="0.1">
+                     </div>
+                 </div>
+            </div>
+        </div>
+
+        <div class="flex gap-3 mb-4">
+             <button id="convertBtn" class="action-button convert-button">Convert</button>
+             <button id="resetBtn" class="action-button reset-button">Reset</button>
+        </div>
+
+        <div id="error-message" class="text-red-600 text-sm text-center mb-4 h-5"></div>
+
+        <div id="result" class="result-area">
+             </div>
+
+    </div> <script>
+        // --- DOM Element References ---
+        const calorieInput = document.getElementById('calories');
+        const poundsInput = document.getElementById('pounds-input');
+        const ouncesInput = document.getElementById('ounces-input');
+        const convertBtn = document.getElementById('convertBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const swapBtn = document.getElementById('swapBtn');
+        const resultDiv = document.getElementById('result');
+        const errorMessageDiv = document.getElementById('error-message');
+        const titleElement = document.getElementById('converter-title');
+        const calorieInputGroup = document.getElementById('calorie-input-group');
+        const poundsInputGroup = document.getElementById('pounds-input-group');
+        const inputLabelCal = document.getElementById('input-label-cal');
+        const inputLabelLbs = document.getElementById('input-label-lbs');
+
+        // --- State ---
+        let conversionMode = 'calToLb'; // 'calToLb' or 'lbToCal'
+
+        // --- Constants ---
+        const CALORIES_PER_POUND = 3500;
+        const OUNCES_PER_POUND = 16;
+
+        // --- UI Update Function ---
+        function updateUI() {
+            errorMessageDiv.textContent = ''; // Clear errors on swap
+            resultDiv.classList.remove('show'); // Hide result area
+            resultDiv.innerHTML = ''; // Clear previous result content
+            swapBtn.textContent = 'Switch Units'; // Set button text consistently
+
+             // Use classList add/remove which is generally more reliable
+            if (conversionMode === 'calToLb') {
+                titleElement.textContent = 'Calories → Pounds & Ounces';
+                inputLabelCal.textContent = 'Calorie Value:';
+                calorieInputGroup.classList.remove('hidden');
+                poundsInputGroup.classList.add('hidden');
+                poundsInput.value = ''; // Clear opposite inputs
+                ouncesInput.value = '';
+            } else { // lbToCal
+                titleElement.textContent = 'Pounds & Ounces → Calories';
+                inputLabelLbs.textContent = 'Enter Weight:';
+                calorieInputGroup.classList.add('hidden');
+                poundsInputGroup.classList.remove('hidden');
+                calorieInput.value = ''; // Clear opposite input
+            }
+        }
+
+        // --- Conversion Functions ---
+        function convertCaloriesToPounds() {
+            resultDiv.classList.remove('show');
+            const calorieValue = calorieInput.value.trim();
+
+            // Validation
+            if (calorieValue === '') {
+                errorMessageDiv.textContent = 'Please enter a calorie value.';
+                return;
+            }
+            const calories = parseFloat(calorieValue);
+            if (isNaN(calories) || calories < 0) {
+                errorMessageDiv.textContent = 'Please enter a valid positive number for calories.';
+                return;
+            }
+
+            // Calculation
+            const totalPounds = calories / CALORIES_PER_POUND;
+            const pounds = Math.floor(totalPounds);
+            const remainingPounds = totalPounds - pounds;
+            const ounces = Math.round(remainingPounds * OUNCES_PER_POUND * 10) / 10;
+
+            // Display Result (Table Format)
+            resultDiv.innerHTML = `
+                 <h3 class="text-center text-gray-700 font-medium mb-3 text-sm">Equivalent Weight</h3>
+                 <table class="result-table">
+                    <tbody>
+                        <tr>
+                            <td>Pounds:</td>
+                            <td id="pounds-cell">${pounds}</td>
+                        </tr>
+                        <tr>
+                            <td>Ounces:</td>
+                            <td id="ounces-cell">${ounces}</td>
+                        </tr>
+                    </tbody>
+                 </table>`;
+            resultDiv.classList.add('show');
+        }
+
+        function convertPoundsToCalories() {
+            resultDiv.classList.remove('show');
+            const poundsValue = poundsInput.value.trim();
+            const ouncesValue = ouncesInput.value.trim();
+
+             // Validation
+            if (poundsValue === '' && ouncesValue === '') {
+                 errorMessageDiv.textContent = 'Please enter pounds and/or ounces.';
+                 return;
+            }
+
+            const pounds = parseFloat(poundsValue) || 0; // Default to 0 if empty
+            const ounces = parseFloat(ouncesValue) || 0; // Default to 0 if empty
+
+            if (isNaN(pounds) || pounds < 0 || isNaN(ounces) || ounces < 0) {
+                errorMessageDiv.textContent = 'Please enter valid positive numbers for pounds and ounces.';
+                return;
+            }
+             if (ounces >= OUNCES_PER_POUND) {
+                 errorMessageDiv.textContent = `Ounces must be less than ${OUNCES_PER_POUND}.`;
+                 return;
+             }
+
+            // Calculation
+            const totalPounds = pounds + (ounces / OUNCES_PER_POUND);
+            const calories = Math.round(totalPounds * CALORIES_PER_POUND);
+
+             // Display Result (Single Value Format)
+            resultDiv.innerHTML = `
+                <div class="text-center">
+                     <p class="calorie-result-label mb-1">Equivalent Calories</p>
+                     <p class="calorie-result-value">${calories.toLocaleString()} <span class="text-lg">kcal</span></p>
+                 </div>`;
+            resultDiv.classList.add('show');
+        }
+
+        // --- Reset Function ---
+        function resetConverter() {
+            errorMessageDiv.textContent = '';
+            resultDiv.classList.remove('show');
+            resultDiv.innerHTML = ''; // Clear result content
+
+            if (conversionMode === 'calToLb') {
+                calorieInput.value = '';
+                calorieInput.focus();
+            } else { // lbToCal
+                poundsInput.value = '';
+                ouncesInput.value = '';
+                poundsInput.focus();
+            }
+        }
+
+        // --- Event Listeners ---
+        swapBtn.addEventListener('click', () => {
+            conversionMode = (conversionMode === 'calToLb') ? 'lbToCal' : 'calToLb';
+            updateUI();
+        });
+
+        convertBtn.addEventListener('click', () => {
+            errorMessageDiv.textContent = ''; // Clear previous errors
+            if (conversionMode === 'calToLb') {
+                convertCaloriesToPounds();
+            } else {
+                convertPoundsToCalories();
+            }
+        });
+
+        resetBtn.addEventListener('click', resetConverter);
+
+        // Add keypress listener for Enter key on all relevant inputs
+        [calorieInput, poundsInput, ouncesInput].forEach(input => {
+            input.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    convertBtn.click(); // Trigger the convert button click
+                }
+            });
+             // Clear error message and hide result on input change
+             input.addEventListener('input', () => {
+                 if (errorMessageDiv.textContent) {
+                     errorMessageDiv.textContent = '';
+                 }
+                 if (resultDiv.classList.contains('show')){
+                     resultDiv.classList.remove('show');
+                 }
+             });
+        });
+
+
+        // --- Initial UI Setup ---
+        document.addEventListener('DOMContentLoaded', () => {
+             updateUI(); // Set initial state on load
+        });
+
+    </script>
+</body>
+</html>

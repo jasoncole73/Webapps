@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic Gravel Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .disclaimer {
+            background-color: #f0f8ff;
+            border: 1px solid #b8d8fb;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .description {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .section {
+            background-color: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+        }
+        .section-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .input-row {
+            margin-bottom: 10px;
+        }
+        .input-label {
+            display: inline-block;
+            width: 70px;
+        }
+        input[type="number"] {
+            width: 120px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        select {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .radio-group {
+            margin-bottom: 15px;
+        }
+        .radio-label {
+            margin-right: 15px;
+        }
+        .button-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            text-align: center;
+        }
+        .calculate-btn {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .clear-btn {
+            background-color: #d1d5db;
+            color: #4b5563;
+        }
+        .save-btn {
+            background-color: #10b981;
+            color: white;
+        }
+        #results {
+            display: none;
+            background-color: #ebf5ff;
+            border: 1px solid #bfdbfe;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 6px;
+        }
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .result-card {
+            background-color: white;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .note {
+            font-size: 12px;
+            color: #666;
+            margin-top: 12px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="disclaimer">
+            <p>The following calculator helps estimate the amount of gravel needed to cover an area based on the density and desired depth of the gravel. It also estimates the cost of purchasing a given amount of gravel.</p>
+        </div>
+        
+        <h1>Gravel Calculator</h1>
+        <p class="description">Estimate the amount of gravel needed based on area, depth, and density</p>
+        
+        <div class="section">
+            <div class="section-title">Area to Cover:</div>
+            <div class="radio-group">
+                <label class="radio-label">
+                    <input type="radio" name="areaType" value="total" checked> Total Area
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="areaType" value="rectangle"> Rectangle
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="areaType" value="circle"> Circle
+                </label>
+            </div>
+            
+            <div id="totalAreaInputs">
+                <div class="input-row">
+                    <span class="input-label">Total Area:</span>
+                    <input type="number" id="totalArea" value="200" min="0" step="0.01">
+                    <select id="totalAreaUnit">
+                        <option value="f">square feet</option>
+                        <option value="m">square meters</option>
+                        <option value="y">square yards</option>
+                        <option value="a">acres</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="rectangleInputs" class="hidden">
+                <div class="input-row">
+                    <span class="input-label">Length:</span>
+                    <input type="number" id="length" value="20" min="0" step="0.01">
+                    <select id="lengthUnit">
+                        <option value="f">feet</option>
+                        <option value="m">meters</option>
+                        <option value="i">inches</option>
+                        <option value="c">cm</option>
+                        <option value="y">yards</option>
+                    </select>
+                </div>
+                <div class="input-row">
+                    <span class="input-label">Width:</span>
+                    <input type="number" id="width" value="15" min="0" step="0.01">
+                    <select id="widthUnit">
+                        <option value="f">feet</option>
+                        <option value="m">meters</option>
+                        <option value="i">inches</option>
+                        <option value="c">cm</option>
+                        <option value="y">yards</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="circleInputs" class="hidden">
+                <div class="input-row">
+                    <span class="input-label">Diameter:</span>
+                    <input type="number" id="diameter" value="10" min="0" step="0.01">
+                    <select id="diameterUnit">
+                        <option value="f">feet</option>
+                        <option value="m">meters</option>
+                        <option value="i">inches</option>
+                        <option value="c">cm</option>
+                        <option value="y">yards</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">Depth of Gravel</div>
+            <div class="input-row">
+                <span class="input-label">Depth:</span>
+                <input type="number" id="depth" value="3" min="0" step="0.01">
+                <select id="depthUnit">
+                    <option value="i">inches</option>
+                    <option value="c">cm</option>
+                    <option value="f">feet</option>
+                    <option value="m">meters</option>
+                    <option value="y">yards</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">Gravel Density</div>
+            <select id="densityType" style="width: 100%;">
+                <option value="g">Gravel (0.2 - 2" or 0.5 - 5 cm)</option>
+                <option value="gs">Gravel with sand</option>
+                <option value="ds">Dry sand</option>
+                <option value="ws">Wet sand</option>
+            </select>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">Price (optional)</div>
+            <div class="input-row">
+                <span class="input-label">$</span>
+                <input type="number" id="price" min="0" step="0.01">
+                <select id="priceUnit">
+                    <option value="f">per cubic foot</option>
+                    <option value="y">per cubic yard</option>
+                    <option value="b">per bag</option>
+                </select>
+            </div>
+            
+            <div id="bagSizeInputs" class="hidden">
+                <div class="input-row" style="margin-top: 10px;">
+                    <span class="input-label">Bag Size:</span>
+                    <input type="number" id="bagSize" value="0.5" min="0" step="0.01">
+                    <select id="bagSizeUnit">
+                        <option value="f">cubic feet per bag</option>
+                        <option value="b">lbs per bag</option>
+                        <option value="l">liter per bag</option>
+                        <option value="k">kg per bag</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="button-row">
+            <button type="button" id="calculateBtn" class="button calculate-btn">Calculate</button>
+            <button type="button" id="clearBtn" class="button clear-btn">Clear</button>
+        </div>
+        
+        <div id="results">
+            <div class="results-header">
+                <div class="section-title">Results</div>
+                <a href="#" id="saveBtn" style="color: #10b981; font-weight: bold; text-decoration: none;">Print</a>
+            </div>
+            
+            <div class="result-card">
+                <h3>Volume</h3>
+                <p id="volumeCubicFeet"></p>
+                <p id="volumeCubicYards"></p>
+            </div>
+            
+            <div class="result-card">
+                <h3>Weight</h3>
+                <p id="weightPounds"></p>
+                <p id="weightTons"></p>
+            </div>
+            
+            <div class="result-card" id="costCard">
+                <h3>Estimated Cost</h3>
+                <p id="costResult"></p>
+                <p id="bagsNeeded" class="hidden"></p>
+            </div>
+            
+            <p class="note">
+                Note: A typical 2-4 inch depth of gravel is recommended for most applications.
+                One cubic yard of gravel typically covers about 100 square feet at 3 inches deep.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Get elements
+        var areaTypeRadios = document.getElementsByName('areaType');
+        var totalAreaInputs = document.getElementById('totalAreaInputs');
+        var rectangleInputs = document.getElementById('rectangleInputs');
+        var circleInputs = document.getElementById('circleInputs');
+        var priceUnitSelect = document.getElementById('priceUnit');
+        var bagSizeInputs = document.getElementById('bagSizeInputs');
+        var calculateBtn = document.getElementById('calculateBtn');
+        var clearBtn = document.getElementById('clearBtn');
+        var saveBtn = document.getElementById('saveBtn');
+        var resultsDiv = document.getElementById('results');
+        var costCard = document.getElementById('costCard');
+        var bagsNeededElement = document.getElementById('bagsNeeded');
+        
+        // Show/hide area inputs based on selection
+        function toggleAreaInputs() {
+            var selectedAreaType = 'total';
+            
+            for (var i = 0; i < areaTypeRadios.length; i++) {
+                if (areaTypeRadios[i].checked) {
+                    selectedAreaType = areaTypeRadios[i].value;
+                    break;
+                }
+            }
+            
+            totalAreaInputs.className = 'hidden';
+            rectangleInputs.className = 'hidden';
+            circleInputs.className = 'hidden';
+            
+            if (selectedAreaType === 'total') {
+                totalAreaInputs.className = '';
+            } else if (selectedAreaType === 'rectangle') {
+                rectangleInputs.className = '';
+            } else if (selectedAreaType === 'circle') {
+                circleInputs.className = '';
+            }
+        }
+        
+        // Show/hide bag size inputs based on price unit selection
+        function toggleBagSizeInputs() {
+            if (priceUnitSelect.value === 'b') {
+                bagSizeInputs.className = '';
+            } else {
+                bagSizeInputs.className = 'hidden';
+            }
+        }
+        
+        // Convert length to feet
+        function convertToFeet(value, unit) {
+            if (unit === 'f') return value;
+            if (unit === 'm') return value * 3.28084;
+            if (unit === 'i') return value / 12;
+            if (unit === 'c') return value / 30.48;
+            if (unit === 'y') return value * 3;
+            return value;
+        }
+        
+        // Get density in lbs/ft³
+        function getDensity(type) {
+            if (type === 'g') return 105; // Standard gravel
+            if (type === 'gs') return 120; // Gravel with sand
+            if (type === 'ds') return 100; // Dry sand
+            if (type === 'ws') return 120; // Wet sand
+            return 105;
+        }
+        
+        // Convert area to square feet
+        function convertAreaToSqFt() {
+            var areaSqFt = 0;
+            var selectedAreaType = 'total';
+            
+            for (var i = 0; i < areaTypeRadios.length; i++) {
+                if (areaTypeRadios[i].checked) {
+                    selectedAreaType = areaTypeRadios[i].value;
+                    break;
+                }
+            }
+            
+            if (selectedAreaType === 'total') {
+                // Convert total area to square feet
+                var totalArea = parseFloat(document.getElementById('totalArea').value) || 0;
+                var totalAreaUnit = document.getElementById('totalAreaUnit').value;
+                
+                if (totalAreaUnit === 'f') {
+                    areaSqFt = totalArea;
+                } else if (totalAreaUnit === 'm') {
+                    areaSqFt = totalArea * 10.764;
+                } else if (totalAreaUnit === 'y') {
+                    areaSqFt = totalArea * 9;
+                } else if (totalAreaUnit === 'a') {
+                    areaSqFt = totalArea * 43560;
+                }
+            } else if (selectedAreaType === 'rectangle') {
+                // Convert length and width to feet
+                var length = parseFloat(document.getElementById('length').value) || 0;
+                var width = parseFloat(document.getElementById('width').value) || 0;
+                var lengthUnit = document.getElementById('lengthUnit').value;
+                var widthUnit = document.getElementById('widthUnit').value;
+                
+                var lengthFt = convertToFeet(length, lengthUnit);
+                var widthFt = convertToFeet(width, widthUnit);
+                
+                areaSqFt = lengthFt * widthFt;
+            } else if (selectedAreaType === 'circle') {
+                // Convert diameter to feet
+                var diameter = parseFloat(document.getElementById('diameter').value) || 0;
+                var diameterUnit = document.getElementById('diameterUnit').value;
+                
+                var diameterFt = convertToFeet(diameter, diameterUnit);
+                
+                var radius = diameterFt / 2;
+                areaSqFt = Math.PI * radius * radius;
+            }
+            
+            return areaSqFt;
+        }
+        
+        // Convert depth to feet
+        function convertDepthToFt() {
+            var depth = parseFloat(document.getElementById('depth').value) || 0;
+            var depthUnit = document.getElementById('depthUnit').value;
+            
+            return convertToFeet(depth, depthUnit);
+        }
+        
+        // Calculate results
+        function calculateResults() {
+            // Calculate area in square feet
+            var areaSqFt = convertAreaToSqFt();
+            var depthFt = convertDepthToFt();
+            
+            // Calculate volume
+            var volumeCubicFeet = areaSqFt * depthFt;
+            var volumeCubicYards = volumeCubicFeet / 27;
+            
+            // Get density and calculate weight
+            var densityType = document.getElementById('densityType').value;
+            var densityLbsPerCubicFt = getDensity(densityType);
+            var weightPounds = volumeCubicFeet * densityLbsPerCubicFt;
+            var weightTons = weightPounds / 2000;
+            
+            // Display volume results
+            document.getElementById('volumeCubicFeet').textContent = volumeCubicFeet.toFixed(2) + ' cubic feet';
+            document.getElementById('volumeCubicYards').textContent = volumeCubicYards.toFixed(2) + ' cubic yards';
+            
+            // Display weight results
+            document.getElementById('weightPounds').textContent = weightPounds.toFixed(2) + ' pounds';
+            document.getElementById('weightTons').textContent = weightTons.toFixed(2) + ' tons';
+            
+            // Calculate and display cost if provided
+            var priceInput = document.getElementById('price').value;
+            
+            if (priceInput && priceInput !== '') {
+                var price = parseFloat(priceInput);
+                var priceUnit = document.getElementById('priceUnit').value;
+                var cost = 0;
+                
+                if (priceUnit === 'f') {
+                    // Price per cubic foot
+                    cost = price * volumeCubicFeet;
+                    document.getElementById('costResult').textContent = '$' + cost.toFixed(2);
+                    bagsNeededElement.className = 'hidden';
+                } 
+                else if (priceUnit === 'y') {
+                    // Price per cubic yard
+                    cost = price * volumeCubicYards;
+                    document.getElementById('costResult').textContent = '$' + cost.toFixed(2);
+                    bagsNeededElement.className = 'hidden';
+                } 
+                else if (priceUnit === 'b') {
+                    // Price per bag
+                    var bagSize = parseFloat(document.getElementById('bagSize').value) || 0.5;
+                    var bagSizeUnit = document.getElementById('bagSizeUnit').value;
+                    var bagsNeeded = 0;
+                    
+                    if (bagSizeUnit === 'f') {
+                        // Bag size in cubic feet
+                        bagsNeeded = volumeCubicFeet / bagSize;
+                    } else if (bagSizeUnit === 'b') {
+                        // Bag size in pounds
+                        bagsNeeded = weightPounds / bagSize;
+                    } else if (bagSizeUnit === 'l') {
+                        // Bag size in liters
+                        bagsNeeded = (volumeCubicFeet * 28.3168) / bagSize;
+                    } else if (bagSizeUnit === 'k') {
+                        // Bag size in kg
+                        bagsNeeded = (weightPounds / 2.20462) / bagSize;
+                    }
+                    
+                    // Round up to whole bags
+                    var bagsNeededRounded = Math.ceil(bagsNeeded);
+                    // Calculate cost based on rounded number of bags
+                    cost = price * bagsNeededRounded;
+                    
+                    // Display cost and number of bags
+                    document.getElementById('costResult').textContent = '$' + cost.toFixed(2);
+                    document.getElementById('bagsNeeded').textContent = 'Number of bags needed: ' + bagsNeededRounded + ' (rounded up to whole bags)';
+                    bagsNeededElement.className = '';
+                }
+                
+                costCard.style.display = 'block';
+            } else {
+                costCard.style.display = 'none';
+            }
+            
+            // Show results
+            resultsDiv.style.display = 'block';
+        }
+        
+        // Generate PDF
+        function generatePDF() {
+            if (resultsDiv.style.display === 'none') {
+                alert('Please calculate results first before saving.');
+                return;
+            }
+            
+            // Get input values for the PDF
+            var areaDescription = '';
+            var selectedAreaType = 'total';
+            
+            for (var i = 0; i < areaTypeRadios.length; i++) {
+                if (areaTypeRadios[i].checked) {
+                    selectedAreaType = areaTypeRadios[i].value;
+                    break;
+                }
+            }
+            
+            if (selectedAreaType === 'total') {
+                var totalArea = document.getElementById('totalArea').value;
+                var totalAreaUnitEl = document.getElementById('totalAreaUnit');
+                var totalAreaUnit = totalAreaUnitEl.options[totalAreaUnitEl.selectedIndex].text;
+                areaDescription = 'Total Area: ' + totalArea + ' ' + totalAreaUnit;
+            } else if (selectedAreaType === 'rectangle') {
+                var length = document.getElementById('length').value;
+                var lengthUnitEl = document.getElementById('lengthUnit');
+                var lengthUnit = lengthUnitEl.options[lengthUnitEl.selectedIndex].text;
+                var width = document.getElementById('width').value;
+                var widthUnitEl = document.getElementById('widthUnit');
+                var widthUnit = widthUnitEl.options[widthUnitEl.selectedIndex].text;
+                areaDescription = 'Rectangle: ' + length + ' ' + lengthUnit + ' × ' + width + ' ' + widthUnit;
+            } else if (selectedAreaType === 'circle') {
+                var diameter = document.getElementById('diameter').value;
+                var diameterUnitEl = document.getElementById('diameterUnit');
+                var diameterUnit = diameterUnitEl.options[diameterUnitEl.selectedIndex].text;
+                areaDescription = 'Circle: ' + diameter + ' ' + diameterUnit + ' diameter';
+            }
+            
+            var depth = document.getElementById('depth').value;
+            var depthUnitEl = document.getElementById('depthUnit');
+            var depthUnit = depthUnitEl.options[depthUnitEl.selectedIndex].text;
+            var densityTypeEl = document.getElementById('densityType');
+            var densityType = densityTypeEl.options[densityTypeEl.selectedIndex].text;
+            
+            // Create a new window for the PDF
+            var printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                alert('Please allow popups to use the Save feature');
+                return;
+            }
+            
+            // Write the HTML content for the PDF
+            printWindow.document.write('<html><head><title>Gravel Calculator Results</title>');
+            printWindow.document.write('<style>');
+            printWindow.document.write('body { font-family: Arial, sans-serif; margin: 20px; }');
+            printWindow.document.write('h1 { text-align: center; }');
+            printWindow.document.write('.section { margin-bottom: 20px; }');
+            printWindow.document.write('.section-title { font-weight: bold; margin-bottom: 5px; }');
+            printWindow.document.write('.card { border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 4px; }');
+            printWindow.document.write('.note { font-size: 12px; color: #666; font-style: italic; margin-top: 20px; }');
+            printWindow.document.write('.footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }');
+            printWindow.document.write('</style></head><body>');
+            
+            printWindow.document.write('<h1>Gravel Calculator Results</h1>');
+            
+            printWindow.document.write('<div class="section">');
+            printWindow.document.write('<div class="section-title">Project Specifications</div>');
+            printWindow.document.write('<p>' + areaDescription + '</p>');
+            printWindow.document.write('<p>Depth: ' + depth + ' ' + depthUnit + '</p>');
+            printWindow.document.write('<p>Material: ' + densityType + '</p>');
+            printWindow.document.write('</div>');
+            
+            printWindow.document.write('<div class="section">');
+            printWindow.document.write('<div class="section-title">Volume</div>');
+            printWindow.document.write('<p>' + document.getElementById('volumeCubicFeet').textContent + '</p>');
+            printWindow.document.write('<p>' + document.getElementById('volumeCubicYards').textContent + '</p>');
+            printWindow.document.write('</div>');
+            
+            printWindow.document.write('<div class="section">');
+            printWindow.document.write('<div class="section-title">Weight</div>');
+            printWindow.document.write('<p>' + document.getElementById('weightPounds').textContent + '</p>');
+            printWindow.document.write('<p>' + document.getElementById('weightTons').textContent + '</p>');
+            printWindow.document.write('</div>');
+            
+            if (costCard.style.display !== 'none') {
+                printWindow.document.write('<div class="section">');
+                printWindow.document.write('<div class="section-title">Estimated Cost</div>');
+                printWindow.document.write('<p>' + document.getElementById('costResult').textContent + '</p>');
+                if (bagsNeededElement.className === '') {
+                    printWindow.document.write('<p>' + document.getElementById('bagsNeeded').textContent + '</p>');
+                }
+                printWindow.document.write('</div>');
+            }
+            
+            printWindow.document.write('<p class="note">');
+            printWindow.document.write('Note: A typical 2-4 inch depth of gravel is recommended for most applications. ');
+            printWindow.document.write('One cubic yard of gravel typically covers about 100 square feet at 3 inches deep.');
+            printWindow.document.write('</p>');
+            
+            var currentDate = new Date();
+            printWindow.document.write('<div class="footer">');
+            printWindow.document.write('Generated on ' + currentDate.toLocaleDateString() + ' at ' + currentDate.toLocaleTimeString());
+            printWindow.document.write('</div>');
+            
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            
+            // Trigger print dialog
+            setTimeout(function() {
+                printWindow.print();
+            }, 500);
+        }
+        
+        // Clear form
+        function clearForm() {
+            // Reset form values
+            document.getElementById('totalArea').value = '200';
+            document.getElementById('totalAreaUnit').value = 'f';
+            document.getElementById('length').value = '20';
+            document.getElementById('lengthUnit').value = 'f';
+            document.getElementById('width').value = '15';
+            document.getElementById('widthUnit').value = 'f';
+            document.getElementById('diameter').value = '10';
+            document.getElementById('diameterUnit').value = 'f';
+            document.getElementById('depth').value = '3';
+            document.getElementById('depthUnit').value = 'i';
+            document.getElementById('densityType').value = 'g';
+            document.getElementById('price').value = '';
+            document.getElementById('priceUnit').value = 'f';
+            document.getElementById('bagSize').value = '0.5';
+            document.getElementById('bagSizeUnit').value = 'f';
+            
+            // Reset area type to total
+            areaTypeRadios[0].checked = true;
+            toggleAreaInputs();
+            
+            // Reset bag size inputs
+            toggleBagSizeInputs();
+            
+            // Hide results
+            resultsDiv.style.display = 'none';
+        }
+        
+        // Add event listeners
+        for (var i = 0; i < areaTypeRadios.length; i++) {
+            areaTypeRadios[i].addEventListener('change', toggleAreaInputs);
+        }
+        
+        priceUnitSelect.addEventListener('change', toggleBagSizeInputs);
+        calculateBtn.addEventListener('click', calculateResults);
+        clearBtn.addEventListener('click', clearForm);
+        saveBtn.addEventListener('click', generatePDF);
+        
+        // Initialize form
+        toggleAreaInputs();
+        toggleBagSizeInputs();
+    </script>
+</body>
+</html>

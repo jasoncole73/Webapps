@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERA Calculator (Auto with Outs)</title>
+    <style>
+        /* Basic Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Light Blue Theme */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #e0f7fa; /* Light cyan/blue background */
+            color: #004d40; /* Dark teal text */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Calculator Container */
+        .calculator-container {
+            background-color: #ffffff; /* White container */
+            padding: 30px 40px;
+            border-radius: 12px; /* More rounded corners */
+            box-shadow: 0 6px 12px rgba(0, 77, 64, 0.15); /* Softer teal shadow */
+            text-align: center;
+            width: 100%;
+            max-width: 400px; /* Limit max width */
+        }
+
+        /* Heading */
+        h1 {
+            color: #00796b; /* Teal heading */
+            margin-bottom: 25px;
+            font-size: 2em;
+        }
+
+        /* Input Groups */
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        /* Labels */
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600; /* Slightly bolder */
+            color: #006064; /* Darker cyan label */
+            font-size: 0.95em;
+        }
+
+        /* Input Fields & Select */
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #b2dfdb; /* Light teal border */
+            border-radius: 6px;
+            font-size: 1em;
+            color: #004d40;
+            background-color: #f0fdfa; /* Very light cyan input background */
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #00796b; /* Teal border on focus */
+            box-shadow: 0 0 0 3px rgba(0, 121, 107, 0.2); /* Teal focus ring */
+        }
+
+        /* Remove number input spinners (optional) */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        input[type=number] {
+          -moz-appearance: textfield; /* Firefox */
+        }
+
+        /* Button Container (now just for Clear button) */
+        .button-container {
+            margin-top: 20px; /* Space above button */
+        }
+
+        /* Button Styling (Shared) */
+        button {
+            width: 100%; /* Make button full width */
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.1s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+
+        button:active {
+             transform: scale(0.98); /* Slight press effect */
+        }
+
+        /* Clear Button Specific Style */
+        .btn-clear {
+            background-color: #b2dfdb; /* Light teal background */
+            color: #00695c; /* Darker teal text */
+            border: 1px solid #80cbc4; /* Slightly darker border */
+        }
+        .btn-clear:hover {
+            background-color: #80cbc4; /* Darker light teal on hover */
+            border-color: #4db6ac;
+        }
+
+
+        /* Result Display */
+        .result-area {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #e0f7fa; /* Match body background */
+            border-radius: 6px;
+            min-height: 50px; /* Prevent layout shifts */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #result {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #00796b; /* Teal result text */
+        }
+
+        /* Error Message Styling */
+        #error-message {
+            color: #d32f2f; /* Red for errors */
+            font-size: 0.9em;
+            margin-top: 5px; /* Adjusted margin */
+            margin-bottom: 15px;
+            min-height: 1.2em; /* Reserve space */
+            text-align: left;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="calculator-container">
+        <h1>ERA Calculator</h1>
+
+        <div id="error-message"></div> <div class="input-group">
+            <label for="earnedRuns">Earned Runs (ER)</label>
+            <input type="number" id="earnedRuns" min="0" step="1">
+        </div>
+
+        <div class="input-group">
+            <label for="wholeInningsPitched">Whole Innings Pitched (IP)</label>
+            <input type="number" id="wholeInningsPitched" min="0" step="1">
+        </div>
+
+        <div class="input-group">
+            <label for="outsPitched">Outs Pitched</label>
+            <select id="outsPitched">
+                <option value="0" selected>0 Outs</option>
+                <option value="1">1 Out</option>
+                <option value="2">2 Outs</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label for="inningsPerGame">Standard Innings per Game</label>
+            <select id="inningsPerGame">
+                <option value="9" selected>9 Innings</option>
+                <option value="7">7 Innings</option>
+            </select>
+        </div>
+
+        <div class="button-container">
+             <button class="btn-clear" onclick="clearFields()">Clear</button>
+        </div>
+
+        <div class="result-area">
+            <span id="result">--.--</span>
+        </div>
+
+    </div>
+
+    <script>
+        // Get references to elements
+        const earnedRunsInput = document.getElementById('earnedRuns');
+        const wholeInningsInput = document.getElementById('wholeInningsPitched'); // Updated ID
+        const outsPitchedSelect = document.getElementById('outsPitched'); // New element
+        const inningsPerGameSelect = document.getElementById('inningsPerGame');
+        const resultDisplay = document.getElementById('result');
+        const errorDisplay = document.getElementById('error-message');
+
+        // --- Core Calculation Function ---
+        function performCalculation() {
+            // Clear previous results and errors
+            resultDisplay.textContent = '--.--';
+            errorDisplay.textContent = '';
+
+            // --- Get Values ---
+            const erString = earnedRunsInput.value;
+            const wholeIpString = wholeInningsInput.value; // Updated variable name
+            const outsString = outsPitchedSelect.value;
+            const standardInnings = parseInt(inningsPerGameSelect.value, 10);
+
+            // --- Input Validation ---
+            let isValid = true;
+            let errorMessage = '';
+            let earnedRuns = 0;
+            let wholeInnings = 0;
+            let outsPitched = 0;
+            let totalInningsPitched = 0;
+
+            // Validate Earned Runs (only if not empty)
+            if (erString !== '') {
+                if (isNaN(erString) || parseFloat(erString) < 0) {
+                    errorMessage = 'Earned Runs must be a non-negative number.';
+                    isValid = false;
+                } else {
+                    earnedRuns = parseFloat(erString);
+                }
+            } else {
+                isValid = false; // Need ER for calculation
+            }
+
+            // Validate Whole Innings Pitched (only if ER is valid and IP is not empty)
+            if (isValid && wholeIpString !== '') {
+                 if (isNaN(wholeIpString) || parseInt(wholeIpString) < 0 || !Number.isInteger(Number(wholeIpString))) {
+                     errorMessage = 'Whole Innings Pitched must be a non-negative whole number.';
+                     isValid = false;
+                 } else {
+                     wholeInnings = parseInt(wholeIpString, 10);
+                 }
+            } else if (isValid && wholeIpString === '') {
+                 // Allow 0 innings if explicitly entered or default, but need a value if ER > 0
+                 // Let the total innings check handle the case where ER > 0 and IP = 0
+                 wholeInnings = 0; // Assume 0 if empty but ER might be present
+            }
+
+            // Get Outs Pitched (already validated by select options)
+            if (isValid) {
+                outsPitched = parseInt(outsString, 10);
+                // Calculate Total Innings Pitched
+                totalInningsPitched = wholeInnings + (outsPitched / 3.0);
+            }
+
+
+            // Check if Total Innings Pitched is zero when ER > 0
+            if (isValid && totalInningsPitched <= 0 && earnedRuns > 0) {
+                errorMessage = 'Total Innings Pitched must be > 0 if Earned Runs > 0.';
+                isValid = false;
+            }
+
+            // --- Calculate and Display ---
+            // Only calculate and display if inputs are present and valid (or ER=0, IP=0)
+            if (isValid) {
+                let era = 0;
+                if (totalInningsPitched > 0) {
+                    era = (earnedRuns / totalInningsPitched) * standardInnings;
+                } else if (earnedRuns === 0) {
+                    // Handle 0 ER / 0 IP case (results in 0.00 ERA)
+                    era = 0;
+                } else {
+                    // This case should be caught by validation, but as a fallback:
+                    resultDisplay.textContent = '--.--'; // Or 'N/A'
+                    if (!errorMessage) errorMessage = "Cannot calculate ERA with 0 innings and >0 runs.";
+                    errorDisplay.textContent = errorMessage;
+                    return; // Stop execution here
+                }
+                resultDisplay.textContent = era.toFixed(2);
+            } else {
+                // Display error only if one of the fields has potentially invalid content
+                // Otherwise, just show the default '--.--' if fields are empty
+                if (erString !== '' || wholeIpString !== '') { // Check if user started typing
+                     errorDisplay.textContent = errorMessage;
+                }
+                 resultDisplay.textContent = '--.--';
+            }
+        }
+
+        // --- Function to clear all fields and results ---
+        function clearFields() {
+            earnedRunsInput.value = '';
+            wholeInningsInput.value = ''; // Updated ID
+            outsPitchedSelect.value = '0'; // Reset outs dropdown
+            inningsPerGameSelect.value = '9'; // Reset innings per game dropdown
+            resultDisplay.textContent = '--.--';
+            errorDisplay.textContent = ''; // Clear any errors
+        }
+
+
+        // --- Event Listeners for Auto-Calculation ---
+        earnedRunsInput.addEventListener('input', performCalculation);
+        wholeInningsInput.addEventListener('input', performCalculation); // Updated ID
+        outsPitchedSelect.addEventListener('change', performCalculation); // New listener
+        inningsPerGameSelect.addEventListener('change', performCalculation);
+
+        // Optional: Perform initial calculation in case of default values (e.g., 0 outs)
+        // performCalculation(); // Uncomment if you want calculation on load with defaults
+
+    </script>
+
+</body>
+</html>

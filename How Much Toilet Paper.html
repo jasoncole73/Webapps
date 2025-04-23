@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toilet Paper Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+     <script>
+        // Optional: Configure Tailwind (if needed)
+        tailwind.config = {
+          theme: {
+            extend: {
+              fontFamily: {
+                 // Ensure Inter font is available via Tailwind config
+                 sans: ['Inter', 'sans-serif'],
+              },
+              colors: {
+                // Example custom colors
+              }
+            }
+          }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles */
+        body {
+            font-family: 'Inter', sans-serif; /* Apply Inter font */
+            background-color: #f3f4f6; /* Tailwind gray-100 */
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem; /* Tailwind space-x-4 */
+        }
+        .slider {
+            flex-grow: 1;
+            cursor: pointer;
+            accent-color: #3b82f6; /* Tailwind blue-500 */
+            height: 0.5rem; /* Tailwind h-2 */
+            background-color: #d1d5db; /* Tailwind gray-300 */
+            border-radius: 9999px; /* Tailwind rounded-full */
+            appearance: none; /* Override default look */
+            -webkit-appearance: none;
+        }
+        /* Style the thumb for Webkit browsers (Chrome, Safari) */
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 1.25rem; /* Tailwind w-5 */
+            height: 1.25rem; /* Tailwind h-5 */
+            background-color: #3b82f6; /* Tailwind blue-500 */
+            border-radius: 9999px; /* Tailwind rounded-full */
+            cursor: pointer;
+            margin-top: -0.375rem; /* Vertically center thumb on track */
+        }
+        /* Style the thumb for Firefox */
+        .slider::-moz-range-thumb {
+            width: 1.25rem; /* Tailwind w-5 */
+            height: 1.25rem; /* Tailwind h-5 */
+            background-color: #3b82f6; /* Tailwind blue-500 */
+            border-radius: 9999px; /* Tailwind rounded-full */
+            cursor: pointer;
+            border: none; /* Remove default border */
+        }
+        .slider-value {
+            min-width: 3rem; /* Tailwind w-12 */
+            text-align: right;
+            font-weight: 500; /* Tailwind font-medium */
+            color: #4b5563; /* Tailwind gray-600 */
+        }
+        .result-box {
+            background-color: #dbeafe; /* Tailwind blue-100 */
+            border: 1px solid #93c5fd; /* Tailwind blue-300 */
+            color: #1e3a8a; /* Tailwind blue-800 */
+            padding: 1rem 1.5rem; /* Adjusted padding */
+            border-radius: 0.5rem; /* Tailwind rounded-lg */
+            text-align: center;
+            margin-top: 1.5rem; /* Tailwind mt-6 */
+        }
+        .result-days {
+            font-size: 2rem; /* Slightly smaller on mobile */
+            font-weight: 700; /* Tailwind font-bold */
+            line-height: 1;
+        }
+        .result-label {
+            font-size: 0.875rem; /* Tailwind text-sm */
+            color: #374151; /* Tailwind gray-700 */
+            margin-top: 0.25rem; /* Tailwind mt-1 */
+        }
+        .result-percentage {
+            font-size: 1.25rem; /* Slightly smaller on mobile */
+            font-weight: 600; /* Tailwind font-semibold */
+            margin-top: 0.75rem; /* Tailwind mt-3 */
+            color: #1d4ed8; /* Tailwind blue-700 */
+        }
+        .result-percentage-label {
+             font-size: 0.875rem; /* Tailwind text-sm */
+             color: #374151; /* Tailwind gray-700 */
+             margin-top: 0.125rem; /* Tailwind mt-0.5 */
+        }
+        /* Style for the toggle button */
+        #toggleAdvanced {
+            background-color: #e5e7eb; /* Tailwind gray-200 */
+            color: #374151; /* Tailwind gray-700 */
+            transition: background-color 0.2s;
+        }
+        #toggleAdvanced:hover {
+            background-color: #d1d5db; /* Tailwind gray-300 */
+        }
+        /* Hide advanced options by default */
+        #advancedOptions {
+            display: none;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, padding-top 0.5s ease-out, margin-top 0.5s ease-out; /* Smooth transition */
+            max-height: 0;
+            padding-top: 0;
+            margin-top: 0;
+            border-top: none;
+        }
+        #advancedOptions.open {
+            display: grid; /* Use grid for layout */
+            max-height: 600px; /* Increased max-height */
+            padding-top: 1.5rem; /* Tailwind pt-6 */
+            margin-top: 1.5rem; /* Tailwind mt-6 */
+            border-top: 1px solid #e5e7eb; /* Tailwind border-gray-200 */
+        }
+        /* Responsive adjustments */
+        @media (min-width: 768px) { /* md breakpoint */
+             .result-days {
+                 font-size: 2.25rem; /* text-4xl */
+             }
+              .result-percentage {
+                 font-size: 1.5rem; /* text-2xl */
+             }
+             #advancedOptions.open {
+                 grid-template-columns: repeat(2, minmax(0, 1fr)); /* 2 columns on md+ */
+             }
+        }
+
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-2xl mx-auto bg-white p-6 md:p-8 rounded-lg shadow-lg">
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6 text-center">How Much Toilet Paper Do You Need?</h1>
+
+        <form id="tpForm" class="space-y-6">
+            <div>
+                <label for="rolls" class="block text-sm font-medium text-gray-700 mb-1">Rolls you have:</label>
+                <div class="slider-container">
+                    <input type="range" id="rolls" name="rolls" min="1" max="500" value="10" class="slider">
+                    <span id="rollsValue" class="slider-value">10</span>
+                </div>
+            </div>
+
+            <div>
+                <label for="visits" class="block text-sm font-medium text-gray-700 mb-1">Toilet Visits Per Person Per Day:</label>
+                <div class="slider-container">
+                    <input type="range" id="visits" name="visits" min="1" max="10" value="3" step="1" class="slider">
+                    <span id="visitsValue" class="slider-value">3</span>
+                </div>
+            </div>
+
+             <div>
+                <label for="targetDuration" class="block text-sm font-medium text-gray-700 mb-1">Target Duration (days):</label>
+                <div class="slider-container">
+                    <input type="range" id="targetDuration" name="targetDuration" min="1" max="365" value="14" step="1" class="slider">
+                    <span id="targetDurationValue" class="slider-value">14</span>
+                </div>
+            </div>
+
+            <button type="button" id="toggleAdvanced" class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Advanced Options <span id="toggleIcon">▼</span>
+            </button>
+
+            <div id="advancedOptions" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                 <div>
+                    <label for="people" class="block text-sm font-medium text-gray-700 mb-1">People in household:</label>
+                    <div class="slider-container">
+                        <input type="range" id="people" name="people" min="1" max="10" value="2" step="1" class="slider">
+                        <span id="peopleValue" class="slider-value">2</span>
+                    </div>
+                </div>
+                 <div>
+                    <label for="sheetsPerRoll" class="block text-sm font-medium text-gray-700 mb-1">Sheets on a roll:</label>
+                    <div class="slider-container">
+                        <input type="range" id="sheetsPerRoll" name="sheetsPerRoll" min="50" max="1000" value="160" step="10" class="slider">
+                        <span id="sheetsPerRollValue" class="slider-value">160</span>
+                    </div>
+                </div>
+                <div>
+                    <label for="wipes" class="block text-sm font-medium text-gray-700 mb-1">Avg. wipes per trip:</label>
+                     <div class="slider-container">
+                        <input type="range" id="wipes" name="wipes" min="1" max="10" value="3" step="1" class="slider">
+                        <span id="wipesValue" class="slider-value">3</span>
+                    </div>
+                </div>
+                <div>
+                    <label for="sheetsPerWipe" class="block text-sm font-medium text-gray-700 mb-1">Sheets per wipe:</label>
+                     <div class="slider-container">
+                        <input type="range" id="sheetsPerWipe" name="sheetsPerWipe" min="1" max="10" value="2" step="1" class="slider">
+                        <span id="sheetsPerWipeValue" class="slider-value">2</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="result-box">
+                <div>
+                    <div id="resultDays" class="result-days">--</div>
+                    <div class="result-label">Days Your Supply Will Last</div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-blue-200">
+                     <div id="resultPercentage" class="result-percentage">--%</div>
+                     <div id="resultPercentageLabel" class="result-percentage-label">of Target Duration Covered</div>
+                </div>
+            </div>
+        </form>
+
+    </div> <div class="text-center mt-6 px-4">
+        <p class="text-xs text-gray-500">
+            Disclaimer: This is just an estimate and calculations are approximate. Actual usage may vary.
+        </p>
+    </div>
+
+
+    <script>
+        // Get DOM elements
+        const form = document.getElementById('tpForm');
+        const rollsInput = document.getElementById('rolls');
+        const visitsInput = document.getElementById('visits');
+        const targetDurationInput = document.getElementById('targetDuration');
+        const peopleInput = document.getElementById('people');
+        const sheetsPerRollInput = document.getElementById('sheetsPerRoll');
+        const wipesInput = document.getElementById('wipes');
+        const sheetsPerWipeInput = document.getElementById('sheetsPerWipe');
+
+        // Slider value spans
+        const rollsValueSpan = document.getElementById('rollsValue');
+        const visitsValueSpan = document.getElementById('visitsValue');
+        const targetDurationValueSpan = document.getElementById('targetDurationValue');
+        const peopleValueSpan = document.getElementById('peopleValue');
+        const sheetsPerRollValueSpan = document.getElementById('sheetsPerRollValue');
+        const wipesValueSpan = document.getElementById('wipesValue');
+        const sheetsPerWipeValueSpan = document.getElementById('sheetsPerWipeValue');
+
+        // Result elements
+        const resultDaysDiv = document.getElementById('resultDays');
+        const resultPercentageDiv = document.getElementById('resultPercentage');
+        const resultPercentageLabelDiv = document.getElementById('resultPercentageLabel');
+
+        // Advanced options toggle
+        const toggleButton = document.getElementById('toggleAdvanced');
+        const advancedOptionsDiv = document.getElementById('advancedOptions');
+        const toggleIcon = document.getElementById('toggleIcon');
+
+        // --- Event Listeners ---
+
+        // Update display and calculate on any input change
+        form.addEventListener('input', (event) => {
+            // Update slider value displays if the event target is a range input
+            if (event.target.type === 'range') {
+                const valueSpanId = event.target.id + 'Value';
+                const valueSpan = document.getElementById(valueSpanId);
+                if (valueSpan) {
+                    valueSpan.textContent = event.target.value;
+                }
+            }
+            calculate(); // Recalculate whenever any input changes
+        });
+
+        // Toggle advanced options visibility
+        toggleButton.addEventListener('click', () => {
+            const isOpen = advancedOptionsDiv.classList.toggle('open');
+             toggleIcon.textContent = isOpen ? '▲' : '▼'; // Update icon
+             // Adjust max-height for smooth transition based on content height
+             if (isOpen) {
+                // Needs scrollHeight to calculate the actual height required
+                advancedOptionsDiv.style.maxHeight = advancedOptionsDiv.scrollHeight + "px";
+             } else {
+                advancedOptionsDiv.style.maxHeight = "0";
+             }
+        });
+
+        // --- Calculation Function ---
+        function calculate() {
+            // Get current values from inputs (convert to integers)
+            const rolls = parseInt(rollsInput.value);
+            const visits = parseInt(visitsInput.value);
+            const targetDuration = parseInt(targetDurationInput.value);
+            const people = parseInt(peopleInput.value);
+            const sheetsPerRoll = parseInt(sheetsPerRollInput.value);
+            const wipes = parseInt(wipesInput.value);
+            const sheetsPerWipe = parseInt(sheetsPerWipeInput.value);
+
+            // --- Calculate Days Lasting ---
+            const sheetsPerDayPerPerson = visits * wipes * sheetsPerWipe;
+            const totalSheetsPerDay = sheetsPerDayPerPerson * people;
+            const totalSheetsAvailable = rolls * sheetsPerRoll;
+
+            let daysLasting = 0;
+
+            // Avoid division by zero when calculating days
+            if (totalSheetsPerDay > 0) {
+                daysLasting = Math.floor(totalSheetsAvailable / totalSheetsPerDay);
+            } else if (totalSheetsAvailable > 0) {
+                // If usage is zero but rolls exist, supply lasts indefinitely
+                daysLasting = Infinity;
+            } else {
+                // If usage is zero and rolls are zero
+                daysLasting = 0;
+            }
+
+            // Display Days Lasting result
+            if (daysLasting === Infinity) {
+                 resultDaysDiv.textContent = '∞';
+            } else if (isNaN(daysLasting)) {
+                 resultDaysDiv.textContent = '--'; // Handle potential NaN issues (e.g., invalid input)
+            }
+            else {
+                resultDaysDiv.textContent = daysLasting;
+            }
+
+            // --- Calculate Percentage ---
+            let percentage = 0;
+            let percentageText = '--%'; // Default text
+
+            // Calculate percentage only if target duration is positive
+            if (targetDuration > 0) {
+                if (daysLasting === Infinity) {
+                    // If supply is infinite, coverage is effectively 100%+
+                    percentage = Infinity;
+                    percentageText = '100%+'; // Display as 100%+
+                } else if (!isNaN(daysLasting)) {
+                    // Calculate the actual percentage
+                    percentage = Math.round((daysLasting / targetDuration) * 100);
+                    // Display the actual calculated percentage
+                    percentageText = `${percentage}%`;
+                }
+                // If daysLasting is NaN, percentageText remains '--%'
+            } // If targetDuration is 0 or less, percentageText remains '--%'
+
+            // Display Percentage result
+            resultPercentageDiv.textContent = percentageText;
+            // Update the label to reflect the current target duration
+            resultPercentageLabelDiv.textContent = `of ${targetDuration} Day Target Covered`;
+        }
+
+        // --- Initial Setup ---
+
+        // Function to set initial display values for all sliders
+        function setInitialSliderValues() {
+             rollsValueSpan.textContent = rollsInput.value;
+             visitsValueSpan.textContent = visitsInput.value;
+             targetDurationValueSpan.textContent = targetDurationInput.value;
+             peopleValueSpan.textContent = peopleInput.value;
+             sheetsPerRollValueSpan.textContent = sheetsPerRollInput.value;
+             wipesValueSpan.textContent = wipesInput.value;
+             sheetsPerWipeValueSpan.textContent = sheetsPerWipeInput.value;
+        }
+
+        // Set initial values on page load
+        setInitialSliderValues();
+
+        // Perform initial calculation on page load
+        calculate();
+
+        // Optional: Recalculate max-height if window resizes while advanced options are open
+        window.addEventListener('resize', () => {
+            if (advancedOptionsDiv.classList.contains('open')) {
+                 advancedOptionsDiv.style.maxHeight = advancedOptionsDiv.scrollHeight + "px";
+            }
+        });
+
+    </script>
+
+</body>
+</html>

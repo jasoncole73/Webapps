@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cat Years to Human Years Calculator</title>
+    <style>
+        /* Basic Reset and Font */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f4f8; /* Light grey-blue background */
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center; /* Center vertically */
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        /* Calculator Container */
+        .calculator-container {
+            background-color: #ffffff; /* White background for the card */
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-width: 450px; /* Slightly wider to accommodate text */
+            width: 100%; /* Full width on smaller screens */
+            text-align: center;
+        }
+
+        /* Heading */
+        h1 {
+            color: #2a4b7c; /* Darker blue for heading */
+            margin-bottom: 25px;
+            font-size: 1.8em;
+        }
+
+        /* Form Elements */
+        label {
+            display: block; /* Makes label take full width */
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+            text-align: left;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 5px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1em;
+            appearance: textfield; /* Hides spinner buttons in some browsers */
+            -moz-appearance: textfield; /* Firefox */
+        }
+        /* Style for focus state */
+        input[type="number"]:focus {
+             border-color: #4a90e2; /* Blue border on focus */
+             outline: none;
+             box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        }
+
+        /* Result Display */
+        #result {
+            margin-top: 20px; /* Adjusted margin */
+            font-size: 1.1em;
+            font-weight: 500;
+            color: #2a4b7c; /* Dark blue for result text */
+            min-height: 1.6em; /* Reserve space to prevent layout shift */
+            background-color: #e7f0fa; /* Very light blue background for result */
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px dashed #a0c4e8; /* Dashed blue border */
+            text-align: center; /* Center text in result box */
+        }
+        #result.error {
+            color: #d9534f; /* Red color for error messages */
+            background-color: #f2dede;
+            border-color: #ebccd1;
+            font-weight: normal;
+        }
+
+        /* Reference Note */
+        .reference {
+            margin-top: 20px;
+            font-size: 0.8em;
+            color: #777;
+        }
+
+        /* Info Dropdown Section */
+        .info-section {
+            margin-top: 30px; /* Space above the dropdown */
+            text-align: left; /* Align text left within the section */
+        }
+
+        details {
+            border: 1px solid #a0c4e8; /* Light blue border */
+            border-radius: 8px;
+            margin-bottom: 10px; /* Space below dropdown */
+            background-color: #f8fafd; /* Very light blue background */
+        }
+
+        summary {
+            padding: 10px 15px;
+            font-weight: 600;
+            color: #357abd; /* Medium blue color */
+            cursor: pointer;
+            list-style: none; /* Remove default marker */
+            position: relative;
+            border-radius: 8px; /* Match details border radius */
+            transition: background-color 0.2s ease;
+        }
+        summary:hover {
+             background-color: #e7f0fa; /* Slightly darker blue on hover */
+        }
+
+        /* Add custom marker */
+        summary::before {
+            content: '▶'; /* Collapsed state marker */
+            position: absolute;
+            left: 15px; /* Position marker */
+            margin-right: 10px;
+            font-size: 0.8em;
+            transition: transform 0.2s ease-in-out;
+            display: inline-block; /* Needed for transform */
+        }
+
+        details[open] > summary::before {
+            transform: rotate(90deg); /* Rotated marker for expanded state */
+        }
+
+        details[open] > summary {
+            border-bottom: 1px solid #a0c4e8; /* Separator line when open */
+             border-bottom-left-radius: 0; /* Adjust radius when open */
+             border-bottom-right-radius: 0;
+        }
+
+        /* Padding for the content inside details */
+        .info-content {
+            padding: 15px;
+            font-size: 0.95em;
+            color: #444; /* Slightly darker text for content */
+        }
+        .info-content h3 {
+             color: #2a4b7c; /* Darker blue for subheadings */
+             margin-top: 15px;
+             margin-bottom: 5px;
+             font-size: 1.1em;
+        }
+        .info-content h3:first-child {
+            margin-top: 0; /* Remove top margin for the first heading */
+        }
+        .info-content ul {
+            padding-left: 20px; /* Indent list items */
+            margin-top: 5px;
+        }
+         .info-content li {
+             margin-bottom: 5px; /* Space between list items */
+         }
+
+
+    </style>
+</head>
+<body>
+
+    <div class="calculator-container">
+        <h1>Cat Years Calculator</h1>
+
+        <label for="cat-years">Enter Cat's Age (in years):</label>
+        <input type="number" id="cat-years" min="0" placeholder="e.g., 5">
+
+        <div id="result">Enter your cat's age above.</div>
+
+        <p class="reference">Conversion based on Purina's guide.</p>
+
+        <div class="info-section">
+            <details>
+                <summary style="padding-left: 35px;">Learn More About Cat Aging</summary> <div class="info-content">
+                    <h3>What is the Average Cat’s Life Expectancy?</h3>
+                    <p>The true answer is that it depends, but indoor cats usually live longer than outdoor cats. The average indoor cat lifespan is 16-18 years and some even reach (or pass) the venerable age of 20. Most outdoor cats have an average lifespan of 13-14 years.</p>
+                    <p>Life expectancy in cats also varies depending on the breed, as some cat breeds will naturally live longer than others. For example, Siamese and Manx breeds are said to live the longest, so they could reach a ripe age in human years!</p>
+                    <p>Did you know? According to some sources, the world’s oldest cat lived to be 34? That’s 153 in human years!</p>
+                    <p>Cats’ life expectancies have increased dramatically in the last few decades. Although it’s never enough, we’re spending more and more time together with our feline friends and that can only be a great thing.</p>
+
+                    <h3>How Do Cats Age in Human Years?</h3>
+                    <p>Cats age very quickly in their first two years of life, after which the process slows down and becomes more gradual. The way in which a cat’s age is determined is based off its physical and behavioral changes. These stages are then matched to those of a human life cycle.</p>
+
+                    <h3>Why is it Important to Know a Cat’s Age in Human Years?</h3>
+                    <p>It is important to know the life stage that they are at so that you can prepare yourself for any age-related health issues that may occur. Knowing when your cat has transitioned into their mature, senior cat years will help you give them the best care possible.</p>
+
+                    <h3>How Can I Tell My Cat’s Age?</h3>
+                    <p>To find out how old your cat is, it’s best to take them to a vet. But you can still look for tell-tale signs of a cat’s age and health. You (or your vet) can look for these signs in their teeth, fur, eyes, muscles and bones. We have more information on this below.</p>
+
+                    <h4>Teeth</h4>
+                    <p>Teeth can’t pinpoint the exact date for your feline friend’s birthday party, but they are still a great indicator of a cat’s age. The milestones are:</p>
+                    <ul>
+                        <li>A kitten’s first teeth appear between two to four weeks.</li>
+                        <li>Their permanent white teeth come in at around four months.</li>
+                        <li>Yellow stains (aka tartar) on a few teeth can mean your cat might be between one or two years old.</li>
+                        <li>If the stains appear on all teeth, the cat is likely at least three to five years old.</li>
+                        <li>Missing teeth are usually a sign that your cat is a respectable senior, between 10-15 years of age.</li>
+                    </ul>
+                    <p>But keep in mind that some cats can just have worse teeth than others regardless of their age.</p>
+
+                    <h4>Eyes</h4>
+                    <p>If your cat’s teeth are not always the reliable indicator you hoped for, eyes can give you a useful clue regarding your cat’s age. The difference between a smooth iris and a crackly looking one can be the difference between a young cat and a senior one.</p>
+                    <p>After 12 years of age, cat’s eyes usually start showing cloudiness. And if you notice tearing and eye discharge, you likely have a senior cat on your hands.</p>
+
+                    <h4>Muscles and Bones</h4>
+                    <p>Age can hide behind appearances so pay attention to features that can complete your cat’s age picture. As in humans, a higher activity level gives your cat muscle definition. Playing, jumping and running are a young cat’s game. So, if you notice that your cat tends to lose muscle mass or they don't like to move around too much, this might be a sign of aging. Older cats may be bonier, have extra skin hanging or protruding shoulder blades.</p>
+
+                    <h4>Coat</h4>
+                    <p>A cat’s fur changes with age. Fine, soft fur is usually reserved for young cats only. Older cats tend to have a thicker, coarser fur with patches of grey hair.</p>
+                </div>
+            </details>
+        </div>
+        </div>
+
+    <script>
+        // Get references to the necessary DOM elements
+        const catYearsInput = document.getElementById('cat-years');
+        const resultDiv = document.getElementById('result');
+
+        // Add event listener to the input field to trigger calculation on input
+        catYearsInput.addEventListener('input', calculateHumanYears);
+
+        // Function to perform the calculation
+        function calculateHumanYears() {
+            // Clear previous error styling
+            resultDiv.classList.remove('error');
+
+            // Get the input value and convert it to a floating-point number
+            const catYearsValue = catYearsInput.value;
+
+            // If the input is empty, reset the result message
+            if (catYearsValue === '') {
+                 resultDiv.textContent = 'Enter your cat\'s age above.';
+                 return;
+            }
+
+            const catYears = parseFloat(catYearsValue);
+
+
+            // --- Input Validation ---
+            if (isNaN(catYears)) {
+                resultDiv.textContent = 'Please enter a valid number.';
+                resultDiv.classList.add('error');
+                return; // Stop the function execution
+            }
+            if (catYears < 0) {
+                resultDiv.textContent = 'Age cannot be negative.';
+                 resultDiv.classList.add('error');
+                return; // Stop the function execution
+            }
+             if (catYears > 30) { // Optional: Upper limit check
+                resultDiv.textContent = 'Please enter a realistic cat age (e.g., 0-30).';
+                 resultDiv.classList.add('error');
+                return;
+            }
+
+
+            // --- Calculation Logic based on Purina's chart ---
+            let humanYears;
+
+            if (catYears === 0) {
+                humanYears = 0;
+            } else if (catYears <= 1) {
+                humanYears = catYears * 15;
+            } else if (catYears <= 2) {
+                humanYears = 15 + (catYears - 1) * 9;
+            } else {
+                humanYears = 24 + (catYears - 2) * 4;
+            }
+
+            // Round the result to one decimal place for readability if needed
+            const roundedHumanYears = Math.round(humanYears * 10) / 10;
+
+            // --- Display the Result ---
+            resultDiv.textContent = `Your cat is approximately ${roundedHumanYears} human years old.`;
+        }
+    </script>
+
+</body>
+</html>

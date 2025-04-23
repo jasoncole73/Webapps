@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Repayment Calculator</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <style>
+        /* Custom styles if needed, Tailwind handles most */
+        body {
+            font-family: 'Inter', sans-serif; /* Use Inter font */
+        }
+        /* Style for the results table */
+        .results-table th, .results-table td {
+            padding: 0.75rem; /* p-3 */
+            text-align: right;
+            border-bottom-width: 1px;
+            border-color: #e5e7eb; /* gray-200 */
+        }
+        .results-table th {
+            text-align: left;
+            font-weight: 600; /* font-semibold */
+            color: #4b5563; /* gray-600 */
+        }
+        /* Ensure inputs don't stretch excessively on large screens */
+        .input-group input, .input-group select {
+           max-width: 300px; /* Adjust as needed */
+        }
+         /* Hide spinner arrows on number inputs */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield; /* Firefox */
+        }
+        /* Ensure all text and number inputs within the form are left-aligned */
+        #loan-form input[type="text"],
+        #loan-form input[type="number"] {
+            text-align: left;
+        }
+    </style>
+     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white p-6 md:p-8 rounded-lg shadow-lg w-full max-w-2xl">
+        <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">Loan Repayment Calculator</h1>
+
+        <form id="loan-form" class="space-y-4">
+            <div class="input-group">
+                <label for="calculation-type" class="block text-sm font-medium text-gray-700 mb-1">What do you want to do?</label>
+                <select id="calculation-type" name="calculation-type" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <option value="extra-payments" selected>Make Extra Loan Payments</option>
+                    <option value="reduce-term">Reduce Loan Term (Months)</option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="input-group">
+                    <label for="loan-balance" class="block text-sm font-medium text-gray-700 mb-1">Current Loan Balance ($)</label>
+                    <input type="text" inputmode="decimal" data-format="currency" id="loan-balance" name="loan-balance" required class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+                <div class="input-group">
+                    <label for="interest-rate" class="block text-sm font-medium text-gray-700 mb-1">Annual Interest Rate (%)</label>
+                    <input type="number" id="interest-rate" name="interest-rate" step="0.01" required class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+
+                <div id="monthly-payment-group" class="input-group">
+                    <label for="monthly-payment" class="block text-sm font-medium text-gray-700 mb-1">Current Monthly Payment ($)</label>
+                     <input type="text" inputmode="decimal" data-format="currency" id="monthly-payment" name="monthly-payment" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+
+                <div id="extra-payment-group" class="input-group">
+                    <label for="monthly-extra" class="block text-sm font-medium text-gray-700 mb-1">Monthly Extra Payment ($)</label>
+                     <input type="text" inputmode="decimal" data-format="currency" id="monthly-extra" name="monthly-extra" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+
+                <div id="remaining-term-group" class="input-group hidden">
+                    <label for="remaining-term" class="block text-sm font-medium text-gray-700 mb-1">Remaining Term (months)</label>
+                    <input type="number" id="remaining-term" name="remaining-term" step="1" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+
+                <div id="desired-term-group" class="input-group hidden">
+                    <label for="desired-term" class="block text-sm font-medium text-gray-700 mb-1">Desired Term (months)</label>
+                     <input type="number" id="desired-term" name="desired-term" step="1" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center pt-4">
+                <button type="button" id="clear-button" class="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition duration-150 ease-in-out">Clear</button>
+                <button type="submit" id="calculate-button" class="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">Calculate</button>
+            </div>
+        </form>
+
+        <div id="results" class="mt-8 border-t border-gray-200 pt-6 hidden">
+            <h2 class="text-xl font-semibold text-gray-800 mb-3 text-center">Answer</h2>
+            <p id="summary" class="text-center text-green-700 font-medium mb-6 bg-green-50 p-3 rounded-md"></p>
+
+            <h3 class="text-lg font-semibold text-gray-700 mb-4 text-center">Loan Change Totals</h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white results-table rounded-lg shadow">
+                    <thead>
+                        <tr>
+                            <th class="text-left"></th>
+                            <th class="text-right">Current</th>
+                            <th class="text-right">New</th>
+                            <th class="text-right">Change</th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-tbody" class="text-gray-700">
+                        </tbody>
+                </table>
+            </div>
+             <p class="text-xs text-gray-500 mt-4 text-center italic">Calculations use exact interest based on final payment amount.</p>
+             <p id="save-info" class="text-xs text-gray-600 mt-2 text-center">Your calculation results are displayed here. You can copy this information or take a screenshot to save it.</p>
+        </div>
+
+         <div id="error-message" class="mt-4 text-center text-red-600 font-medium hidden bg-red-50 p-3 rounded-md"></div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const form = document.getElementById('loan-form');
+        const calculationTypeSelect = document.getElementById('calculation-type');
+        const loanBalanceInput = document.getElementById('loan-balance');
+        const interestRateInput = document.getElementById('interest-rate');
+        // Groups for conditional visibility
+        const monthlyPaymentGroup = document.getElementById('monthly-payment-group');
+        const extraPaymentGroup = document.getElementById('extra-payment-group');
+        const remainingTermGroup = document.getElementById('remaining-term-group');
+        const desiredTermGroup = document.getElementById('desired-term-group');
+        // Input fields
+        const monthlyPaymentInput = document.getElementById('monthly-payment');
+        const monthlyExtraInput = document.getElementById('monthly-extra');
+        const remainingTermInput = document.getElementById('remaining-term');
+        const desiredTermInput = document.getElementById('desired-term');
+        // Buttons and Results
+        const clearButton = document.getElementById('clear-button');
+        const resultsDiv = document.getElementById('results');
+        const summaryP = document.getElementById('summary');
+        const resultsTbody = document.getElementById('results-tbody');
+        const errorMessageDiv = document.getElementById('error-message');
+
+        // --- Utility Functions ---
+        const formatCurrency = (value) => {
+            if (isNaN(value) || value === null || !isFinite(value)) return 'N/A';
+             // Format to 2 decimal places with commas
+             return `$${Number(value.toFixed(2)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        };
+
+        const formatMonths = (months) => {
+            // Display the term rounded up, as that's the number of payment periods.
+            if (isNaN(months) || months === null || months <= 0 || !isFinite(months)) return 'N/A';
+            const roundedMonths = Math.ceil(months);
+            const years = Math.floor(roundedMonths / 12);
+            const remainingMonths = roundedMonths % 12;
+            let result = '';
+            if (years > 0) {
+                result += `${years} yr${years > 1 ? 's' : ''}`;
+            }
+            if (remainingMonths > 0) {
+                result += `${years > 0 ? ' ' : ''}${remainingMonths} mo${remainingMonths > 1 ? 's' : ''}`;
+            }
+             if (result === '') return '0 mos';
+            return result;
+        };
+
+        /**
+         * Gets the raw numeric value from a formatted currency input.
+         * @param {HTMLInputElement} inputElement - The input element.
+         * @returns {number} The parsed numeric value, or NaN if invalid.
+         */
+        function getNumericValue(inputElement) {
+            if (!inputElement) return NaN;
+            const value = inputElement.value;
+            // Remove commas
+            const cleaned = value.replace(/,/g, '');
+            // Return NaN if empty/whitespace after cleaning, otherwise parse
+            if (cleaned.trim() === '') return NaN;
+            return parseFloat(cleaned);
+        }
+
+        /**
+         * Formats the value of an input field as currency (with commas) as the user types.
+         * @param {Event} event - The input event.
+         */
+        function formatInputAsCurrency(event) {
+            const input = event.target;
+            let value = input.value;
+            // Store original cursor position - basic implementation
+            let cursorPos = input.selectionStart;
+
+            // 1. Remove non-digit characters except the decimal point
+            let cleanedValue = value.replace(/[^\d.]/g, '');
+
+            // 2. Ensure only one decimal point exists
+            const parts = cleanedValue.split('.');
+            if (parts.length > 2) {
+                cleanedValue = parts[0] + '.' + parts.slice(1).join('');
+            }
+
+            // 3. Separate integer and decimal parts
+            let integerPart = parts[0];
+            let decimalPart = parts[1];
+
+            // 4. Remove leading zeros from integer part unless it's the only digit
+            if (integerPart.length > 1 && integerPart.startsWith('0')) {
+                 integerPart = integerPart.replace(/^0+/, '');
+                 if (integerPart === '') integerPart = '0';
+            }
+             if (integerPart === '') {
+                 if (decimalPart !== undefined) { integerPart = '0'; }
+                 else { input.value = ''; return; } // Clear if empty
+             }
+
+            // 5. Add commas to the integer part
+            const formattedIntegerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+            // 6. Reconstruct the value, limiting decimal part to 2 digits
+            let formattedValue = formattedIntegerPart;
+            if (decimalPart !== undefined) {
+                formattedValue += '.' + decimalPart.substring(0, 2);
+            }
+
+            // 7. Set the formatted value back to the input
+            // Avoid unnecessary updates if the value hasn't changed
+            if (input.value !== formattedValue) {
+                input.value = formattedValue;
+
+                 // 8. Adjust cursor position (simple adjustment)
+                 // Calculate number of commas added/removed before cursor
+                 const originalCommas = (value.substring(0, cursorPos).match(/,/g) || []).length;
+                 const newCommas = (formattedValue.substring(0, cursorPos + (formattedValue.length - value.length)).match(/,/g) || []).length; // Estimate new cursor pos region
+                 const commaDifference = newCommas - originalCommas;
+                 let newCursorPos = cursorPos + commaDifference;
+
+                 // Ensure cursor position is valid
+                 if (newCursorPos < 0) newCursorPos = 0;
+                 if (newCursorPos > formattedValue.length) newCursorPos = formattedValue.length;
+
+                 // Set the adjusted cursor position
+                 if (typeof input.selectionStart === "number" && typeof input.selectionEnd === "number") {
+                     input.setSelectionRange(newCursorPos, newCursorPos);
+                 }
+            }
+        }
+
+
+        // --- Calculation Functions --- (Keep existing precise calculations)
+
+        function calculateNumberOfMonths(P, i, M) {
+            if (P <= 0) return 0;
+            if (i === 0) { return M > 0 ? P / M : Infinity; }
+            const interestOnlyPayment = P * i;
+            if (M <= interestOnlyPayment || Math.abs(M - interestOnlyPayment) < 1e-9) { return Infinity; }
+            try {
+                const n = -Math.log(1 - (P * i) / M) / Math.log(1 + i);
+                return isFinite(n) && n > -1e-9 ? Math.max(0, n) : null;
+            } catch (error) { console.error("Error in calculateNumberOfMonths:", error); return null; }
+        }
+
+        function calculateMonthlyPayment(P, i, n) {
+             if (P <= 0) return 0;
+             if (n <= 0 || isNaN(n) || !isFinite(n)) return null;
+            if (i === 0) { return P / n; }
+            try {
+                const iPlus1 = 1 + i; const iPlus1PowN = Math.pow(iPlus1, n);
+                 if (Math.abs(iPlus1PowN - 1) < 1e-9) { console.warn("Cannot calculate payment: (1+i)^n - 1 is close to zero."); return null; }
+                const M = P * (i * iPlus1PowN) / (iPlus1PowN - 1);
+                return isFinite(M) && M > 0 ? M : null;
+            } catch(error) { console.error("Error in calculateMonthlyPayment:", error); return null; }
+        }
+
+        function calculateTotalInterest(P, M, n_raw, i) {
+             if (isNaN(P) || isNaN(M) || isNaN(n_raw) || isNaN(i) || !isFinite(M) || !isFinite(n_raw) || n_raw < 0 || M <= 0 || P <= 0) { if (n_raw === 0 && P <= 0) return 0; return 0; }
+             if (!isFinite(n_raw)) return Infinity;
+             if (n_raw < 1e-9) return 0;
+             const tolerance = 1e-9;
+             if (Math.abs(n_raw - Math.round(n_raw)) < tolerance) {
+                 const exactN = Math.round(n_raw); const totalPaidSimple = M * exactN;
+                 return Math.max(0, totalPaidSimple - P);
+             }
+             const numFullPayments = Math.floor(n_raw);
+             let balanceAfterFullPayments;
+             if (i === 0) { balanceAfterFullPayments = P - M * numFullPayments; }
+             else { const iPlus1PowK = Math.pow(1 + i, numFullPayments); balanceAfterFullPayments = P * iPlus1PowK - M * ((iPlus1PowK - 1) / i); }
+             balanceAfterFullPayments = Math.max(0, balanceAfterFullPayments);
+             const finalPayment = balanceAfterFullPayments * (1 + i);
+             const totalPaid = (numFullPayments * M) + finalPayment;
+             const totalInterest = totalPaid - P;
+             return Math.max(0, totalInterest);
+        }
+
+
+        // --- Event Listeners ---
+        calculationTypeSelect.addEventListener('change', (e) => {
+            const type = e.target.value;
+            clearResults(); hideError();
+            if (type === 'extra-payments') {
+                monthlyPaymentGroup.classList.remove('hidden'); extraPaymentGroup.classList.remove('hidden');
+                remainingTermGroup.classList.add('hidden'); desiredTermGroup.classList.add('hidden');
+                monthlyPaymentInput.setAttribute('required', '');
+                remainingTermInput.removeAttribute('required'); desiredTermInput.removeAttribute('required');
+            } else { // reduce-term
+                monthlyPaymentGroup.classList.add('hidden'); extraPaymentGroup.classList.add('hidden');
+                remainingTermGroup.classList.remove('hidden'); desiredTermGroup.classList.remove('hidden');
+                monthlyPaymentInput.removeAttribute('required');
+                remainingTermInput.setAttribute('required', ''); desiredTermInput.setAttribute('required', '');
+            }
+            // Clear potentially formatted values when switching modes
+            monthlyPaymentInput.value = ''; monthlyExtraInput.value = '';
+            remainingTermInput.value = ''; desiredTermInput.value = '';
+        });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault(); hideError(); calculateAndDisplay();
+        });
+
+        clearButton.addEventListener('click', () => {
+            form.reset();
+            // Explicitly clear formatted fields after reset
+            loanBalanceInput.value = ''; monthlyPaymentInput.value = ''; monthlyExtraInput.value = '';
+            remainingTermInput.value = ''; desiredTermInput.value = ''; interestRateInput.value = '';
+            calculationTypeSelect.dispatchEvent(new Event('change')); // Reset visibility
+            clearResults(); hideError();
+        });
+
+        // Add input listeners for auto-formatting currency fields
+        loanBalanceInput.addEventListener('input', formatInputAsCurrency);
+        monthlyPaymentInput.addEventListener('input', formatInputAsCurrency);
+        monthlyExtraInput.addEventListener('input', formatInputAsCurrency);
+
+
+        // --- Core Calculation and Display Logic ---
+        function calculateAndDisplay() {
+            // Use getNumericValue for currency fields
+            const P = getNumericValue(loanBalanceInput);
+            const annualRate = parseFloat(interestRateInput.value); // Rate is still type=number
+            const type = calculationTypeSelect.value;
+
+            // Validate numeric values after cleaning/parsing
+            if (isNaN(P) || P <= 0 || isNaN(annualRate) || annualRate < 0) {
+                showError("Please enter valid positive numbers for Loan Balance and a non-negative number for Interest Rate.");
+                return;
+            }
+
+            const i = annualRate / 12 / 100;
+
+            let currentN_raw, currentN_rounded, currentM, currentTotalInterest;
+            let newN_raw, newN_rounded, newM, newTotalInterest;
+            let summary = '';
+            let isValidCalculation = true;
+
+            if (type === 'extra-payments') {
+                // Use getNumericValue here
+                currentM = getNumericValue(monthlyPaymentInput);
+                // Use getNumericValue, default to 0 if NaN (e.g., empty input)
+                const extraM = getNumericValue(monthlyExtraInput) || 0;
+
+                // Validate after getting numeric value
+                if (isNaN(currentM) || currentM <= 0) {
+                    // Check if the input was actually empty or just invalid
+                     if (monthlyPaymentInput.value.trim() === '') {
+                         showError("Please enter a value for Current Monthly Payment.");
+                     } else {
+                        showError("Please enter a valid positive number for Current Monthly Payment.");
+                     }
+                     return;
+                }
+                 if (isNaN(extraM) || extraM < 0) { // extraM defaults to 0 if input is empty/invalid, so only check < 0
+                     showError("Monthly Extra Payment must be a non-negative number.");
+                     return;
+                 }
+
+                // --- Calculations remain the same, using numeric M and extraM ---
+                currentN_raw = calculateNumberOfMonths(P, i, currentM);
+                if (currentN_raw === null || !isFinite(currentN_raw)) { showError(`With the current payment of ${formatCurrency(currentM)}, the loan interest cannot be covered or the term is invalid/infinite.`); return; }
+                currentN_rounded = Math.ceil(currentN_raw);
+                currentTotalInterest = calculateTotalInterest(P, currentM, currentN_raw, i);
+
+                newM = currentM + extraM;
+                newN_raw = calculateNumberOfMonths(P, i, newM);
+                if (newN_raw === null || !isFinite(newN_raw)) { showError(`With the total payment of ${formatCurrency(newM)}, the loan interest cannot be covered or the term is invalid/infinite.`); isValidCalculation = false; }
+                else {
+                    newN_rounded = Math.ceil(newN_raw);
+                    newTotalInterest = calculateTotalInterest(P, newM, newN_raw, i);
+                    const monthsSaved = currentN_rounded - newN_rounded;
+                    const interestSaved = currentTotalInterest - newTotalInterest;
+                    if (monthsSaved > 0) { summary = `Loan shortened by ${monthsSaved} month${monthsSaved !== 1 ? 's' : ''}, saving ${formatCurrency(interestSaved)} in interest, with new total payments of ${formatCurrency(newM)}.`; }
+                    else if (monthsSaved <= 0 && extraM > 0) { summary = `Adding ${formatCurrency(extraM)} extra reduces the final payment amount, saving ${formatCurrency(interestSaved)} in interest. New total payments: ${formatCurrency(newM)}.`; }
+                    else { summary = `No extra payment added. Current payment schedule remains. Total interest: ${formatCurrency(currentTotalInterest)}.`; newN_raw = currentN_raw; newN_rounded = currentN_rounded; newM = currentM; newTotalInterest = currentTotalInterest; }
+                }
+
+            } else { // reduce-term
+                // These are still type=number, parse directly
+                const remainingN_input = parseInt(remainingTermInput.value, 10);
+                const desiredN_input = parseInt(desiredTermInput.value, 10);
+
+                if (isNaN(remainingN_input) || remainingN_input <= 0) { showError("Please enter a valid positive number for Remaining Term (months)."); return; }
+                if (isNaN(desiredN_input) || desiredN_input <= 0) { showError("Please enter a valid positive number for Desired Term (months)."); return; }
+                if (desiredN_input >= remainingN_input) { showError(`Desired Term (${desiredN_input} months) must be shorter than Remaining Term (${remainingN_input} months).`); return; }
+
+                currentN_raw = remainingN_input; currentN_rounded = remainingN_input;
+                newN_raw = desiredN_input; newN_rounded = desiredN_input;
+
+                currentM = calculateMonthlyPayment(P, i, currentN_raw);
+                if (currentM === null || currentM <= 0) { showError(`Cannot calculate a valid current monthly payment based on the remaining term of ${currentN_rounded} months.`); return; }
+                currentTotalInterest = calculateTotalInterest(P, currentM, currentN_raw, i);
+
+                newM = calculateMonthlyPayment(P, i, newN_raw);
+                if (newM === null || newM <= 0) { showError(`Cannot calculate a valid required monthly payment for the desired term of ${newN_rounded} months.`); isValidCalculation = false; }
+                else {
+                    newTotalInterest = calculateTotalInterest(P, newM, newN_raw, i);
+                    const monthsReduced = currentN_rounded - newN_rounded;
+                    const interestSaved = Math.max(0, currentTotalInterest - newTotalInterest);
+                    summary = `To pay off the loan in ${newN_rounded} month${newN_rounded !== 1 ? 's' : ''} (reducing term by ${monthsReduced} month${monthsReduced !== 1 ? 's' : ''}), your new monthly payment needs to be ${formatCurrency(newM)}. This saves ${formatCurrency(interestSaved)} in interest compared to the original plan (payment ${formatCurrency(currentM)}).`;
+                }
+            }
+
+            // --- Display Results ---
+            if (isValidCalculation) {
+                displayResults(currentN_rounded, currentM, currentTotalInterest, newN_rounded, newM, newTotalInterest, summary);
+            } else {
+                clearResults();
+            }
+        }
+
+        function displayResults(displayCurrentN, currentM, currentInterest, displayNewN, newM, newInterest, summaryText) {
+            summaryP.textContent = summaryText;
+            resultsTbody.innerHTML = '';
+
+            const formatChange = (value, prefix = '', isCurrency = false, unit = '') => {
+                if (isNaN(value) || !isFinite(value)) return 'N/A';
+                const sign = value > 0 ? '+' : (value < 0 ? '-' : '');
+                if (Math.abs(value) < 1e-9) return `0${unit}`;
+                const absValue = Math.abs(value);
+                 const formattedValue = isCurrency ? absValue.toFixed(2) : Math.round(absValue).toString();
+                const displayValue = isCurrency ? Number(formattedValue).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : formattedValue;
+                return `${sign}${prefix}${displayValue}${unit}`;
+            };
+
+             const monthChangeVal = (isFinite(displayCurrentN) && isFinite(displayNewN)) ? displayNewN - displayCurrentN : NaN;
+             const paymentChangeVal = (isFinite(currentM) && isFinite(newM)) ? newM - currentM : NaN;
+             const interestChangeVal = (isFinite(currentInterest) && isFinite(newInterest)) ? newInterest - currentInterest : NaN;
+
+            const rows = [
+                { label: 'Term (Months)', current: formatMonths(displayCurrentN), newVal: formatMonths(displayNewN), change: formatChange(monthChangeVal, '', false, Math.abs(Math.round(monthChangeVal)) === 1 ? ' mo' : ' mos') },
+                { label: 'Monthly Payment', current: formatCurrency(currentM), newVal: formatCurrency(newM), change: formatChange(paymentChangeVal, '', true) },
+                { label: 'Total Interest', current: formatCurrency(currentInterest), newVal: formatCurrency(newInterest), change: formatChange(interestChangeVal, '', true) }
+            ];
+
+            rows.forEach(rowData => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = ` <td class="text-left font-medium">${rowData.label}</td> <td>${rowData.current}</td> <td>${rowData.newVal}</td> <td>${rowData.change}</td> `;
+                resultsTbody.appendChild(tr);
+            });
+
+            resultsDiv.classList.remove('hidden');
+            resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function clearResults() {
+            resultsDiv.classList.add('hidden'); summaryP.textContent = ''; resultsTbody.innerHTML = '';
+        }
+        function showError(message) {
+            errorMessageDiv.textContent = message; errorMessageDiv.classList.remove('hidden'); clearResults();
+        }
+        function hideError() {
+            errorMessageDiv.textContent = ''; errorMessageDiv.classList.add('hidden');
+        }
+
+        // --- Initial Setup ---
+        calculationTypeSelect.dispatchEvent(new Event('change'));
+
+    </script>
+</body>
+</html>

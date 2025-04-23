@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dog Age Calculator</title>
+    <style>
+        :root {
+            --primary-color: #4682B4; /* Steel Blue */
+            --secondary-color: #F0F0F0; /* Light Gray */
+            --border-color: #D3D3D3; /* Light Gray */
+            --text-color: #333333; /* Dark Gray */
+            --highlight-color: #B0C4DE; /* Light Steel Blue */
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .calculator {
+            padding: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #336699;
+        }
+        
+        .result {
+            margin-top: 30px;
+            text-align: center;
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            display: none;
+        }
+        
+        .result.show {
+            display: block;
+        }
+        
+        .result h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+        
+        .age-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+        }
+        
+        .age-square {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: var(--highlight-color);
+            transform: rotate(45deg);
+            z-index: 1;
+        }
+        
+        .human-age {
+            position: relative;
+            font-size: 40px;
+            font-weight: bold;
+            color: var(--primary-color);
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                border-radius: 0;
+            }
+            
+            h1 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Dog Age Calculator</h1>
+            <p>Find out how old your dog is in human years</p>
+        </header>
+        
+        <div class="calculator">
+            <div class="form-group">
+                <label for="dog-age">Dog's Age (years)</label>
+                <input type="number" id="dog-age" min="1" max="16" value="1">
+            </div>
+            
+            <div class="form-group">
+                <label for="dog-size">Dog's Size</label>
+                <select id="dog-size">
+                    <option value="small">Small (0-20 lbs / 0-9 kg)</option>
+                    <option value="medium">Medium (21-50 lbs / 10-23 kg)</option>
+                    <option value="large">Large (51+ lbs / 24+ kg)</option>
+                </select>
+            </div>
+            
+            <button id="calculate-btn">Calculate Human Age</button>
+            
+            <div class="result" id="result">
+                <h2>Your dog's human age is:</h2>
+                <div class="age-container">
+                    <div class="age-square"></div>
+                    <div class="human-age" id="human-age">15</div>
+                </div>
+            </div>
+            
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Age conversion data based on the chart
+            const ageData = [
+                { dog: 1, small: 15, medium: 15, large: 15 },
+                { dog: 2, small: 24, medium: 24, large: 24 },
+                { dog: 3, small: 28, medium: 28, large: 28 },
+                { dog: 4, small: 32, medium: 32, large: 32 },
+                { dog: 5, small: 36, medium: 36, large: 36 },
+                { dog: 6, small: 40, medium: 42, large: 45 },
+                { dog: 7, small: 44, medium: 47, large: 50 },
+                { dog: 8, small: 48, medium: 51, large: 55 },
+                { dog: 9, small: 52, medium: 56, large: 61 },
+                { dog: 10, small: 56, medium: 60, large: 66 },
+                { dog: 11, small: 60, medium: 65, large: 72 },
+                { dog: 12, small: 64, medium: 69, large: 77 },
+                { dog: 13, small: 68, medium: 74, large: 82 },
+                { dog: 14, small: 72, medium: 78, large: 88 },
+                { dog: 15, small: 76, medium: 83, large: 93 },
+                { dog: 16, small: 80, medium: 87, large: 120 }
+            ];
+            
+            // References to DOM elements
+            const dogAgeInput = document.getElementById('dog-age');
+            const dogSizeSelect = document.getElementById('dog-size');
+            const calculateBtn = document.getElementById('calculate-btn');
+            const resultDiv = document.getElementById('result');
+            const humanAgeDiv = document.getElementById('human-age');
+            
+            // Event listeners
+            calculateBtn.addEventListener('click', calculateAge);
+            
+            // Function to calculate dog's human age
+            function calculateAge() {
+                const dogAge = parseInt(dogAgeInput.value);
+                const dogSize = dogSizeSelect.value;
+                
+                if (isNaN(dogAge) || dogAge < 1 || dogAge > 16) {
+                    alert('Please enter a valid dog age between 1 and 16 years.');
+                    return;
+                }
+                
+                // Find the corresponding human age
+                const ageRow = ageData.find(row => row.dog === dogAge);
+                let humanAge = 0;
+                
+                if (ageRow) {
+                    if (dogSize === 'small') {
+                        humanAge = ageRow.small;
+                    } else if (dogSize === 'medium') {
+                        humanAge = ageRow.medium;
+                    } else {
+                        humanAge = ageRow.large;
+                    }
+                }
+                
+                // Display the result
+                humanAgeDiv.textContent = humanAge;
+                resultDiv.classList.add('show');
+            }
+        });
+    </script>
+</body>
+</html>

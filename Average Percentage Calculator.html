@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Average Percentage Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Use Inter font */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom styles for better input appearance */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield; /* Firefox */
+        }
+        /* Ensure consistent height for remove button */
+        .remove-btn {
+             height: 2.5rem; /* Match input height (h-10 in Tailwind) */
+             line-height: 2.5rem; /* Vertically center icon */
+        }
+         /* Add subtle animation for adding/removing rows */
+        .entry-row {
+            transition: all 0.3s ease-out;
+            overflow: hidden;
+        }
+        .entry-row.removing {
+            opacity: 0;
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            margin-top: 0;
+            margin-bottom: 0;
+            border-width: 0;
+        }
+    </style>
+     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@latest/font/Lucide.css">
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg w-full max-w-md">
+        <h1 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-6">Average Percentage Calculator</h1>
+
+        <div id="percentageEntries" class="space-y-3 mb-4">
+            </div>
+
+        <div class="flex gap-3 mb-6">
+            <button id="addEntry" class="flex-1 flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 ease-in-out shadow hover:shadow-md">
+                 <i class="lucide lucide-plus-circle text-lg"></i>
+                Add Percentage
+            </button>
+            <button id="clearButton" class="flex-1 flex items-center justify-center gap-2 bg-gray-400 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 ease-in-out shadow hover:shadow-md">
+                <i class="lucide lucide-rotate-ccw text-lg"></i>
+                Clear
+            </button>
+        </div>
+
+        <div class="bg-indigo-50 p-4 rounded-lg text-center">
+            <h2 class="text-lg font-semibold text-gray-700 mb-1">Average Percentage</h2>
+            <p id="averageResult" class="text-3xl font-bold text-indigo-600">0.00%</p>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const percentageEntriesContainer = document.getElementById('percentageEntries');
+        const addEntryButton = document.getElementById('addEntry');
+        const clearButton = document.getElementById('clearButton');
+        const averageResultDisplay = document.getElementById('averageResult');
+
+        // --- Functions ---
+
+        /**
+         * Calculates the simple average percentage from all entries.
+         */
+        function calculateAverage() {
+            const entryRows = percentageEntriesContainer.querySelectorAll('.entry-row');
+            let percentageSum = 0;
+            let validEntryCount = 0;
+
+            entryRows.forEach(row => {
+                const percentageInput = row.querySelector('.percentage-input');
+                const percentageValue = percentageInput.value.trim();
+                if (percentageValue !== '' && !isNaN(percentageValue)) {
+                    const percentage = parseFloat(percentageValue);
+                    const validPercentage = Math.max(0, percentage);
+                    percentageSum += validPercentage;
+                    validEntryCount++;
+                }
+            });
+
+            const average = validEntryCount > 0 ? percentageSum / validEntryCount : 0;
+            averageResultDisplay.textContent = `${average.toFixed(2)}%`;
+        }
+
+        /**
+         * Creates and adds a new percentage entry row to the container.
+         */
+        function addEntryRow() {
+            const rowCount = percentageEntriesContainer.children.length;
+            const newRow = document.createElement('div');
+            newRow.className = 'entry-row flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200';
+
+            // Percentage Input Container
+            const percentageDiv = document.createElement('div');
+            percentageDiv.className = 'flex-grow relative'; // Added relative positioning here
+
+            const percentageLabel = document.createElement('label');
+            percentageLabel.className = 'sr-only';
+            percentageLabel.textContent = `Percent #${rowCount + 1}`;
+            percentageLabel.htmlFor = `percent_input_${rowCount}`;
+
+            const percentageInput = document.createElement('input');
+            percentageInput.type = 'number';
+            percentageInput.id = `percent_input_${rowCount}`;
+            // Added pr-7 for padding on the right to make space for the '%' sign
+            percentageInput.className = 'percentage-input w-full p-2 pr-7 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500';
+            percentageInput.placeholder = `Percent #${rowCount + 1}`;
+            percentageInput.min = '0';
+            percentageInput.addEventListener('input', calculateAverage);
+
+            // Span for the '%' symbol
+            const percentSymbol = document.createElement('span');
+            percentSymbol.className = 'absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 pointer-events-none'; // Positioned the symbol
+            percentSymbol.textContent = '%';
+
+            percentageDiv.appendChild(percentageLabel);
+            percentageDiv.appendChild(percentageInput);
+            percentageDiv.appendChild(percentSymbol); // Add the symbol span
+
+            // Remove Button
+            const removeButton = document.createElement('button');
+            removeButton.className = 'remove-btn px-3 bg-red-100 text-red-600 hover:bg-red-200 rounded-md transition duration-200 ease-in-out flex-shrink-0 flex items-center justify-center';
+            removeButton.innerHTML = '<i class="lucide lucide-trash-2 text-base"></i>';
+            removeButton.setAttribute('aria-label', 'Remove entry');
+            removeButton.onclick = () => removeEntryRow(removeButton);
+            removeButton.style.display = 'none'; // Initially hidden
+
+            // Append elements
+            newRow.appendChild(percentageDiv); // Append the container with input and symbol
+            newRow.appendChild(removeButton);
+            percentageEntriesContainer.appendChild(newRow);
+
+            // Update UI
+            calculateAverage();
+            updatePlaceholdersAndButtons();
+        }
+
+        /**
+         * Removes an entry row and recalculates the average.
+         * Ensures the first two rows cannot be removed.
+         * @param {HTMLButtonElement} buttonElement - The remove button that was clicked.
+         */
+        function removeEntryRow(buttonElement) {
+            if (percentageEntriesContainer.children.length <= 2) {
+                console.warn("Cannot remove the first two entries.");
+                return;
+            }
+            const rowToRemove = buttonElement.closest('.entry-row');
+            if (rowToRemove) {
+                rowToRemove.classList.add('removing');
+                rowToRemove.addEventListener('transitionend', () => {
+                    rowToRemove.remove();
+                    calculateAverage();
+                    updatePlaceholdersAndButtons();
+                }, { once: true });
+            }
+        }
+
+         /**
+         * Updates placeholders and manages remove button visibility.
+         * Remove buttons are only shown when more than two entries exist.
+         */
+        function updatePlaceholdersAndButtons() {
+            const entryRows = percentageEntriesContainer.querySelectorAll('.entry-row');
+            const showRemoveButton = entryRows.length > 2;
+
+            entryRows.forEach((row, index) => {
+                const percentageInput = row.querySelector('.percentage-input');
+                const percentageLabel = row.querySelector('label');
+                const removeButton = row.querySelector('.remove-btn');
+
+                if (percentageInput) {
+                    percentageInput.placeholder = `Percent #${index + 1}`;
+                }
+                 if (percentageLabel) {
+                    percentageLabel.textContent = `Percent #${index + 1}`;
+                }
+                if (removeButton) {
+                    removeButton.style.display = showRemoveButton ? 'flex' : 'none';
+                }
+            });
+        }
+
+        /**
+         * Clears all entries beyond the first two and resets their values.
+         */
+        function clearEntries() {
+            const entryRows = percentageEntriesContainer.querySelectorAll('.entry-row');
+            let rowsToRemoveCount = Math.max(0, entryRows.length - 2); // Count how many need removal animation
+            let rowsRemovedCount = 0; // Track how many finished removing
+
+            // Function to run after all removals are done (or if none needed)
+            const finalizeClear = () => {
+                 resetFirstTwoInputs();
+                 calculateAverage();
+                 updatePlaceholdersAndButtons();
+            };
+
+
+            if (rowsToRemoveCount === 0) {
+                // If 2 or fewer rows, just reset inputs and update UI
+                finalizeClear();
+            } else {
+                 // Remove rows beyond the first two (iterate backwards)
+                for (let i = entryRows.length - 1; i >= 2; i--) {
+                    entryRows[i].classList.add('removing');
+                    entryRows[i].addEventListener('transitionend', () => {
+                        entryRows[i].remove();
+                        rowsRemovedCount++;
+                        // Check if this is the last one to remove before updating UI
+                        if (rowsRemovedCount === rowsToRemoveCount) {
+                            finalizeClear();
+                        }
+                    }, { once: true });
+                     // Fallback timeout in case transitionend doesn't fire
+                    setTimeout(() => {
+                        if (!entryRows[i].isConnected) return; // Already removed
+                        entryRows[i].remove();
+                        rowsRemovedCount++;
+                         if (rowsRemovedCount === rowsToRemoveCount) {
+                             finalizeClear();
+                         }
+                    }, 400); // Slightly longer than transition duration
+                }
+            }
+        }
+
+
+        /**
+         * Helper function to clear the input values of the first two rows.
+         */
+         function resetFirstTwoInputs() {
+             const firstTwoRows = percentageEntriesContainer.querySelectorAll('.entry-row');
+             firstTwoRows.forEach((row, index) => {
+                 if (index < 2) { // Target only the first two
+                     const input = row.querySelector('.percentage-input');
+                     if (input) {
+                         input.value = ''; // Clear the value
+                     }
+                 }
+             });
+         }
+
+
+        // --- Initialization ---
+
+        // Add event listeners
+        addEntryButton.addEventListener('click', addEntryRow);
+        clearButton.addEventListener('click', clearEntries);
+
+        // Add the initial two entry rows on page load
+        addEntryRow(); // Adds Percent #1
+        addEntryRow(); // Adds Percent #2
+
+    </script>
+</body>
+</html>

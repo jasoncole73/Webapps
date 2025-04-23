@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Board Foot Calculator</title>
+    <style>
+        /* --- Base Styles & Variables --- */
+        :root {
+            --primary: #2e7d32; /* Main green color */
+            --primary-light: #60ad5e;
+            --primary-dark: #005005;
+            --secondary: #e8f5e9; /* Light green background */
+            --text: #212121; /* Dark text color */
+            --text-light: #757575; /* Lighter text/placeholder color */
+            --white: #ffffff;
+            --border-radius: 8px; /* Consistent rounded corners */
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            --transition: all 0.3s ease; /* Smooth transitions */
+            --input-border: #e0e0e0; /* Input border color */
+            --blue-highlight: #4285f4; /* Highlight color (e.g., share button) */
+            --light-green: #e8f5e9; /* Background for results */
+            --tab-inactive: #f1f1f1; /* Background for inactive tabs */
+            --tab-active-border: var(--primary); /* Border color for active tab */
+            --icon-size: 36px; /* Default size for social icons */
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Common sans-serif font */
+        }
+        
+        body {
+            background-color: #f5f5f5; /* Light gray background */
+            color: var(--text);
+            line-height: 1.6;
+            padding: 20px; /* Padding around the content */
+            max-width: 600px; /* Limit width for better readability */
+            margin: 40px auto; /* Center the content with top margin */
+        }
+        
+        /* --- Main Calculator Container --- */
+        .container {
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden; /* Keep content within rounded corners */
+            margin-bottom: 30px;
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: var(--white);
+            padding: 15px;
+            text-align: center;
+        }
+        
+        header h1 {
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+        }
+        
+        header p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+        
+        .calculator {
+            padding: 20px; /* Inner padding for the form */
+        }
+        
+        /* --- Form Elements --- */
+        .form-group {
+            margin-bottom: 15px;
+            position: relative; /* For absolute positioning of units */
+        }
+        
+        .form-group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 500;
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+        
+        .input-group { /* New container for input + unit select */
+             display: flex;
+             gap: 10px;
+             align-items: flex-start; /* Align items to the top */
+        }
+
+        .input-wrapper { /* Wrapper for primary and secondary inputs */
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column; /* Stack primary/secondary */
+            gap: 5px;
+        }
+
+        .primary-input-container { /* Container for primary input and its label */
+             display: flex;
+             align-items: center; /* Vertically align label and input */
+             gap: 5px;
+        }
+         .primary-input-container input {
+             flex-grow: 1; /* Input takes available space */
+         }
+
+        .secondary-input-container { /* Container for secondary input */
+             display: none; /* Hidden by default */
+             align-items: center;
+             gap: 5px;
+             margin-left: 15px; /* Indent secondary input slightly */
+        }
+         .secondary-input-container input {
+             flex-grow: 1;
+             max-width: 100px; /* Limit width of secondary input */
+         }
+         .secondary-input-container span { /* Label for secondary input (e.g., "in", "cm") */
+             font-size: 0.9em;
+             color: var(--text-light);
+         }
+
+
+        input[type="number"], input[type="text"], select { /* Style inputs and select */
+            width: 100%;
+            padding: 10px; /* Adjusted padding */
+            border: 1px solid var(--input-border);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+            background-color: var(--white); /* Ensure select background matches */
+        }
+         select {
+             width: auto; /* Allow select to size based on content */
+             flex-shrink: 0; /* Prevent select from shrinking */
+             min-width: 80px; /* Minimum width for select */
+             padding-right: 30px; /* Space for dropdown arrow */
+             appearance: none; /* Remove default appearance */
+             background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); /* Slightly darker arrow */
+             background-repeat: no-repeat;
+             background-position: right 10px top 50%;
+             background-size: .65em auto;
+             cursor: pointer;
+         }
+         select:focus {
+             border-color: var(--primary); /* Highlight focus */
+             outline: none;
+         }
+
+
+        .unit-selector { /* Keep this for Price input */
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            color: var(--text-light);
+            cursor: default; 
+        }
+        
+        .unit-selector span {
+            margin-right: 5px;
+            font-size: 0.9rem;
+        }
+        
+        /* --- Result Display --- */
+        .result-container {
+            background-color: var(--light-green);
+            border-radius: var(--border-radius);
+            padding: 12px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        .result-container .form-group-header {
+            margin-bottom: 8px;
+        }
+        
+        .result-container .result-value {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--primary);
+            margin-bottom: 2px;
+            word-wrap: break-word; /* Prevent long numbers from overflowing */
+        }
+        
+        .result-container .result-unit {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            display: block;
+        }
+        
+        .result-value.total-cost {
+            color: var(--primary); /* Ensure total cost uses primary color */
+        }
+        
+        /* --- Formula Section --- */
+        .formula {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #fff; /* White background */
+            border-radius: var(--border-radius);
+            border: 1px solid #e0e0e0; /* Light border */
+        }
+        
+        .formula h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+        
+        .formula p {
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+        
+        /* --- Action Buttons (Clear, Share) --- */
+        .action-buttons {
+            display: flex;
+            gap: 10px; /* Space between buttons */
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 10px 15px;
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            flex: 1; /* Make buttons share space equally */
+            text-align: center;
+        }
+        
+        .btn-clear {
+            background-color: #f5f5f5; /* Light background for clear */
+            color: var(--text);
+            border: 1px solid var(--input-border);
+        }
+        
+        .btn-clear:hover {
+            background-color: #e0e0e0; /* Darken on hover */
+        }
+        
+        .btn-share {
+            background-color: var(--blue-highlight); /* Blue for share */
+            color: white;
+        }
+        
+        .btn-share:hover {
+            background-color: #2b6ada; /* Darken blue on hover */
+        }
+        
+        /* --- Toast Notification --- */
+        .toast {
+            position: fixed;
+            bottom: 20px; /* Position at the bottom */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #323232; /* Dark background */
+            color: white;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+            opacity: 0; /* Hidden by default */
+            transition: opacity 0.3s, bottom 0.3s; /* Fade and slide transition */
+            pointer-events: none; /* Don't block clicks */
+            z-index: 1001; /* Above modal overlay */
+        }
+        
+        .toast.show {
+            opacity: 1; /* Visible */
+            bottom: 40px; /* Slide up when shown */
+        }
+
+        /* --- Share Modal Styles (Unchanged) --- */
+        .share-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 999; align-items: center; justify-content: center; }
+        .share-modal-content { background-color: white; border-radius: var(--border-radius); padding: 0; width: 90%; max-width: 450px; box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column; }
+        .share-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--input-border); flex-shrink: 0; }
+        .share-modal-header h3 { margin: 0; font-size: 1.2rem; color: var(--text); }
+        .share-modal-header p { margin: 5px 0 0; font-size: 0.9rem; color: var(--text-light); }
+        .share-modal-close { cursor: pointer; font-size: 1.8rem; color: var(--text-light); background: none; border: none; padding: 0 5px; line-height: 1; }
+        .share-modal-close:hover { color: var(--text); }
+        .share-tabs { display: flex; border-bottom: 1px solid var(--input-border); flex-shrink: 0; }
+        .tab-button { flex: 1; padding: 12px 10px; border: none; background-color: var(--tab-inactive); cursor: pointer; text-align: center; font-size: 0.95rem; color: var(--text-light); border-bottom: 3px solid transparent; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
+        .tab-button:hover { background-color: #e9e9e9; color: var(--text); }
+        .tab-button.active { background-color: var(--white); color: var(--primary); font-weight: 500; border-bottom-color: var(--tab-active-border); }
+        .share-panels { padding: 20px; flex-grow: 1; overflow-y: auto; }
+        .share-panel { display: none; }
+        .share-panel.active { display: block; }
+        #sharePanel label { display: flex; align-items: center; cursor: pointer; margin-bottom: 20px; font-size: 0.9rem; }
+        #sharePanel input[type="checkbox"] { margin-right: 8px; width: auto; height: 16px; width: 16px; accent-color: var(--primary); }
+        .social-icon-links { display: flex; justify-content: space-around; align-items: center; }
+        .social-icon-links a { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: var(--text-light); font-size: 0.8rem; transition: color 0.2s; }
+        .social-icon-links a:hover { color: var(--primary); }
+        .social-icon { display: inline-block; width: var(--icon-size); height: var(--icon-size); line-height: var(--icon-size); text-align: center; border-radius: 50%; background-color: #eee; color: #555; font-weight: bold; font-size: 1.2rem; margin-bottom: 5px; }
+        .social-icon.facebook { background-color: #3b5998; color: white; }
+        .social-icon.x { background-color: #000000; color: white; font-family: sans-serif; }
+        .social-icon.linkedin { background-color: #0077b5; color: white; }
+        #embedPanel p, #citePanel p { margin-bottom: 10px; font-size: 0.9rem; color: var(--text-light); }
+        #embedPanel textarea { width: 100%; padding: 10px; border: 1px solid var(--input-border); border-radius: var(--border-radius); font-size: 0.85rem; font-family: monospace; resize: vertical; min-height: 80px; background-color: #f9f9f9; }
+        #citePanel #citationText { font-style: normal; color: var(--text); background-color: #f9f9f9; padding: 10px; border-radius: 4px; border: 1px solid #eee; font-size: 0.9rem; line-height: 1.5; }
+        #copyEmbedCodeBtn, #copyCiteTextBtn { margin-top: 10px; background-color: var(--primary); color: white; width: auto; flex: none; padding: 8px 15px; }
+        #copyEmbedCodeBtn:hover, #copyCiteTextBtn:hover { background-color: var(--primary-dark); }
+
+        /* --- Responsive Styles --- */
+        @media (max-width: 480px) {
+            body { padding: 10px; margin: 20px auto; }
+            .calculator { padding: 15px; }
+            .action-buttons { flex-direction: column; }
+            .input-group { flex-direction: column; gap: 5px; align-items: stretch; } /* Stack input and select on small screens */
+             select { width: 100%; } /* Make select full width */
+             .share-modal-content { max-width: 95%; }
+             .tab-button { font-size: 0.85rem; padding: 10px 5px; }
+             .social-icon-links a { font-size: 0.75rem; }
+             .social-icon { width: calc(var(--icon-size) * 0.9); height: calc(var(--icon-size) * 0.9); line-height: calc(var(--icon-size) * 0.9); font-size: 1rem; }
+             .share-panels { padding: 15px; }
+        }
+        
+        /* --- Print Styles (Unchanged) --- */
+        @media print {
+            body { padding: 0; background: white; margin: 0; box-shadow: none; }
+            .container { box-shadow: none; border: none; margin-bottom: 0; border-radius: 0; }
+            header p, .action-buttons, .btn, .share-modal-overlay, .toast, .unit-selector, select /* Hide select in print */ { display: none !important; }
+            header { background-color: transparent; color: black; text-align: left; padding: 0 0 15px 0; border-bottom: 1px solid #ccc; }
+            header h1 { font-size: 1.4rem; margin-bottom: 5px; }
+            .calculator { padding: 15px 0; }
+            .form-group { margin-bottom: 10px; }
+            .input-group { flex-direction: row; } /* Keep input group horizontal for print */
+            input[type="number"] { border: none; padding: 5px 0; font-size: 1rem; background: transparent; -moz-appearance: textfield; }
+            input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+            .result-container { background: transparent; padding: 10px 0; border-bottom: 1px dotted #eee; margin-bottom: 10px; }
+            .result-container label { font-weight: bold; }
+            .formula { border: none; padding: 10px 0 0 0; margin-top: 10px; }
+            .formula h3 { font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Board Foot Calculator</h1>
+            <p>Calculate board feet and total cost for lumber projects</p>
+        </header>
+        
+        <div class="calculator">
+            <div class="form-group">
+                <div class="form-group-header">
+                    <label for="quantity">No. of pieces</label>
+                </div>
+                <div class="input-container"> <input type="number" id="quantity" min="1" step="1" value="1">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <div class="form-group-header">
+                    <label for="thickness">Thickness</label>
+                </div>
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <div class="primary-input-container">
+                            <input type="number" id="thickness" min="0" step="any" value="1">
+                        </div>
+                        <div class="secondary-input-container" id="thickness-secondary-container">
+                             <input type="number" id="thickness-secondary" min="0" step="any" value="0">
+                             <span id="thickness-secondary-unit">in</span> 
+                        </div>
+                    </div>
+                    <select id="thickness-unit" data-previous-unit="in"> <option value="in" selected>inches (in)</option>
+                        <option value="ft">feet (ft)</option>
+                        <option value="ftin">feet / inches (ft / in)</option>
+                        <option value="mm">millimeters (mm)</option>
+                        <option value="cm">centimeters (cm)</option>
+                        <option value="m">meters (m)</option>
+                        <option value="mcm" disabled>meters / cm (m / cm)</option> </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <div class="form-group-header">
+                    <label for="width">Width</label>
+                </div>
+                 <div class="input-group">
+                    <div class="input-wrapper">
+                        <div class="primary-input-container">
+                            <input type="number" id="width" min="0" step="any" value="6">
+                        </div>
+                        <div class="secondary-input-container" id="width-secondary-container">
+                             <input type="number" id="width-secondary" min="0" step="any" value="0">
+                             <span id="width-secondary-unit">in</span> 
+                        </div>
+                    </div>
+                    <select id="width-unit" data-previous-unit="in"> <option value="in" selected>inches (in)</option>
+                        <option value="ft">feet (ft)</option>
+                        <option value="ftin">feet / inches (ft / in)</option>
+                        <option value="mm">millimeters (mm)</option>
+                        <option value="cm">centimeters (cm)</option>
+                        <option value="m">meters (m)</option>
+                        <option value="mcm" disabled>meters / cm (m / cm)</option> </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <div class="form-group-header">
+                    <label for="length">Length</label>
+                </div>
+                 <div class="input-group">
+                     <div class="input-wrapper">
+                        <div class="primary-input-container">
+                            <input type="number" id="length" min="0" step="any" value="8">
+                        </div>
+                        <div class="secondary-input-container" id="length-secondary-container">
+                             <input type="number" id="length-secondary" min="0" step="any" value="0">
+                             <span id="length-secondary-unit">cm</span> 
+                        </div>
+                     </div>
+                    <select id="length-unit" data-previous-unit="ft"> <option value="ft" selected>feet (ft)</option>
+                        <option value="in">inches (in)</option>
+                        <option value="ftin">feet / inches (ft / in)</option>
+                        <option value="mm">millimeters (mm)</option>
+                        <option value="cm">centimeters (cm)</option>
+                        <option value="m">meters (m)</option>
+                        <option value="mcm">meters / cm (m / cm)</option> 
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <div class="form-group-header">
+                    <label for="price">Price per Board Foot</label>
+                </div>
+                <div class="input-container"> <input type="number" id="price" min="0" step="any" value="3.50">
+                    <div class="unit-selector"> <span>$</span>
+                    </div>
+                </div>
+            </div>
+            
+             <div class="result-container">
+                <div class="form-group-header">
+                    <label>Total Board Feet</label>
+                </div>
+                <div class="result-value" id="board-feet-total">4.00</div> 
+                <span class="result-unit">board feet</span>
+            </div>
+            
+            <div class="result-container">
+                <div class="form-group-header">
+                    <label>Total Cost</label>
+                </div>
+                <div class="result-value total-cost" id="total-cost">$14.00</div>
+            </div>
+            
+            <div class="formula">
+                <h3>How Board Feet are Calculated</h3>
+                <p>Board Foot = (Thickness in inches × Width in inches × Length in feet) ÷ 12</p>
+                <p>Total Board Feet = Board Feet per board × Quantity</p>
+                <p>Total Cost = Total Board Feet × Price per Board Foot</p>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-clear" id="clear-btn">Clear</button>
+                <button class="btn btn-share" id="share-btn">Share</button> 
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast-message">Message here!</div>
+    
+    <div class="share-modal-overlay" id="shareDialog">
+        <div class="share-modal-content">
+            <div class="share-modal-header">
+                 <div>
+                     <h3>Share Calculator</h3>
+                     <p>Board Foot Calculator</p>
+                 </div>
+                <button class="share-modal-close" id="closeShareDialog" aria-label="Close share dialog">&times;</button>
+            </div>
+             <div class="share-tabs">
+                <button class="tab-button active" data-tab="share" id="share-tab-btn">Share</button>
+                <button class="tab-button" data-tab="embed" id="embed-tab-btn">Embed</button>
+                <button class="tab-button" data-tab="cite" id="cite-tab-btn">Cite</button>
+            </div>
+             <div class="share-panels">
+                <div id="sharePanel" class="share-panel active" role="tabpanel" aria-labelledby="share-tab-btn">
+                    <label>
+                        <input type="checkbox" id="shareWithResults"> Check to share calculator with results
+                    </label>
+                    <div class="social-icon-links">
+                        <a id="facebookShare" href="#" target="_blank" rel="noopener noreferrer" title="Share on Facebook">
+                             <span class="social-icon facebook" aria-hidden="true">f</span> Facebook
+                        </a>
+                        <a id="xShare" href="#" target="_blank" rel="noopener noreferrer" title="Share on X">
+                             <span class="social-icon x" aria-hidden="true">X</span> X
+                        </a>
+                        <a id="linkedinShare" href="#" target="_blank" rel="noopener noreferrer" title="Share on LinkedIn">
+                             <span class="social-icon linkedin" aria-hidden="true">in</span> LinkedIn
+                        </a>
+                    </div>
+                    <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+                     <label for="copyLinkInput" style="margin-bottom: 5px; font-weight: normal; display: block;">Copy link:</label>
+                     <div style="display: flex; gap: 5px;">
+                         <input type="text" id="copyLinkInput" readonly style="flex-grow: 1; font-size: 0.9em; background-color: #f5f5f5;">
+                         <button id="copyDirectLinkBtn" class="btn" style="flex-grow: 0; padding: 8px 12px; font-size: 0.85em; background-color: var(--primary); color: white;">Copy</button>
+                    </div>
+                </div>
+                <div id="embedPanel" class="share-panel" role="tabpanel" aria-labelledby="embed-tab-btn" hidden>
+                    <p>Copy this code to embed the calculator on your site:</p>
+                    <textarea id="embedCode" rows="4" readonly aria-label="Embed code"></textarea>
+                     <button id="copyEmbedCodeBtn" class="btn">Copy Embed Code</button>
+                </div>
+                 <div id="citePanel" class="share-panel" role="tabpanel" aria-labelledby="cite-tab-btn" hidden>
+                     <p>Please use the following citation:</p>
+                     <p id="citationText">[Citation will appear here]</p>
+                     <button id="copyCiteTextBtn" class="btn">Copy Citation</button>
+                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            
+            // --- DOM Element References ---
+            const quantityInput = document.getElementById("quantity");
+            const priceInput = document.getElementById("price");
+            const boardFeetTotal = document.getElementById("board-feet-total");
+            const totalCost = document.getElementById("total-cost");
+            const clearBtn = document.getElementById("clear-btn");
+            const shareBtn = document.getElementById("share-btn");
+            const toastMessage = document.getElementById("toast-message");
+
+            // Unit Conversion Related Elements
+            const dimensionInputs = {
+                thickness: { 
+                    primary: document.getElementById("thickness"), 
+                    secondary: document.getElementById("thickness-secondary"),
+                    secondaryContainer: document.getElementById("thickness-secondary-container"),
+                    secondaryUnitLabel: document.getElementById("thickness-secondary-unit"),
+                    unitSelect: document.getElementById("thickness-unit"),
+                    targetUnit: 'in' // Target unit for calculation
+                },
+                width: { 
+                    primary: document.getElementById("width"), 
+                    secondary: document.getElementById("width-secondary"),
+                    secondaryContainer: document.getElementById("width-secondary-container"),
+                    secondaryUnitLabel: document.getElementById("width-secondary-unit"),
+                    unitSelect: document.getElementById("width-unit"),
+                    targetUnit: 'in' // Target unit for calculation
+                },
+                length: { 
+                    primary: document.getElementById("length"), 
+                    secondary: document.getElementById("length-secondary"),
+                    secondaryContainer: document.getElementById("length-secondary-container"),
+                    secondaryUnitLabel: document.getElementById("length-secondary-unit"),
+                    unitSelect: document.getElementById("length-unit"),
+                    targetUnit: 'ft' // Target unit for calculation
+                }
+            };
+
+            // Share Modal Elements (Copied from previous version)
+            const shareDialog = document.getElementById('shareDialog');
+            const closeShareDialog = document.getElementById('closeShareDialog');
+            const shareWithResultsCheckbox = document.getElementById('shareWithResults');
+            const facebookShareLink = document.getElementById('facebookShare');
+            const xShareLink = document.getElementById('xShare');
+            const linkedinShareLink = document.getElementById('linkedinShare');
+            const copyLinkInput = document.getElementById('copyLinkInput');
+            const copyDirectLinkBtn = document.getElementById('copyDirectLinkBtn');
+            const embedCodeTextarea = document.getElementById('embedCode');
+            const copyEmbedCodeBtn = document.getElementById('copyEmbedCodeBtn');
+            const citationTextElement = document.getElementById('citationText');
+            const copyCiteTextBtn = document.getElementById('copyCiteTextBtn');
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const panels = { share: document.getElementById('sharePanel'), embed: document.getElementById('embedPanel'), cite: document.getElementById('citePanel') };
+
+            // --- Base Unit & Conversion Factors (Using mm as base for precision) ---
+            const BASE_UNIT = 'mm';
+            const FACTORS_TO_BASE = { // Multiply by factor to get mm
+                'mm': 1,
+                'cm': 10,
+                'm': 1000,
+                'in': 25.4,
+                'ft': 304.8,
+            };
+            const FACTORS_FROM_BASE = { // Divide by factor to get unit from mm
+                'mm': 1,
+                'cm': 10,
+                'm': 1000,
+                'in': 25.4,
+                'ft': 304.8,
+            };
+
+            // --- Utility Functions ---
+            function showToast(message) { 
+                toastMessage.textContent = message;
+                toastMessage.classList.add("show");
+                setTimeout(() => toastMessage.classList.remove("show"), 3000);
+            }
+            function copyToClipboard(textToCopy, successMessage) { 
+                 navigator.clipboard.writeText(textToCopy).then(() => {
+                     showToast(successMessage);
+                 }).catch(err => {
+                     console.error('Clipboard API failed: ', err);
+                     const textArea = document.createElement("textarea");
+                     textArea.value = textToCopy;
+                     textArea.style.position = "fixed"; textArea.style.left = "-9999px";
+                     document.body.appendChild(textArea);
+                     textArea.focus(); textArea.select();
+                     try { document.execCommand('copy'); showToast(successMessage + " (fallback)"); } 
+                     catch (e) { showToast("Failed to copy."); console.error('Fallback execCommand failed: ', e); }
+                     document.body.removeChild(textArea);
+                 });
+            }
+            // Function to format numbers for display, avoiding excessive decimals
+            function formatNumber(num, precision = 4) {
+                 if (Math.abs(num) < 1e-9) return 0; // Handle potential floating point near-zeros
+                 // Limit decimal places but avoid unnecessary trailing zeros for integers
+                 const fixed = parseFloat(num.toFixed(precision)); 
+                 return fixed; 
+            }
+
+            // --- Unit Conversion Logic ---
+
+            /**
+             * Converts the current value(s) from a given unit to the base unit (mm).
+             * Handles simple and compound units.
+             * @param {number} primaryValue - Value from the main input.
+             * @param {number} secondaryValue - Value from the secondary input (for ftin, mcm).
+             * @param {string} unit - The source unit (e.g., 'in', 'ftin', 'cm').
+             * @returns {number} The value converted to the base unit (mm).
+             */
+            function convertToBaseUnit(primaryValue, secondaryValue, unit) {
+                primaryValue = parseFloat(primaryValue) || 0;
+                secondaryValue = parseFloat(secondaryValue) || 0;
+                let valueInMM = 0;
+
+                switch (unit) {
+                    case 'ftin': // feet / inches
+                        valueInMM = (primaryValue * FACTORS_TO_BASE['ft']) + (secondaryValue * FACTORS_TO_BASE['in']);
+                        break;
+                    case 'mcm': // meters / cm
+                        valueInMM = (primaryValue * FACTORS_TO_BASE['m']) + (secondaryValue * FACTORS_TO_BASE['cm']);
+                        break;
+                    default: // Simple units
+                        if (FACTORS_TO_BASE[unit]) {
+                            valueInMM = primaryValue * FACTORS_TO_BASE[unit];
+                        } else {
+                             console.warn(`Unknown unit for conversion to base: ${unit}`);
+                             valueInMM = primaryValue; // Fallback
+                        }
+                }
+                return valueInMM;
+            }
+
+            /**
+             * Converts a value from the base unit (mm) to the target display unit format.
+             * Handles splitting into primary/secondary for compound units.
+             * @param {number} valueInMM - The value in the base unit (mm).
+             * @param {string} targetUnit - The desired display unit (e.g., 'in', 'ftin', 'cm').
+             * @returns {object} An object { primary: number, secondary: number } for the display inputs.
+             */
+            function convertFromBaseUnit(valueInMM, targetUnit) {
+                let primary = 0;
+                let secondary = 0;
+                valueInMM = parseFloat(valueInMM) || 0;
+
+                switch (targetUnit) {
+                    case 'ftin': // feet / inches
+                        const totalInches = valueInMM / FACTORS_FROM_BASE['in'];
+                        primary = Math.floor(totalInches / 12); // Whole feet
+                        secondary = formatNumber(totalInches % 12); // Remaining inches
+                        break;
+                    case 'mcm': // meters / cm
+                        const totalCm = valueInMM / FACTORS_FROM_BASE['cm'];
+                        primary = Math.floor(totalCm / 100); // Whole meters
+                        secondary = formatNumber(totalCm % 100); // Remaining cm
+                        break;
+                    default: // Simple units
+                        if (FACTORS_FROM_BASE[targetUnit]) {
+                            primary = formatNumber(valueInMM / FACTORS_FROM_BASE[targetUnit]);
+                        } else {
+                            console.warn(`Unknown unit for conversion from base: ${targetUnit}`);
+                            primary = valueInMM; // Fallback
+                        }
+                        secondary = 0; // No secondary value for simple units
+                }
+                // Ensure primary is formatted too, especially after Math.floor
+                return { primary: formatNumber(primary), secondary: secondary }; 
+            }
+
+
+             /**
+              * Handles changes in the unit select dropdown.
+              * Converts the currently displayed value to the new unit and updates the input fields.
+              * @param {object} inputConfig - The configuration object for the dimension.
+              */
+            function handleUnitChange(inputConfig) {
+                const selectElement = inputConfig.unitSelect;
+                const newUnit = selectElement.value;
+                const previousUnit = selectElement.dataset.previousUnit || (inputConfig.targetUnit === 'in' ? 'in' : 'ft'); // Get previous or default
+
+                // Only proceed if the unit actually changed
+                if (newUnit === previousUnit) {
+                    return; 
+                }
+
+                // 1. Get current displayed values based on the *previous* unit format
+                let currentPrimaryValue = parseFloat(inputConfig.primary.value) || 0;
+                let currentSecondaryValue = 0;
+                if (previousUnit === 'ftin' || previousUnit === 'mcm') {
+                     currentSecondaryValue = parseFloat(inputConfig.secondary.value) || 0;
+                }
+                
+                // 2. Convert the displayed value (from previous unit) to the base unit (mm)
+                const currentValueInMM = convertToBaseUnit(currentPrimaryValue, currentSecondaryValue, previousUnit);
+
+                // 3. Convert the base unit value (mm) to the *new* unit's display format
+                const newDisplayValues = convertFromBaseUnit(currentValueInMM, newUnit);
+
+                // 4. Update the input fields with the new values
+                inputConfig.primary.value = newDisplayValues.primary;
+
+                if (newUnit === 'ftin') {
+                    inputConfig.secondary.value = newDisplayValues.secondary;
+                    inputConfig.secondaryUnitLabel.textContent = 'in';
+                    inputConfig.secondaryContainer.style.display = 'flex';
+                } else if (newUnit === 'mcm') {
+                    inputConfig.secondary.value = newDisplayValues.secondary;
+                    inputConfig.secondaryUnitLabel.textContent = 'cm';
+                    inputConfig.secondaryContainer.style.display = 'flex';
+                } else {
+                    inputConfig.secondary.value = 0; // Reset secondary value
+                    inputConfig.secondaryContainer.style.display = 'none'; // Hide container
+                }
+
+                // 5. Update the stored previous unit for the next change
+                selectElement.dataset.previousUnit = newUnit;
+
+                // 6. Recalculate the board feet result
+                calculateBoardFeet(); 
+            }
+
+
+            // --- Core Calculator Logic ---
+            /**
+             * Calculates board feet based on current inputs and selected units.
+             * Reads current values, converts them to calculation units (in/ft), and updates results.
+             */
+            function calculateBoardFeet() {
+                // Get current values and selected units directly from inputs/selects
+                const thicknessVal = dimensionInputs.thickness.primary.value;
+                const thicknessSecVal = dimensionInputs.thickness.secondary.value;
+                const thicknessUnit = dimensionInputs.thickness.unitSelect.value;
+
+                const widthVal = dimensionInputs.width.primary.value;
+                const widthSecVal = dimensionInputs.width.secondary.value;
+                const widthUnit = dimensionInputs.width.unitSelect.value;
+
+                const lengthVal = dimensionInputs.length.primary.value;
+                const lengthSecVal = dimensionInputs.length.secondary.value;
+                const lengthUnit = dimensionInputs.length.unitSelect.value;
+
+                const quantity = parseInt(quantityInput.value) || 0;
+                const price = parseFloat(priceInput.value) || 0;
+
+                // Convert current displayed values to the base unit (mm) first
+                const thicknessMM = convertToBaseUnit(thicknessVal, thicknessSecVal, thicknessUnit);
+                const widthMM = convertToBaseUnit(widthVal, widthSecVal, widthUnit);
+                const lengthMM = convertToBaseUnit(lengthVal, lengthSecVal, lengthUnit);
+
+                // Convert from base unit (mm) to the required calculation units (in/ft)
+                const thicknessInInches = thicknessMM / FACTORS_FROM_BASE['in'];
+                const widthInInches = widthMM / FACTORS_FROM_BASE['in'];
+                const lengthInFeet = lengthMM / FACTORS_FROM_BASE['ft'];
+
+                // Calculate board feet
+                // Handle potential division by zero or invalid inputs resulting in NaN/Infinity
+                let totalBoardFeet = 0;
+                if (isFinite(thicknessInInches) && isFinite(widthInInches) && isFinite(lengthInFeet) && quantity > 0) {
+                     totalBoardFeet = (thicknessInInches * widthInInches * lengthInFeet) / 12 * quantity;
+                }
+                
+                const cost = totalBoardFeet * price;
+                
+                // Update display (use formatNumber for results too)
+                boardFeetTotal.textContent = formatNumber(totalBoardFeet, 2); // Format to 2 decimal places
+                totalCost.textContent = "$" + formatNumber(cost, 2); // Format to 2 decimal places
+
+                 // Update share links if modal is open
+                 if (shareDialog.style.display === 'flex') {
+                    updateShareLinks(); 
+                 }
+            }
+
+            /**
+             * Resets calculator inputs, units, and results to default values.
+             * Sets dimensions and price to 0, quantity to 1.
+             */
+            function resetCalculator() {
+                 quantityInput.value = 1; // Reset quantity to 1
+                 priceInput.value = 0;    // Reset price to 0
+
+                 // Reset dimension inputs to 0 and units to defaults
+                 Object.values(dimensionInputs).forEach(config => {
+                     const defaultUnit = config.targetUnit === 'in' ? 'in' : 'ft'; // Default unit (in/ft)
+                     
+                     config.primary.value = 0; // Reset primary value to 0
+                     config.secondary.value = 0; // Reset secondary value to 0
+                     config.unitSelect.value = defaultUnit; // Reset unit select to default
+                     config.unitSelect.dataset.previousUnit = defaultUnit; // Reset previous unit store
+                     config.secondaryContainer.style.display = 'none'; // Hide secondary inputs
+                 });
+
+                 calculateBoardFeet(); // Recalculate with zeroed values
+                 showToast("Calculator has been reset");
+             }
+
+            // --- Share Modal Logic (Unchanged - Relies on reading current state) ---
+             function getCurrentShareUrl() { /* ... (same as before) ... */ 
+                 const baseUrl = window.location.href.split("?")[0]; 
+                 if (shareWithResultsCheckbox.checked) {
+                     const url = new URL(baseUrl);
+                     url.searchParams.set("q", quantityInput.value);
+                     url.searchParams.set("p", priceInput.value);
+                     Object.entries(dimensionInputs).forEach(([key, config]) => {
+                         url.searchParams.set(key[0], config.primary.value); 
+                         url.searchParams.set(`${key[0]}_unit`, config.unitSelect.value); 
+                         if (config.secondaryContainer.style.display === 'flex') {
+                             url.searchParams.set(`${key[0]}s`, config.secondary.value); 
+                         }
+                     });
+                     return url.toString();
+                 } else { return baseUrl; }
+             }
+            function updateShareLinks() { /* ... (same as before) ... */
+                 const urlToShare = getCurrentShareUrl();
+                 const resultsText = `${boardFeetTotal.textContent} board feet for ${totalCost.textContent}`;
+                 const shareText = `Check out this Board Foot Calculation: ${resultsText}`;
+                 const shareTitle = "Board Foot Calculator"; 
+                 copyLinkInput.value = urlToShare;
+                 facebookShareLink.href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(urlToShare)}`;
+                 const xText = shareWithResultsCheckbox.checked ? shareText : shareTitle; 
+                 xShareLink.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(xText)}&url=${encodeURIComponent(urlToShare)}`;
+                 const linkedInSummary = shareWithResultsCheckbox.checked ? shareText : "Calculate board feet and cost easily."; 
+                 linkedinShareLink.href = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(urlToShare)}&title=${encodeURIComponent(shareTitle)}&summary=${encodeURIComponent(linkedInSummary)}`;
+             }
+             function updateEmbedCode() { /* ... (same as before) ... */ 
+                 const embedUrl = window.location.href.split("?")[0]; 
+                 const iframeCode = `<iframe src="${embedUrl}" width="100%" height="600" style="border:1px solid #ccc; border-radius: 8px;" title="Board Foot Calculator" loading="lazy"></iframe>`;
+                 embedCodeTextarea.value = iframeCode; 
+             }
+             function updateCitation() { /* ... (same as before, remember to update websiteName) ... */ 
+                 const url = window.location.href.split("?")[0]; 
+                 const websiteName = "YourWebsiteName.com"; // ** IMPORTANT: Replace this! **
+                 const accessDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                 const citation = `Board Foot Calculator. ${websiteName}. Accessed ${accessDate}. ${url}`;
+                 citationTextElement.textContent = citation; 
+             }
+            function switchTab(targetTabId) { /* ... (same as before) ... */ 
+                 tabButtons.forEach(button => {
+                     const isTarget = button.getAttribute('data-tab') === targetTabId;
+                     button.classList.toggle('active', isTarget); 
+                     button.setAttribute('aria-selected', isTarget); 
+                 });
+                 for (const panelId in panels) {
+                     const isTarget = panelId === targetTabId;
+                     panels[panelId].classList.toggle('active', isTarget); 
+                     panels[panelId].hidden = !isTarget; 
+                 }
+            }
+
+            // --- Initial Page Load Logic ---
+            function loadFromUrl() {
+                const urlParams = new URLSearchParams(window.location.search);
+                let loaded = false; 
+                
+                if (urlParams.has("q")) { quantityInput.value = urlParams.get("q"); loaded = true; }
+                if (urlParams.has("p")) { priceInput.value = urlParams.get("p"); loaded = true; }
+
+                Object.entries(dimensionInputs).forEach(([key, config]) => {
+                    const primaryKey = key[0]; 
+                    const unitKey = `${primaryKey}_unit`; 
+                    const secondaryKey = `${primaryKey}s`; 
+
+                    let unitToLoad = config.unitSelect.value; // Default to current selection
+
+                    if (urlParams.has(unitKey)) { 
+                        unitToLoad = urlParams.get(unitKey);
+                        config.unitSelect.value = unitToLoad; 
+                        config.unitSelect.dataset.previousUnit = unitToLoad; // Set previous unit data
+                        loaded = true; 
+                    }
+                     // Show/hide secondary container based on loaded unit *before* setting values
+                     if (unitToLoad === 'ftin' || unitToLoad === 'mcm') {
+                         config.secondaryContainer.style.display = 'flex';
+                         config.secondaryUnitLabel.textContent = unitToLoad === 'ftin' ? 'in' : 'cm';
+                     } else {
+                          config.secondaryContainer.style.display = 'none';
+                     }
+
+                    if (urlParams.has(primaryKey)) { config.primary.value = urlParams.get(primaryKey); loaded = true; }
+                    
+                    // Load secondary value ONLY if the unit requires it
+                    if ((unitToLoad === 'ftin' || unitToLoad === 'mcm') && urlParams.has(secondaryKey)) {
+                         config.secondary.value = urlParams.get(secondaryKey); 
+                         loaded = true; 
+                    } else {
+                         config.secondary.value = 0; // Ensure secondary is 0 if not loaded or not applicable
+                    }
+                });
+                
+                if (loaded) {
+                    calculateBoardFeet(); // Recalculate with loaded values
+                    showToast("Calculation loaded from shared link");
+                }
+            }
+            
+            // --- Event Listeners ---
+
+            // Recalculate when any primary/secondary input, quantity, or price changes
+            [quantityInput, priceInput, 
+             dimensionInputs.thickness.primary, dimensionInputs.width.primary, dimensionInputs.length.primary,
+             dimensionInputs.thickness.secondary, dimensionInputs.width.secondary, dimensionInputs.length.secondary
+            ].forEach(input => input.addEventListener("input", calculateBoardFeet));
+            
+            // Handle unit changes for each dimension using the new handler
+            Object.values(dimensionInputs).forEach(config => {
+                config.unitSelect.addEventListener('change', () => handleUnitChange(config));
+            });
+
+            // Standard button/modal listeners (Unchanged)
+            clearBtn.addEventListener("click", resetCalculator);
+            shareBtn.addEventListener("click", () => { updateShareLinks(); updateEmbedCode(); updateCitation(); shareDialog.style.display = 'flex'; switchTab('share'); closeShareDialog.focus(); });
+            closeShareDialog.addEventListener('click', () => shareDialog.style.display = 'none');
+            shareDialog.addEventListener('click', (event) => { if (event.target === shareDialog) shareDialog.style.display = 'none'; });
+            shareWithResultsCheckbox.addEventListener('change', updateShareLinks);
+            copyDirectLinkBtn.addEventListener('click', () => copyToClipboard(copyLinkInput.value, "Link copied!"));
+            copyEmbedCodeBtn.addEventListener('click', () => copyToClipboard(embedCodeTextarea.value, "Embed code copied!"));
+            copyCiteTextBtn.addEventListener('click', () => copyToClipboard(citationTextElement.textContent, "Citation copied!"));
+            tabButtons.forEach(button => button.addEventListener('click', () => switchTab(button.getAttribute('data-tab'))));
+
+            // --- Initial Setup ---
+            // Set initial state for secondary inputs and store initial unit
+             Object.values(dimensionInputs).forEach(config => {
+                 const initialUnit = config.unitSelect.value;
+                 config.unitSelect.dataset.previousUnit = initialUnit; // Store initial unit
+                  if (initialUnit === 'ftin' || initialUnit === 'mcm') {
+                      config.secondaryContainer.style.display = 'flex';
+                      config.secondaryUnitLabel.textContent = initialUnit === 'ftin' ? 'in' : 'cm';
+                  } else {
+                       config.secondaryContainer.style.display = 'none';
+                  }
+             }); 
+            // Run initial calculation and check for URL parameters
+            calculateBoardFeet(); 
+            loadFromUrl();      
+
+        }); // End DOMContentLoaded listener
+    </script>
+</body>
+</html>

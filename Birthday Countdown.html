@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birthday Countdown Calculator</title>
+    <style>
+        /* General body styling */
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        /* Responsive adjustments for smaller screens */
+        @media screen and (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            /* Regular mode responsiveness */
+            .countdown-display:not(.fullscreen-display) { /* Target only non-fullscreen */
+                flex-direction: column; /* Stack units vertically */
+                align-items: center;
+            }
+            .countdown-display:not(.fullscreen-display) .countdown-unit {
+                margin-bottom: 15px;
+                width: 100%;
+                text-align: center;
+            }
+            /* Fullscreen mode responsiveness for mobile */
+            .fullscreen-display {
+                 flex-direction: row; /* Keep horizontal on fullscreen mobile */
+                 justify-content: space-around;
+                 width: 100%;
+                 flex-wrap: wrap; /* Allow wrapping if needed on very small screens */
+            }
+             /* Target fullscreen values/labels specifically within mobile media query */
+             .fullscreen-mode .fullscreen-value { /* More specific selector */
+                font-size: 10vw !important; /* Keep large font for mobile fullscreen */
+                max-font-size: 60px !important; /* Cap size more aggressively on mobile */
+                margin-bottom: 1vh !important;
+            }
+            .fullscreen-mode .fullscreen-label { /* More specific selector */
+                font-size: 3vw !important; /* Adjust label size */
+                 max-font-size: 18px !important;
+            }
+             .fullscreen-display .countdown-unit {
+                 margin: 1vh 1vw; /* Add some margin for wrapping */
+                 min-width: 40%; /* Allow two units per row */
+             }
+            .exit-fullscreen-btn {
+                top: 10px; /* Adjust position for mobile */
+                right: 10px;
+                padding: 8px 12px; /* Adjust padding */
+                font-size: 12px;
+            }
+        }
+
+        /* Input area styling */
+        .input-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 18px;
+        }
+        input[type="date"] {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button { /* General button styling */
+            padding: 12px 20px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            transition: background-color 0.2s ease; /* Smooth hover effect */
+        }
+        button:hover {
+            background-color: #555;
+        }
+
+        /* Countdown container styling */
+        .countdown-container {
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 20px;
+            position: relative; /* Needed for absolute positioning of icon/button */
+            transition: background-color 0.3s ease, color 0.3s ease; /* Smooth color transitions */
+        }
+        .settings-icon {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            color: #555; /* Default icon color */
+            z-index: 5; /* Ensure it's clickable */
+        }
+        h2 { /* Main title styling */
+            text-align: center;
+            color: #333;
+            margin-top: 10px;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        /* Default Countdown Display (Non-Fullscreen) */
+        .countdown-display {
+            display: flex;
+            justify-content: space-between;
+            border: 1px solid #ddd;
+            background-color: white;
+            padding: 30px;
+            margin: 0 auto 20px auto; /* Add bottom margin */
+            max-width: 600px;
+            border-radius: 4px; /* Rounded corners */
+            /* Ensure default styles apply when not fullscreen */
+            flex-direction: row;
+            align-items: stretch;
+        }
+        .countdown-unit { /* Styling for each Day/Hour/Min/Sec block */
+            text-align: center;
+            min-width: 90px; /* Min width in normal mode */
+            flex: 1; /* Allow units to share space */
+            padding: 0 5px; /* Small padding */
+             /* Ensure default styles apply when not fullscreen */
+            margin-bottom: 0;
+            width: auto;
+        }
+        .countdown-value { /* Styling for the large numbers */
+            font-size: 64px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            line-height: 1; /* Prevent extra vertical space */
+            display: block; /* Ensure block display */
+        }
+        .countdown-label { /* Styling for the Day/Hour/Min/Sec text */
+            font-size: 22px;
+            font-weight: bold;
+            color: #333;
+             display: block; /* Ensure block display */
+        }
+        .fullscreen-link { /* Link to enter fullscreen */
+            text-align: right;
+            margin-top: 10px;
+        }
+        .fullscreen-link a {
+            color: #333;
+            text-decoration: none;
+            padding: 5px;
+        }
+         .fullscreen-link a:hover {
+             text-decoration: underline;
+         }
+
+        /* Settings Panel Styling */
+        .settings-panel {
+            display: none; /* Hidden by default */
+            background-color: white;
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-top: 15px;
+            border-radius: 4px;
+            text-align: center;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Subtle shadow */
+        }
+        .settings-panel h2 {
+            font-size: 22px;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        .settings-panel h3 {
+            font-size: 18px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #555;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .settings-option {
+            margin-bottom: 15px;
+            text-align: left;
+            padding: 5px 0;
+        }
+        .settings-option label {
+            margin-left: 8px; /* Space between checkbox/radio and label */
+            font-size: 16px; /* Consistent font size */
+            font-weight: normal; /* Override general label bold */
+        }
+        #previewButton { /* Specific styling for preview button */
+            background-color: #5cb85c; /* Green color */
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            text-transform: uppercase;
+            margin-top: 10px; /* Space above button */
+            transition: background-color 0.2s ease;
+        }
+         #previewButton:hover {
+             background-color: #4cae4c;
+         }
+        .color-picker { /* Container for color input */
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .color-picker label { /* Label for color input */
+             margin-right: 10px;
+             font-size: 16px;
+             font-weight: normal;
+        }
+        input[type="color"] { /* Style the color input itself */
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 2px;
+            cursor: pointer;
+        }
+
+        /* --- Fullscreen Mode Styles --- */
+        .fullscreen-mode { /* Applied to countdown-container in fullscreen */
+            width: 100vw !important;  /* Full viewport width */
+            height: 100vh !important; /* Full viewport height */
+            position: fixed; /* Take out of normal flow */
+            top: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 30px;
+            box-sizing: border-box;
+            border-radius: 0; /* No rounded corners in fullscreen */
+            z-index: 1000; /* Ensure it's on top */
+            overflow: hidden; /* Prevent scrollbars if content overflows slightly */
+        }
+        .exit-fullscreen-btn { /* Button to exit fullscreen */
+            position: absolute; /* Position relative to fullscreen container */
+            top: 20px;       /* Position at the top */
+            right: 20px;      /* Position at the right */
+            padding: 10px 15px;
+            background: rgba(50, 50, 50, 0.7); /* Semi-transparent dark */
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 4px;
+            cursor: pointer;
+            z-index: 1001; /* Above other fullscreen content */
+            font-size: 14px;
+            transition: background-color 0.2s ease;
+        }
+        .exit-fullscreen-btn:hover {
+            background: rgba(0, 0, 0, 0.8); /* Darken on hover */
+        }
+        /* Title in fullscreen */
+        .fullscreen-mode h2 {
+            font-size: clamp(24px, 3.5vw, 40px); /* Responsive font size with min/max */
+             margin-bottom: 5vh; /* Relative margin */
+        }
+        /* Countdown display container in fullscreen */
+        .fullscreen-display {
+            padding: 2vh 2vw; /* Reduced padding */
+            margin-top: 0; /* Remove top margin */
+            width: 95%; /* Increase width slightly */
+            max-width: 1200px; /* Increase max width */
+            display: flex;
+            justify-content: space-around; /* Distribute space */
+            align-items: center; /* Align items vertically */
+            background-color: rgba(255, 255, 255, 0.9); /* Slightly transparent background */
+            border-radius: 8px; /* Add slight rounding */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); /* Add subtle shadow */
+        }
+         /* Individual unit styling within fullscreen */
+         .fullscreen-display .countdown-unit {
+            text-align: center;
+            flex: 1; /* Allow units to grow/shrink */
+            min-width: 150px; /* Minimum width for each unit */
+            margin: 0 1.5vw; /* Add horizontal margin for separation */
+            padding: 1vh 0; /* Add some vertical padding */
+        }
+        /* Numbers in fullscreen */
+        .fullscreen-mode .fullscreen-value { /* Specific selector */
+            font-size: clamp(40px, 10vw, 100px) !important; /* Responsive font size with min/max */
+            margin-bottom: 2vh !important; /* INCREASED: More space between number and label */
+            line-height: 1; /* Ensure line height doesn't add extra space */
+            display: block; /* Ensure it takes block space */
+        }
+        /* Labels in fullscreen */
+         .fullscreen-mode .fullscreen-label { /* Specific selector */
+            font-size: clamp(16px, 2.5vw, 25px) !important; /* Responsive font size with min/max */
+            display: block; /* Ensure it takes block space */
+        }
+
+
+        /* Confetti Styles */
+        .confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Allows clicks to pass through to elements underneath */
+            z-index: 9999;
+            overflow: hidden; /* Prevent scrollbars */
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00; /* Default color, will be overridden */
+            opacity: 0.9;
+            animation: fall linear forwards; /* Duration set in JS */
+            pointer-events: none; /* Individual confetti don't block clicks */
+        }
+        @keyframes fall {
+            0% {
+                transform: translateY(-10vh) rotate(0deg); /* Start above screen */
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(110vh) rotate(720deg); /* Fall well below screen */
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="input-container">
+        <label for="birthday">Your Birthday:</label>
+        <input type="date" id="birthday" name="birthday" value="2025-05-10">
+    </div>
+
+    <button id="updateCountdown">UPDATE COUNTDOWN</button>
+
+    <div class="countdown-container">
+        <svg class="settings-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+
+        <h2>Countdown to Your Birthday:</h2>
+
+        <div class="countdown-display">
+             </div>
+
+        <div class="fullscreen-link">
+            <a href="#" id="fullscreenLink">Fullscreen</a>
+        </div>
+    </div>
+
+    <div id="settingsPanel" class="settings-panel">
+        <h2>Countdown Timer Settings</h2>
+
+        <h3>Countdown Appearance</h3>
+        <div class="settings-option">
+            <input type="radio" id="separateUnits" name="displayStyle" value="separate" checked>
+            <label for="separateUnits">Separate units (Days, Hours, etc.)</label>
+        </div>
+        <div class="settings-option">
+            <input type="radio" id="clockStyle" name="displayStyle" value="clock">
+            <label for="clockStyle">Clock style (HH:MM:SS)</label>
+        </div>
+        <div class="settings-option">
+            <input type="radio" id="minutesOnly" name="displayStyle" value="minutes">
+            <label for="minutesOnly">Total Minutes only</label>
+        </div>
+        <div class="settings-option">
+            <input type="radio" id="secondsOnly" name="displayStyle" value="seconds">
+            <label for="secondsOnly">Total Seconds only</label>
+        </div>
+
+        <h3>When the Timer Reaches Zero</h3>
+        <div class="settings-option">
+            <input type="checkbox" id="dropConfetti">
+            <label for="dropConfetti">Drop confetti 🎉</label>
+        </div>
+        <div class="settings-option">
+            <input type="checkbox" id="playAudio">
+            <label for="playAudio">Play "Happy Birthday" 🎵</label>
+        </div>
+        <div class="settings-option" style="text-align: center;"> <button id="previewButton">PREVIEW ▶</button>
+        </div>
+
+        <h3>Background Color</h3>
+        <div class="settings-option color-picker">
+             <label for="bgColor">Countdown Area:</label>
+             <input type="color" id="bgColor" value="#f0f0f0">
+        </div>
+
+        <h3>Text Color</h3>
+        <div class="settings-option color-picker">
+             <label for="textColor">Countdown Text:</label>
+             <input type="color" id="textColor" value="#333333">
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- DOM Element References ---
+            const birthdayInput = document.getElementById('birthday');
+            const updateButton = document.getElementById('updateCountdown');
+            const countdownContainer = document.querySelector('.countdown-container');
+            const countdownDisplay = document.querySelector('.countdown-display'); // Reference to the display area
+            const settingsIcon = document.querySelector('.settings-icon');
+            const settingsPanel = document.getElementById('settingsPanel');
+            const fullscreenLink = document.getElementById('fullscreenLink');
+
+            // Settings Elements
+            const bgColorInput = document.getElementById('bgColor');
+            const textColorInput = document.getElementById('textColor');
+            const displayStyles = document.querySelectorAll('input[name="displayStyle"]');
+            const dropConfettiCheckbox = document.getElementById('dropConfetti');
+            const playAudioCheckbox = document.getElementById('playAudio');
+            const previewButton = document.getElementById('previewButton');
+
+            // Countdown value elements (will be reassigned if display style changes)
+            let daysElement, hoursElement, minutesElement, secondsElement;
+
+            // --- State Variables ---
+            let countdownInterval; // To store the interval ID
+            let birthdayCelebrated = false; // Flag to ensure celebration happens only once
+            let audioContext; // For Web Audio API
+            let currentOscillator; // To store the currently playing sound oscillator
+            let confettiIntervalId = null; // To store the confetti generation interval ID
+            let confettiContainerElement = null; // Reference to the confetti container
+
+            // --- Initialization ---
+            setDefaultBirthday(); // Set a default future birthday
+            applySettings(); // Apply initial color settings
+            applyDisplayStyle(); // Set up the initial display style (this also calls assignCountdownElements)
+            updateCountdown(); // Start the countdown immediately
+
+            // --- Event Listeners ---
+            updateButton.addEventListener('click', () => {
+                birthdayCelebrated = false; // Reset celebration flag on update
+                stopConfetti(); // Stop any existing confetti
+                initializeAudioContext(); // Ensure audio context is ready
+                updateCountdown();
+            });
+            settingsIcon.addEventListener('click', toggleSettingsPanel);
+            fullscreenLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                openFullscreen(countdownContainer);
+            });
+            bgColorInput.addEventListener('input', applySettings); // Use 'input' for live preview
+            textColorInput.addEventListener('input', applySettings);
+            displayStyles.forEach(radio => radio.addEventListener('change', applyDisplayStyle));
+            previewButton.addEventListener('click', previewZeroReached);
+
+            // Fullscreen change listeners
+            document.addEventListener('fullscreenchange', handleFullscreenChange);
+            document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+            document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+            document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+            // --- Core Functions ---
+
+            function setDefaultBirthday() {
+                if (!birthdayInput.value) {
+                    const today = new Date();
+                    const defaultDate = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate());
+                    const year = defaultDate.getFullYear();
+                    const month = String(defaultDate.getMonth() + 1).padStart(2, '0');
+                    const day = String(defaultDate.getDate()).padStart(2, '0');
+                    birthdayInput.value = `${year}-${month}-${day}`;
+                }
+            }
+
+            function assignCountdownElements() {
+                // Find elements within the current countdownDisplay container
+                daysElement = countdownDisplay.querySelector('#days');
+                hoursElement = countdownDisplay.querySelector('#hours');
+                minutesElement = countdownDisplay.querySelector('#minutes');
+                secondsElement = countdownDisplay.querySelector('#seconds');
+            }
+
+            function updateCountdown() {
+                clearInterval(countdownInterval);
+                stopConfetti(); // Ensure confetti stops if countdown restarts before birthday
+
+                countdownInterval = setInterval(() => {
+                    const now = new Date();
+                    const birthdayValue = birthdayInput.value;
+                    if (!birthdayValue) return;
+
+                    const birthdayParts = birthdayValue.split("-");
+                    const birthMonth = parseInt(birthdayParts[1]) - 1;
+                    const birthDay = parseInt(birthdayParts[2]);
+                    const currentYear = now.getFullYear();
+                    const currentMonth = now.getMonth();
+                    const currentDay = now.getDate();
+
+                    if (birthMonth === currentMonth && birthDay === currentDay) {
+                        if (!birthdayCelebrated) {
+                            handleZeroReached(true);
+                            birthdayCelebrated = true;
+                        }
+                        updateDisplay(0, 0, 0, 0);
+                        clearInterval(countdownInterval);
+                        return;
+                    }
+
+                    let nextBirthdayYear = currentYear;
+                    let nextBirthday = new Date(nextBirthdayYear, birthMonth, birthDay);
+                    if (now > nextBirthday) {
+                        nextBirthdayYear++;
+                        nextBirthday = new Date(nextBirthdayYear, birthMonth, birthDay);
+                    }
+
+                    const timeDifference = nextBirthday - now;
+                    const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((timeDifference % (1000 * 60)) / 1000);
+                    updateDisplay(days, hours, minutes, seconds);
+                }, 1000);
+            }
+
+            function updateDisplay(days, hours, minutes, seconds) {
+                const selectedStyle = document.querySelector('input[name="displayStyle"]:checked').value;
+                // Use the locally scoped variables updated by assignCountdownElements
+                const dElem = daysElement;
+                const hElem = hoursElement;
+                const mElem = minutesElement;
+                const sElem = secondsElement;
+                // Find other style elements if they exist within countdownDisplay
+                const clockElem = countdownDisplay.querySelector('#clock');
+                const totalMinElem = countdownDisplay.querySelector('#totalMinutes');
+                const totalSecElem = countdownDisplay.querySelector('#totalSeconds');
+
+                switch (selectedStyle) {
+                    case 'separate':
+                        if (dElem) dElem.textContent = days;
+                        if (hElem) hElem.textContent = String(hours).padStart(2, '0');
+                        if (mElem) mElem.textContent = String(minutes).padStart(2, '0');
+                        if (sElem) sElem.textContent = String(seconds).padStart(2, '0');
+                        break;
+                    case 'clock':
+                        if (clockElem) {
+                            const totalHours = (days * 24) + hours;
+                            clockElem.textContent = `${String(totalHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                        }
+                        break;
+                    case 'minutes':
+                        if (totalMinElem) {
+                            const totalMinutes = (days * 24 * 60) + (hours * 60) + minutes;
+                            totalMinElem.textContent = totalMinutes;
+                        }
+                        break;
+                    case 'seconds':
+                        if (totalSecElem) {
+                             const totalSeconds = Math.floor((days * 24 * 60 * 60) + (hours * 60 * 60) + (minutes * 60) + seconds);
+                             totalSecElem.textContent = totalSeconds;
+                        }
+                        break;
+                }
+                 applyTextColor(textColorInput.value);
+            }
+
+            // --- Settings & Appearance ---
+            function toggleSettingsPanel() {
+                settingsPanel.style.display = settingsPanel.style.display === 'block' ? 'none' : 'block';
+            }
+
+            function applySettings() {
+                const bgColor = bgColorInput.value;
+                const textColor = textColorInput.value;
+                countdownContainer.style.backgroundColor = bgColor;
+                applyTextColor(textColor);
+            }
+
+            function applyTextColor(color) {
+                 countdownContainer.style.color = color;
+                document.querySelectorAll('.countdown-value, .countdown-label, .fullscreen-value, .fullscreen-label, .countdown-container h2, .fullscreen-link a, .settings-icon').forEach(element => {
+                     if (element) element.style.color = color;
+                 });
+                 if (settingsIcon && settingsIcon.tagName.toLowerCase() === 'svg') {
+                     settingsIcon.style.stroke = color;
+                 }
+            }
+
+            function applyDisplayStyle() {
+                const selectedStyle = document.querySelector('input[name="displayStyle"]:checked').value;
+                let html = '';
+                const isFullscreen = countdownContainer.classList.contains('fullscreen-mode');
+                // Determine current class based on fullscreen state
+                const valueClass = isFullscreen ? 'fullscreen-value' : 'countdown-value';
+                const labelClass = isFullscreen ? 'fullscreen-label' : 'countdown-label';
+
+                // Get current values safely
+                const currentDays = daysElement?.textContent || '0';
+                const currentHours = hoursElement?.textContent || '0';
+                const currentMinutes = minutesElement?.textContent || '0';
+                const currentSeconds = secondsElement?.textContent || '0';
+
+                switch (selectedStyle) {
+                    case 'separate':
+                        html = `
+                            <div class="countdown-unit">
+                                <div id="days" class="${valueClass}">${currentDays}</div>
+                                <div class="${labelClass}">Days</div>
+                            </div>
+                            <div class="countdown-unit">
+                                <div id="hours" class="${valueClass}">${String(currentHours).padStart(2, '0')}</div>
+                                <div class="${labelClass}">Hours</div>
+                            </div>
+                            <div class="countdown-unit">
+                                <div id="minutes" class="${valueClass}">${String(currentMinutes).padStart(2, '0')}</div>
+                                <div class="${labelClass}">Minutes</div>
+                            </div>
+                            <div class="countdown-unit">
+                                <div id="seconds" class="${valueClass}">${String(currentSeconds).padStart(2, '0')}</div>
+                                <div class="${labelClass}">Seconds</div>
+                            </div>`;
+                        break;
+                     case 'clock':
+                        const totalHours = (parseInt(currentDays) * 24) + parseInt(currentHours);
+                        // Apply appropriate class directly in the template
+                        html = `
+                            <div class="countdown-unit" style="width: 100%; text-align: center;">
+                                <div id="clock" class="${valueClass}" style="font-size: 60px; letter-spacing: 2px;">
+                                    ${String(totalHours).padStart(2, '0')}:${String(currentMinutes).padStart(2, '0')}:${String(currentSeconds).padStart(2, '0')}
+                                </div>
+                                <div class="${labelClass}">HH:MM:SS</div>
+                            </div>`;
+                        break;
+                    case 'minutes':
+                         const totalMinutes = (parseInt(currentDays) * 24 * 60) + (parseInt(currentHours) * 60) + parseInt(currentMinutes);
+                        html = `
+                            <div class="countdown-unit" style="width: 100%; text-align: center;">
+                                <div id="totalMinutes" class="${valueClass}" style="font-size: 60px;">${totalMinutes}</div>
+                                <div class="${labelClass}">Total Minutes Remaining</div>
+                            </div>`;
+                        break;
+                    case 'seconds':
+                        const totalSeconds = Math.floor((parseInt(currentDays) * 24 * 60 * 60) + (parseInt(currentHours) * 60 * 60) + (parseInt(currentMinutes) * 60) + parseInt(currentSeconds));
+                        html = `
+                            <div class="countdown-unit" style="width: 100%; text-align: center;">
+                                <div id="totalSeconds" class="${valueClass}" style="font-size: 60px;">${totalSeconds}</div>
+                                <div class="${labelClass}">Total Seconds Remaining</div>
+                            </div>`;
+                        break;
+                }
+
+                countdownDisplay.innerHTML = html;
+                assignCountdownElements(); // Re-assign element references
+
+                // Immediately update display with current time data
+                 const now = new Date();
+                 const birthdayValue = birthdayInput.value;
+                 if (birthdayValue) {
+                     const birthdayParts = birthdayValue.split("-");
+                     const birthMonth = parseInt(birthdayParts[1]) - 1;
+                     const birthDay = parseInt(birthdayParts[2]);
+                     const currentYear = now.getFullYear();
+                     const currentMonth = now.getMonth();
+                     const currentDay = now.getDate();
+
+                     if (birthMonth === currentMonth && birthDay === currentDay) {
+                         updateDisplay(0, 0, 0, 0);
+                     } else {
+                         let nextBirthdayYear = currentYear;
+                         let nextBirthday = new Date(nextBirthdayYear, birthMonth, birthDay);
+                         if (now > nextBirthday) {
+                             nextBirthdayYear++;
+                             nextBirthday = new Date(nextBirthdayYear, birthMonth, birthDay);
+                         }
+                         const timeDifference = nextBirthday - now;
+                         if (timeDifference > 0) {
+                            const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+                            const hours = Math.floor((timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                            const minutes = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
+                            const seconds = Math.floor((timeDifference % (1000 * 60)) / 1000);
+                            updateDisplay(days, hours, minutes, seconds);
+                         } else {
+                             updateDisplay(0,0,0,0); // Handle case where date might be invalid or past
+                         }
+                     }
+                 } else {
+                     updateDisplay(0,0,0,0); // Default if no date
+                 }
+
+                applySettings(); // Re-apply colors
+            }
+
+             // --- Zero Reached Handling (Confetti & Sound) ---
+             function handleZeroReached(isRealBirthday = false) {
+                 if (dropConfettiCheckbox.checked || isRealBirthday) {
+                     showConfetti(); // Start continuous confetti
+                 }
+                 if (playAudioCheckbox.checked || isRealBirthday) {
+                     initializeAudioContext();
+                     playHappyBirthday();
+                 }
+             }
+
+             function previewZeroReached() {
+                 if (dropConfettiCheckbox.checked) {
+                     showConfetti();
+                 }
+                 if (playAudioCheckbox.checked) {
+                     initializeAudioContext();
+                     playHappyBirthday();
+                 }
+             }
+
+            // --- UPDATED Confetti Logic ---
+            function createConfettiPiece() {
+                if (!confettiContainerElement) return; // Need container
+
+                const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#4caf50', '#ffeb3b', '#ff9800'];
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.width = Math.random() * 8 + 5 + 'px';
+                confetti.style.height = confetti.style.width;
+                confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                confetti.style.opacity = Math.random() * 0.5 + 0.5;
+                // Randomize animation duration for variation
+                const animDuration = Math.random() * 3 + 4; // 4-7 seconds duration
+                confetti.style.animationDuration = animDuration + 's';
+
+                confettiContainerElement.appendChild(confetti);
+
+                // Remove the individual confetti element after its animation ends
+                setTimeout(() => {
+                    confetti.remove();
+                }, animDuration * 1000);
+            }
+
+            function showConfetti() {
+                // Stop any previous confetti first
+                stopConfetti();
+
+                confettiContainerElement = document.createElement('div');
+                confettiContainerElement.className = 'confetti-container';
+                document.body.appendChild(confettiContainerElement);
+
+                // Start interval to create confetti pieces
+                confettiIntervalId = setInterval(createConfettiPiece, 100); // Create new pieces every 100ms
+
+                // Add listeners to stop confetti on click/tap
+                // Use { once: true } so the listener removes itself after firing once
+                document.addEventListener('click', stopConfetti, { once: true });
+                document.addEventListener('touchstart', stopConfetti, { once: true });
+            }
+
+            function stopConfetti() {
+                 // Clear the interval that creates new confetti
+                if (confettiIntervalId) {
+                    clearInterval(confettiIntervalId);
+                    confettiIntervalId = null;
+                }
+                 // Remove the container element
+                if (confettiContainerElement) {
+                    confettiContainerElement.remove();
+                    confettiContainerElement = null;
+                }
+                 // Remove listeners - {once: true} handles this automatically,
+                 // but good practice if not using 'once'
+                 // document.removeEventListener('click', stopConfetti);
+                 // document.removeEventListener('touchstart', stopConfetti);
+            }
+
+
+             // --- Web Audio API for Sound ---
+            function initializeAudioContext() {
+                if (!audioContext) {
+                    try {
+                        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    } catch (e) {
+                        console.error("Web Audio API is not supported.", e);
+                        if(playAudioCheckbox) playAudioCheckbox.disabled = true;
+                    }
+                }
+                 if (audioContext && audioContext.state === 'suspended') {
+                     audioContext.resume().catch(e => console.error("AudioContext resume failed:", e));
+                 }
+            }
+
+             function playHappyBirthday() {
+                 if (!audioContext || audioContext.state !== 'running') {
+                     console.warn("AudioContext not ready.");
+                     initializeAudioContext(); return;
+                 }
+                 if (currentOscillator) { try { currentOscillator.stop(); } catch (e) {} currentOscillator = null; }
+
+                 const notes = { C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23, G4: 392.00, A4: 440.00, Bb4: 466.16, C5: 523.25 };
+                 const baseDuration = 0.3;
+                 const melody = [ ['C4', 0.75], ['C4', 0.25], ['D4', 1], ['C4', 1], ['F4', 1], ['E4', 2], ['C4', 0.75], ['C4', 0.25], ['D4', 1], ['C4', 1], ['G4', 1], ['F4', 2], ['C4', 0.75], ['C4', 0.25], ['C5', 1], ['A4', 1], ['F4', 1], ['E4', 1], ['D4', 2], ['Bb4', 0.75], ['Bb4', 0.25], ['A4', 1], ['F4', 1], ['G4', 1], ['F4', 2] ];
+                 let scheduleTime = audioContext.currentTime;
+                 const gainNode = audioContext.createGain();
+                 gainNode.gain.setValueAtTime(0, scheduleTime);
+                 gainNode.gain.linearRampToValueAtTime(0.3, scheduleTime + 0.01);
+                 gainNode.connect(audioContext.destination);
+                 let lastOscillatorStopTime = scheduleTime;
+                 let lastOscillator = null;
+
+                 melody.forEach(([noteName, durationMultiplier]) => {
+                     const frequency = notes[noteName];
+                     const duration = baseDuration * durationMultiplier;
+                     if (frequency) {
+                         const oscillator = audioContext.createOscillator();
+                         oscillator.type = 'sine';
+                         oscillator.frequency.setValueAtTime(frequency, scheduleTime);
+                         oscillator.connect(gainNode);
+                         oscillator.start(scheduleTime);
+                         const stopTime = scheduleTime + duration * 0.95;
+                         oscillator.stop(stopTime);
+                         lastOscillator = oscillator;
+                         lastOscillatorStopTime = stopTime;
+                     }
+                     scheduleTime += duration;
+                 });
+                  currentOscillator = lastOscillator;
+                  gainNode.gain.setValueAtTime(0.3, lastOscillatorStopTime);
+                  gainNode.gain.linearRampToValueAtTime(0, lastOscillatorStopTime + 0.1);
+                  const cleanupTime = (scheduleTime + 0.2 - audioContext.currentTime) * 1000;
+                  setTimeout(() => {
+                      if (gainNode) gainNode.disconnect();
+                      if (currentOscillator === lastOscillator) { currentOscillator = null; }
+                  }, Math.max(0, cleanupTime));
+             }
+
+            // --- Fullscreen Handling (REVISED) ---
+            function openFullscreen(elem) {
+                if (elem.requestFullscreen) elem.requestFullscreen();
+                else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen(); /* Safari */
+                else if (elem.msRequestFullscreen) elem.msRequestFullscreen(); /* IE11 */
+            }
+
+            function exitFullscreen() {
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen(); /* Safari */
+                else if (document.mozCancelFullScreen) document.mozCancelFullScreen(); /* Firefox */
+                else if (document.msExitFullscreen) document.msExitFullscreen(); /* IE11 */
+            }
+
+            function handleFullscreenChange() {
+                const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+                const displayArea = countdownContainer.querySelector('.countdown-display');
+
+                if (isFullscreen && document.fullscreenElement === countdownContainer) {
+                    // --- Entering Fullscreen ---
+                    countdownContainer.classList.add('fullscreen-mode');
+                    if (displayArea) {
+                        displayArea.classList.add('fullscreen-display');
+                        // Swap classes on children
+                        displayArea.querySelectorAll('.countdown-value').forEach(el => {
+                            el.classList.remove('countdown-value');
+                            el.classList.add('fullscreen-value');
+                        });
+                        displayArea.querySelectorAll('.countdown-label').forEach(el => {
+                            el.classList.remove('countdown-label');
+                            el.classList.add('fullscreen-label');
+                        });
+                    }
+
+                    // Add exit button if it doesn't exist
+                    if (!countdownContainer.querySelector('.exit-fullscreen-btn')) {
+                        const exitBtn = document.createElement('button');
+                        exitBtn.className = 'exit-fullscreen-btn';
+                        exitBtn.textContent = 'Exit Fullscreen';
+                        exitBtn.addEventListener('click', exitFullscreen);
+                        countdownContainer.appendChild(exitBtn);
+                    }
+                    if(settingsIcon) settingsIcon.style.display = 'none';
+                    if(fullscreenLink) fullscreenLink.style.display = 'none';
+
+                } else if (!isFullscreen && countdownContainer.classList.contains('fullscreen-mode')) {
+                     // --- Exiting Fullscreen ---
+                     // Check if the class is present before attempting removal
+                    countdownContainer.classList.remove('fullscreen-mode');
+                    if (displayArea) {
+                        displayArea.classList.remove('fullscreen-display');
+                        // Swap classes back on children
+                        displayArea.querySelectorAll('.fullscreen-value').forEach(el => {
+                            el.classList.remove('fullscreen-value');
+                            el.classList.add('countdown-value');
+                        });
+                        displayArea.querySelectorAll('.fullscreen-label').forEach(el => {
+                            el.classList.remove('fullscreen-label');
+                            el.classList.add('countdown-label');
+                        });
+                    }
+
+                    // Remove exit button
+                    const exitBtn = countdownContainer.querySelector('.exit-fullscreen-btn');
+                    if (exitBtn) exitBtn.remove();
+
+                    if(settingsIcon) settingsIcon.style.display = 'block';
+                    if(fullscreenLink) fullscreenLink.style.display = 'block';
+                }
+                 // Re-apply color settings after potential class changes
+                 applySettings();
+            }
+
+        }); // End DOMContentLoaded
+    </script>
+</body>
+</html>
