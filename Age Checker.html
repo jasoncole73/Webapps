@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Age Checker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for a modern appearance */
+        body {
+            font-family: 'Inter', sans-serif; /* Using Inter font */
+            background-color: #f7fafc; /* Lighter gray background */
+            color: #2d3748; /* Default text color - slightly darker gray */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top */
+            min-height: 100vh;
+            padding: 1rem; /* Add padding around the container */
+        }
+        .container {
+            max-width: 600px; /* Moderate max-width */
+            width: 100%;
+            margin-top: 2rem; /* Margin top */
+            margin-bottom: 2rem; /* Add margin bottom */
+            padding: 2rem; /* Increased padding inside the card */
+            background-color: white;
+            border-radius: 0.75rem; /* Slightly larger rounded corners */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Softer shadow */
+        }
+        .title-bar {
+            text-align: center;
+            font-size: 1.5rem; /* Larger title */
+            font-weight: 700; /* Bold */
+            color: #1a202c; /* Very dark gray / black */
+            margin-bottom: 1.5rem;
+        }
+        .input-group {
+             margin-bottom: 1.5rem; /* Spacing between groups */
+        }
+        .input-group > label { /* Style main group labels */
+            margin-bottom: 0.5rem;
+            display: block;
+            font-weight: 600; /* Semi-bold */
+            color: #4a5568;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+         .input-group .sub-label { /* Style for sub-labels (Month, Day, Year) */
+             color: #718096;
+             margin-bottom: 0.15rem;
+             display: block;
+             font-size: 0.75rem; /* Smaller sub-labels */
+             font-weight: 500;
+         }
+        .input-group input,
+        .input-group select {
+            border: 1px solid #e2e8f0; /* Lighter gray border */
+            border-radius: 0.5rem; /* Consistent rounded corners */
+            padding: 0.65rem 0.85rem; /* Adjusted padding */
+            width: 100%; /* Default to full width, adjust in flex/grid */
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background-color: #f7fafc; /* Very light background for inputs */
+            color: #4a5568;
+            font-size: 0.9rem;
+        }
+         /* Specific width adjustments for inline elements */
+         .input-group .inline-inputs input#day {
+             width: 70px; /* Width for Day input */
+             text-align: center;
+         }
+         .input-group .inline-inputs input#year {
+             width: 80px; /* Width for Year input */
+             text-align: center;
+         }
+         .input-group .inline-inputs select {
+             width: auto; /* Auto width for month select */
+             min-width: 80px;
+         }
+         .input-group .inline-inputs .date-picker-container input[type="date"] {
+              width: 45px; /* Width for the date picker trigger */
+              padding-left: 0.5rem;
+              padding-right: 0.5rem;
+              text-align: center; /* Center potential text */
+              color: transparent; /* Hide date text */
+              background-color: #edf2f7; /* Slightly different background */
+         }
+         /* Width for age inputs */
+         .input-group .inline-inputs input[type="number"]:not(#day):not(#year) {
+             width: auto; /* Allow flex to control width */
+         }
+
+         .input-group input::placeholder {
+             color: #a0aec0; /* Lighter placeholder text */
+         }
+         .input-group input:focus,
+         .input-group select:focus {
+            outline: none;
+            border-color: #4299e1; /* Brighter blue border on focus */
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.3); /* Adjusted focus ring */
+            background-color: white;
+        }
+        .date-picker-container {
+            position: relative;
+            display: inline-block; /* Needed for icon positioning */
+        }
+        .date-picker-icon {
+            position: absolute;
+            right: 0.65rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+            pointer-events: none;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            opacity: 1;
+            cursor: pointer;
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent; /* Make default icon transparent */
+            color: transparent;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.2s, box-shadow 0.2s, transform 0.1s;
+            cursor: pointer;
+            text-align: center;
+            border: none;
+        }
+        .btn:active {
+             transform: scale(0.98);
+        }
+        .btn-primary {
+            background-color: #4299e1; /* Brighter blue */
+            color: white;
+            box-shadow: 0 4px 6px rgba(66, 153, 225, 0.2);
+        }
+        .btn-primary:hover {
+            background-color: #3182ce;
+            box-shadow: 0 6px 8px rgba(66, 153, 225, 0.3);
+        }
+        .btn-secondary {
+            background-color: #e2e8f0;
+            color: #4a5568;
+        }
+        .btn-secondary:hover {
+            background-color: #cbd5e0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .results-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 1.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        .results-table th,
+        .results-table td {
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0.85rem 1rem;
+            text-align: center;
+        }
+         .results-table th:not(:last-child),
+         .results-table td:not(:last-child) {
+             border-right: 1px solid #e2e8f0;
+         }
+        .results-table th {
+            background-color: #f7fafc;
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 0.875rem;
+        }
+         .results-table tr:last-child td {
+             border-bottom: none;
+         }
+        .results-table td {
+            color: #4a5568;
+            font-size: 0.9rem;
+        }
+        .error-message {
+            color: #e53e3e;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+        .hidden {
+            display: none;
+        }
+
+        /* Flex container for inline elements */
+        .inline-inputs {
+            display: flex;
+            align-items: flex-end; /* Align items to bottom */
+            gap: 0.75rem; /* Space between inline items */
+            flex-wrap: wrap; /* Allow wrapping */
+        }
+         .inline-inputs > div { /* Target direct children divs for sub-labels */
+             margin-bottom: 0;
+         }
+
+        /* REMOVED Info Section Styles */
+        /* .info-section { ... } */
+        /* .info-section h3 { ... } */
+        /* .info-section p { ... } */
+        /* .info-section p strong { ... } */
+
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            body {
+                 padding: 0.5rem;
+                 align-items: flex-start;
+            }
+            .container {
+                padding: 1.5rem;
+                margin-top: 1rem;
+                margin-bottom: 1rem;
+            }
+             .title-bar {
+                 font-size: 1.25rem;
+                 margin-bottom: 1rem;
+             }
+             .inline-inputs {
+                 gap: 0.5rem; /* Reduce gap on smaller screens */
+             }
+             .input-group .inline-inputs input#day {
+                 width: 60px;
+             }
+              .input-group .inline-inputs input#year {
+                 width: 70px;
+             }
+             .input-group .inline-inputs select {
+                 min-width: 70px;
+             }
+             .button-flex {
+                 flex-direction: column;
+                 gap: 0.75rem;
+             }
+             .button-flex > .btn {
+                 width: 100%;
+             }
+             /* REMOVED Info Section Responsive Styles */
+             /* .info-section { ... } */
+             /* .info-section h3 { ... } */
+             /* .info-section p { ... } */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title-bar">Age Checker</h1>
+
+        <div class="space-y-6"> <div class="input-group">
+                <label for="month">Find Age on</label>
+                <div class="inline-inputs mt-1">
+                    <div>
+                        <label for="month" class="sub-label">Month</label>
+                        <select id="month" name="month">
+                            </select>
+                    </div>
+                    <div>
+                         <label for="day" class="sub-label">Day</label>
+                        <input type="number" id="day" name="day" min="1" max="31">
+                    </div>
+                    <div>
+                         <label for="year" class="sub-label">Year</label>
+                        <input type="number" id="year" name="year"> </div>
+                    <div class="relative date-picker-container">
+                         <label for="datePicker" class="sub-label invisible">Picker</label>
+                         <input type="date" id="datePicker" name="datePicker">
+                         <span class="date-picker-icon">
+                             <i class="fas fa-calendar-alt"></i>
+                         </span>
+                    </div>
+                </div>
+                 <div id="date-error" class="error-message hidden">Invalid date selected.</div>
+            </div>
+
+            <div class="input-group">
+                <label for="minAge1">Check Minimum Ages</label>
+                <div class="inline-inputs mt-1">
+                    <input type="number" id="minAge1" name="minAge1" placeholder="e.g., 21" class="flex-1 min-w-[60px]">
+                    <input type="number" id="minAge2" name="minAge2" placeholder="e.g., 18" class="flex-1 min-w-[60px]">
+                    <input type="number" id="minAge3" name="minAge3" placeholder="Optional" class="flex-1 min-w-[60px]">
+                </div>
+                 <div id="age-error" class="error-message hidden">Please enter valid positive numbers for age.</div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row sm:justify-between gap-3 pt-4 button-flex">
+                <button id="clearBtn" class="btn btn-secondary order-last sm:order-first">Clear</button>
+                <button id="calculateBtn" class="btn btn-primary">Calculate</button>
+            </div>
+        </div>
+
+        <div id="answerSection" class="mt-8 hidden">
+            <h2 class="text-lg font-semibold mb-3 text-gray-700">Results:</h2>
+            <div class="overflow-x-auto">
+                 <table id="resultsTable" class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Age <span class="block text-xs font-normal text-gray-500">(minimum)</span></th>
+                            <th>Born <span class="block text-xs font-normal text-gray-500">(on or before)</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        </div> <script>
+        // DOM Elements
+        const monthSelect = document.getElementById('month');
+        const dayInput = document.getElementById('day');
+        const yearInput = document.getElementById('year');
+        const datePicker = document.getElementById('datePicker');
+        const minAgeInputs = [
+            document.getElementById('minAge1'),
+            document.getElementById('minAge2'),
+            document.getElementById('minAge3')
+        ];
+        const calculateBtn = document.getElementById('calculateBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const answerSection = document.getElementById('answerSection');
+        const resultsTableBody = document.querySelector('#resultsTable tbody');
+        const dateError = document.getElementById('date-error');
+        const ageError = document.getElementById('age-error');
+
+        // Constants
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+        // --- Initialization ---
+        function populateMonths() {
+            months.forEach((month, index) => {
+                const option = document.createElement('option');
+                option.value = index; // 0-based index
+                option.textContent = month;
+                monthSelect.appendChild(option);
+            });
+        }
+
+        function initializeDateSelectors() {
+            populateMonths();
+            const today = new Date();
+            const currentMonth = today.getMonth();
+            const currentDay = today.getDate();
+            const currentYear = today.getFullYear();
+
+            monthSelect.value = currentMonth;
+            dayInput.value = currentDay;
+            yearInput.value = currentYear;
+
+            updatePickerFromInputs(); // Sync picker initially
+
+            // Add event listeners
+            monthSelect.addEventListener('change', updatePickerFromInputs);
+            dayInput.addEventListener('input', updatePickerFromInputs);
+            yearInput.addEventListener('input', updatePickerFromInputs);
+            datePicker.addEventListener('change', updateInputsFromPicker);
+        }
+
+        // --- Date Synchronization Logic ---
+        function updatePickerFromInputs() {
+            hideError(dateError);
+            const yearStr = yearInput.value;
+            const monthIndexStr = monthSelect.value;
+            const dayStr = dayInput.value;
+
+            if (yearStr && /^\d{4}$/.test(yearStr) && monthIndexStr !== "" && dayStr && /^\d{1,2}$/.test(dayStr)) {
+                 const yearNum = parseInt(yearStr);
+                 const monthNum = parseInt(monthIndexStr);
+                 const dayNum = parseInt(dayStr);
+                 const tempDate = new Date(yearNum, monthNum, dayNum);
+
+                 if (tempDate.getFullYear() === yearNum && tempDate.getMonth() === monthNum && tempDate.getDate() === dayNum) {
+                     const formattedMonth = String(monthNum + 1).padStart(2, '0');
+                     const formattedDay = String(dayNum).padStart(2, '0');
+                     datePicker.value = `${yearNum}-${formattedMonth}-${formattedDay}`;
+                 } else {
+                     datePicker.value = '';
+                 }
+            } else {
+                 datePicker.value = '';
+             }
+        }
+
+        function updateInputsFromPicker() {
+            hideError(dateError);
+            const dateValue = datePicker.value;
+            if (dateValue) {
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+                    showError(dateError, "Invalid date format from picker.");
+                    return;
+                }
+                try {
+                    const pickedDate = new Date(dateValue + 'T00:00:00Z'); // Use UTC
+                    if (isNaN(pickedDate.getTime())) throw new Error("Invalid date");
+                    const year = pickedDate.getUTCFullYear();
+                    const month = pickedDate.getUTCMonth();
+                    const day = pickedDate.getUTCDate();
+                    yearInput.value = year;
+                    monthSelect.value = month;
+                    dayInput.value = day;
+                 } catch (error) {
+                    showError(dateError, "Invalid date selected.");
+                }
+            }
+        }
+
+        // --- Calculation Logic ---
+        function calculateRequiredBirthDate(targetDate, minAge) {
+            if (!(targetDate instanceof Date) || isNaN(targetDate)) return null;
+            if (typeof minAge !== 'number' || minAge < 0 || !Number.isInteger(minAge)) return null;
+            const birthDate = new Date(targetDate);
+            birthDate.setUTCFullYear(birthDate.getUTCFullYear() - minAge);
+            return isNaN(birthDate.getTime()) ? null : birthDate;
+        }
+
+        function formatDate(date) {
+             if (!(date instanceof Date) || isNaN(date)) return "Invalid Date";
+             const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+             const day = String(date.getUTCDate()).padStart(2, '0');
+             const year = date.getUTCFullYear();
+             return `${month}/${day}/${year}`;
+        }
+
+        function handleCalculate() {
+            hideError(dateError);
+            hideError(ageError);
+            resultsTableBody.innerHTML = '';
+            answerSection.classList.add('hidden');
+
+            let targetDate;
+            const yearStr = yearInput.value;
+            const monthIndexStr = monthSelect.value;
+            const dayStr = dayInput.value;
+
+            if (!yearStr || !/^\d{4}$/.test(yearStr) || monthIndexStr === "" || !dayStr || !/^\d{1,2}$/.test(dayStr)) {
+                 showError(dateError, "Please enter a valid Month, Day (1-31), and 4-digit Year.");
+                 return;
+             }
+             const yearNum = parseInt(yearStr);
+             const monthNum = parseInt(monthIndexStr);
+             const dayNum = parseInt(dayStr);
+
+            try {
+                 targetDate = new Date(Date.UTC(yearNum, monthNum, dayNum));
+                 if (isNaN(targetDate.getTime()) || targetDate.getUTCFullYear() !== yearNum || targetDate.getUTCMonth() !== monthNum || targetDate.getUTCDate() !== dayNum) {
+                     throw new Error("Invalid date entered.");
+                 }
+                 updatePickerFromInputs();
+             } catch (error) {
+                 showError(dateError, "Please enter a valid date (e.g., check day for the month).");
+                 return;
+             }
+
+            const agesToCalculate = [];
+            let ageInputValid = true;
+            minAgeInputs.forEach(input => {
+                const ageValue = input.value.trim();
+                if (ageValue !== '') {
+                    const age = parseFloat(ageValue);
+                    if (isNaN(age) || age < 0 || !Number.isInteger(age)) {
+                        ageInputValid = false;
+                    } else {
+                        agesToCalculate.push(age);
+                    }
+                }
+            });
+
+            if (!ageInputValid) {
+                showError(ageError, "Please enter valid, non-negative whole numbers for ages.");
+                return;
+            }
+            if (agesToCalculate.length === 0) {
+                 showError(ageError, "Please enter at least one minimum age.");
+                return;
+            }
+
+            agesToCalculate.sort((a, b) => b - a);
+            agesToCalculate.forEach(minAge => {
+                const requiredBirthDate = calculateRequiredBirthDate(targetDate, minAge);
+                const row = resultsTableBody.insertRow();
+                const cellAge = row.insertCell();
+                const cellDate = row.insertCell();
+                cellAge.textContent = minAge;
+                if (requiredBirthDate) {
+                    cellDate.textContent = formatDate(requiredBirthDate);
+                } else {
+                    cellDate.textContent = "Error";
+                    cellDate.style.color = "#e53e3e";
+                }
+            });
+
+            if (resultsTableBody.rows.length > 0) {
+                answerSection.classList.remove('hidden');
+            }
+        }
+
+        // --- Clear Logic ---
+        function handleClear() {
+            minAgeInputs.forEach(input => input.value = '');
+            resultsTableBody.innerHTML = '';
+            answerSection.classList.add('hidden');
+            hideError(dateError);
+            hideError(ageError);
+            initializeDateSelectors();
+        }
+
+        // --- Error Handling ---
+        function showError(element, message) {
+            element.textContent = message;
+            element.classList.remove('hidden');
+        }
+        function hideError(element) {
+            element.classList.add('hidden');
+            element.textContent = '';
+        }
+
+        // --- Event Listeners ---
+        calculateBtn.addEventListener('click', handleCalculate);
+        clearBtn.addEventListener('click', handleClear);
+
+        // --- Initial Setup ---
+        document.addEventListener('DOMContentLoaded', initializeDateSelectors);
+
+    </script>
+</body>
+</html>
