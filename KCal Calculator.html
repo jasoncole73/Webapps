@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pet Food Kcal & Feeding Calculator + Reference</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Apply Inter font globally */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom style for better focus visibility */
+        input:focus, select:focus {
+            outline: 2px solid #2563eb; /* blue-600 */
+            outline-offset: 2px;
+        }
+        /* Style for the result box */
+        .result-box {
+            background-color: #e0f2fe; /* sky-100 */
+            border: 1px solid #7dd3fc; /* sky-300 */
+            color: #0c4a6e; /* sky-900 */
+        }
+        /* Style for the error box */
+        .error-box {
+            background-color: #fee2e2; /* red-100 */
+            border: 1px solid #fca5a5; /* red-300 */
+            color: #991b1b; /* red-900 */
+        }
+        /* Style for the reference box */
+        .reference-box {
+            background-color: #f3f4f6; /* gray-100 */
+            border: 1px solid #e5e7eb; /* gray-200 */
+            color: #374151; /* gray-700 */
+        }
+        /* Add some spacing between sections */
+        .section-divider {
+            border-top: 1px solid #e5e7eb; /* gray-200 */
+            margin-top: 1.5rem; /* my-6 */
+            margin-bottom: 1.5rem; /* mb-6 */
+        }
+        /* Basic table styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        th, td {
+            border: 1px solid #d1d5db; /* gray-300 */
+            padding: 0.5rem; /* p-2 */
+            text-align: left;
+        }
+        th {
+            background-color: #e5e7eb; /* gray-200 */
+            font-weight: 600; /* font-semibold */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4">
+
+    <div class="calculator bg-white p-6 md:p-8 rounded-lg shadow-lg w-full max-w-lg mb-8">
+        <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">Pet Food Kcal & Feeding Calculator</h1>
+
+        <h2 class="text-lg font-semibold text-gray-700 mb-4">1. Food Information (from label)</h2>
+        <div class="space-y-4 mb-6">
+            <div>
+                <label for="kcalValue" class="block text-sm font-medium text-gray-700 mb-1">Kcal Listed:</label>
+                <input type="number" id="kcalValue" placeholder="e.g., 350" min="0" step="any" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out">
+                <p class="text-xs text-gray-500 mt-1">Enter the kilocalories (Kcal).</p>
+            </div>
+            <div>
+                <label for="amountValue" class="block text-sm font-medium text-gray-700 mb-1">Amount for that Kcal:</label>
+                <input type="number" id="amountValue" placeholder="e.g., 1 (for kg/cup) or 3 (for 3oz can)" min="0.001" step="any" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out">
+                 <p class="text-xs text-gray-500 mt-1">Enter the corresponding amount (weight or volume).</p>
+            </div>
+            <div>
+                <label for="unit" class="block text-sm font-medium text-gray-700 mb-1">Unit for that Amount:</label>
+                <select id="unit" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out bg-white">
+                    <option value="kg">Kilograms (kg)</option>
+                    <option value="g">Grams (g)</option>
+                    <option value="lb">Pounds (lb)</option>
+                    <option value="oz">Ounces (oz)</option>
+                    <option value="cup_dry">Cup (Dry Food - avg. 100g)</option>
+                    <option value="cup_wet">Cup (Wet Food - avg. 240g/8oz)</option>
+                    <option value="can_oz">Can (enter weight in oz above)</option>
+                    <option value="can_g">Can (enter weight in g above)</option>
+                </select>
+                 <p class="text-xs text-gray-500 mt-1">Select the unit corresponding to the amount.</p>
+            </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <h2 class="text-lg font-semibold text-gray-700 mb-4">2. Pet Information</h2>
+        <div class="space-y-4 mb-6">
+             <div>
+                <label for="petWeight" class="block text-sm font-medium text-gray-700 mb-1">Pet's Weight:</label>
+                <div class="flex space-x-2">
+                    <input type="number" id="petWeight" placeholder="e.g., 10" min="0.1" step="any" class="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out">
+                    <select id="petWeightUnit" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out bg-white">
+                        <option value="lb">lbs</option>
+                        <option value="kg">kg</option>
+                    </select>
+                </div>
+                 <p class="text-xs text-gray-500 mt-1">Enter your pet's current weight.</p>
+            </div>
+             <div>
+                <label for="petStatus" class="block text-sm font-medium text-gray-700 mb-1">Pet Status / Activity Level:</label>
+                <select id="petStatus" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out bg-white">
+                    <option value="neutered_adult_dog">Neutered Adult Dog - Typical Activity</option>
+                    <option value="intact_adult_dog">Intact Adult Dog / Active</option>
+                    <option value="neutered_adult_cat_indoor">Neutered Adult Cat - Indoor</option>
+                    <option value="neutered_adult_cat_outdoor">Neutered Adult Cat - Outdoor/Active</option>
+                    <option value="intact_adult_cat">Intact Adult Cat</option>
+                    <option value="inactive_obese">Inactive / Weight Loss Target</option>
+                    <option value="weight_gain">Weight Gain Target</option>
+                    <option value="puppy_kitten">Puppy / Kitten (&lt; 1 year)</option>
+                    <option value="performance">Highly Active / Working Dog</option>
+                </select>
+                 <p class="text-xs text-gray-500 mt-1">Select the option that best describes your pet.</p>
+            </div>
+        </div>
+
+        <button id="calculate" onclick="calculateResults()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-lg">
+            Calculate
+        </button>
+
+        <div id="error" class="error-box mt-4 p-3 rounded-md text-sm font-medium text-center hidden">
+            </div>
+
+        <div id="result" class="result-box mt-4 p-4 rounded-md hidden">
+            <h2 class="text-lg font-semibold mb-3 text-center">Estimated Results</h2>
+            <div class="space-y-2 text-sm md:text-base">
+                <p><strong class="font-medium">Food Density:</strong> <span id="result-kcal-per-oz"></span> Kcal per ounce.</p>
+                <p><strong class="font-medium">Est. Daily Need:</strong> <span id="result-daily-kcal"></span> Kcal per day.</p>
+                <p><strong class="font-medium">Est. Daily Feeding Amount:</strong> <span id="result-daily-oz"></span> ounces per day.</p>
+                <p id="result-daily-cups-cans" class="hidden"><strong class="font-medium">Approximate Equivalent:</strong> <span id="result-cups-cans-value"></span> <span id="result-cups-cans-unit"></span> per day.</p>
+            </div>
+             <p class="text-xs text-gray-600 mt-4 text-center italic">Disclaimer: This calculator provides estimates based on general formulas (Resting Energy Requirement - RER, and Maintenance Energy Requirement - MER multipliers). Actual needs vary. Consult your veterinarian for specific feeding recommendations.</p>
+        </div>
+    </div>
+
+    <div class="reference-box p-6 md:p-8 rounded-lg shadow-lg w-full max-w-lg">
+        <h2 class="text-xl font-bold text-center text-gray-800 mb-4">General Daily Kcal Estimates (Reference Only)</h2>
+        <p class="text-sm text-gray-600 mb-4 text-center">These are rough estimates for maintaining an ideal weight in average, **neutered adult** pets with typical activity levels. Individual needs can vary significantly.</p>
+
+        <h3 class="text-lg font-semibold text-gray-700 mb-2 mt-4">Cats (Indoor, Neutered Adult)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Ideal Weight (lbs)</th>
+                    <th>Estimated Daily Kcal Range</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>5 lbs</td>
+                    <td>~150 - 180 Kcal</td>
+                </tr>
+                 <tr>
+                    <td>8 lbs</td>
+                    <td>~200 - 240 Kcal</td>
+                </tr>
+                <tr>
+                    <td>10 lbs</td>
+                    <td>~240 - 280 Kcal</td>
+                </tr>
+                <tr>
+                    <td>12 lbs</td>
+                    <td>~270 - 320 Kcal</td>
+                </tr>
+                <tr>
+                    <td>15 lbs</td>
+                    <td>~320 - 370 Kcal</td>
+                </tr>
+            </tbody>
+        </table>
+
+         <h3 class="text-lg font-semibold text-gray-700 mb-2 mt-6">Dogs (Typical Activity, Neutered Adult)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Ideal Weight (lbs)</th>
+                    <th>Estimated Daily Kcal Range</th>
+                </tr>
+            </thead>
+            <tbody>
+                 <tr>
+                    <td>10 lbs</td>
+                    <td>~225 - 300 Kcal</td>
+                </tr>
+                <tr>
+                    <td>20 lbs</td>
+                    <td>~375 - 500 Kcal</td>
+                </tr>
+                 <tr>
+                    <td>30 lbs</td>
+                    <td>~500 - 675 Kcal</td>
+                </tr>
+                 <tr>
+                    <td>50 lbs</td>
+                    <td>~750 - 1000 Kcal</td>
+                </tr>
+                <tr>
+                    <td>70 lbs</td>
+                    <td>~950 - 1300 Kcal</td>
+                </tr>
+                 <tr>
+                    <td>90 lbs</td>
+                    <td>~1150 - 1550 Kcal</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p class="text-sm text-gray-600 mt-6 font-semibold">Important Considerations:</p>
+        <ul class="list-disc list-inside text-sm text-gray-600 space-y-1 mt-2">
+            <li>**Activity Level:** Very active pets need significantly more; inactive pets need less.</li>
+            <li>**Age:** Puppies/kittens need much more; seniors often need less.</li>
+            <li>**Breed & Metabolism:** Some breeds naturally have higher or lower metabolisms.</li>
+            <li>**Intact Pets:** Unspayed/unneutered pets generally need more calories.</li>
+            <li>**Health Conditions:** Illness or specific health needs can change requirements.</li>
+            <li>**Environment:** Outdoor pets or those in cold climates may need more.</li>
+        </ul>
+         <p class="text-xs text-gray-500 mt-4">
+            *Source: Estimates derived from standard veterinary formulas (RER/MER) and general guidelines found in pet nutrition resources (e.g., PetMD, VCA Hospitals, OSU Veterinary Medical Center, Association for Pet Obesity Prevention).
+         </p>
+         <p class="text-sm text-gray-600 mt-4 text-center italic font-medium">Always consult your veterinarian for personalized feeding advice based on your specific pet's needs and health.</p>
+
+    </div>
+
+
+    <script>
+        // Constants for conversion
+        const GRAMS_PER_KG = 1000;
+        const OUNCES_PER_LB = 16;
+        const GRAMS_PER_OUNCE = 28.3495;
+        const LBS_PER_KG = 2.20462;
+        const AVG_GRAMS_PER_DRY_CUP = 100; // Average, can vary significantly
+        const AVG_GRAMS_PER_WET_CUP = 240; // Approx 8oz, can vary
+
+        // Multipliers for Maintenance Energy Requirement (MER) based on RER
+        // These are general estimates and can vary. Consult vet for specifics.
+        const MER_MULTIPLIERS = {
+            neutered_adult_dog: 1.6, // Typical neutered dog
+            intact_adult_dog: 1.8,   // Typical intact dog
+            neutered_adult_cat_indoor: 1.2, // Typical indoor neutered cat
+            neutered_adult_cat_outdoor: 1.4, // Typical outdoor/active neutered cat
+            intact_adult_cat: 1.6, // Typical intact cat (similar to active neutered)
+            inactive_obese: 1.0,   // For weight loss target or very inactive
+            weight_gain: 1.7,      // For weight gain
+            puppy_kitten: 2.5,     // Average for growth (0-12 months)
+            performance: 4.0       // Highly variable (2-6+) for working/performance dogs
+        };
+
+        /**
+         * Calculates Kcal density and estimated feeding amounts based on user inputs.
+         */
+        function calculateResults() {
+            // --- Get DOM elements ---
+            const kcalValueInput = document.getElementById('kcalValue');
+            const amountValueInput = document.getElementById('amountValue');
+            const unitSelect = document.getElementById('unit');
+            const petWeightInput = document.getElementById('petWeight');
+            const petWeightUnitSelect = document.getElementById('petWeightUnit');
+            const petStatusSelect = document.getElementById('petStatus');
+
+            const errorDiv = document.getElementById('error');
+            const resultDiv = document.getElementById('result');
+            const resultKcalPerOz = document.getElementById('result-kcal-per-oz');
+            const resultDailyKcal = document.getElementById('result-daily-kcal');
+            const resultDailyOz = document.getElementById('result-daily-oz');
+            const resultDailyCupsCansP = document.getElementById('result-daily-cups-cans');
+            const resultCupsCansValue = document.getElementById('result-cups-cans-value');
+            const resultCupsCansUnit = document.getElementById('result-cups-cans-unit');
+
+
+            // --- Clear previous results and errors ---
+            errorDiv.classList.add('hidden');
+            errorDiv.textContent = '';
+            resultDiv.classList.add('hidden');
+            resultKcalPerOz.textContent = '';
+            resultDailyKcal.textContent = '';
+            resultDailyOz.textContent = '';
+            resultDailyCupsCansP.classList.add('hidden'); // Hide cups/cans result initially
+
+
+            // --- Get and Validate Food Inputs ---
+            const kcalValue = parseFloat(kcalValueInput.value);
+            const amountValue = parseFloat(amountValueInput.value);
+            const unit = unitSelect.value;
+            let foodErrorMessage = '';
+            if (isNaN(kcalValue) || kcalValue < 0) {
+                foodErrorMessage = 'Please enter a valid, non-negative Kcal value for the food.';
+            } else if (isNaN(amountValue) || amountValue <= 0) {
+                foodErrorMessage = 'Please enter a valid, positive amount for the food.';
+            }
+            if (foodErrorMessage) {
+                showError(foodErrorMessage);
+                return;
+            }
+
+            // --- Get and Validate Pet Inputs ---
+            const petWeight = parseFloat(petWeightInput.value);
+            const petWeightUnit = petWeightUnitSelect.value;
+            const petStatus = petStatusSelect.value;
+            let petErrorMessage = '';
+            if (isNaN(petWeight) || petWeight <= 0) {
+                petErrorMessage = 'Please enter a valid, positive weight for the pet.';
+            }
+            if (petErrorMessage) {
+                showError(petErrorMessage);
+                return;
+            }
+
+            // --- Calculations ---
+            try {
+                // 1. Calculate Kcal per Gram
+                let kcalPerGram = 0;
+                switch (unit) {
+                    case 'kg':
+                        kcalPerGram = kcalValue / (amountValue * GRAMS_PER_KG);
+                        break;
+                    case 'g':
+                    case 'can_g': // Treat can weight in g directly
+                        kcalPerGram = kcalValue / amountValue;
+                        break;
+                    case 'lb':
+                        kcalPerGram = kcalValue / (amountValue * OUNCES_PER_LB * GRAMS_PER_OUNCE);
+                        break;
+                    case 'oz':
+                    case 'can_oz': // Treat can weight in oz directly
+                        kcalPerGram = kcalValue / (amountValue * GRAMS_PER_OUNCE);
+                        break;
+                    case 'cup_dry':
+                        // Use average grams per cup for density calculation
+                        kcalPerGram = kcalValue / (amountValue * AVG_GRAMS_PER_DRY_CUP);
+                        break;
+                    case 'cup_wet':
+                         // Use average grams per cup for density calculation
+                        kcalPerGram = kcalValue / (amountValue * AVG_GRAMS_PER_WET_CUP);
+                        break;
+                    default:
+                        throw new Error('Invalid unit selected for food.');
+                }
+
+                // 2. Calculate Kcal per Ounce
+                const kcalPerOunce = kcalPerGram * GRAMS_PER_OUNCE;
+                 if (!isFinite(kcalPerOunce) || kcalPerOunce <= 0) {
+                   throw new Error('Calculation resulted in zero or invalid Kcal per ounce. Please check food inputs.');
+                }
+                resultKcalPerOz.textContent = kcalPerOunce.toFixed(1);
+
+                // 3. Calculate Pet's Daily Kcal Need (DER)
+                // Convert weight to kg
+                const weightKg = (petWeightUnit === 'kg') ? petWeight : petWeight / LBS_PER_KG;
+                if (weightKg <= 0) throw new Error('Invalid pet weight after conversion.');
+
+                // Calculate RER (Resting Energy Requirement)
+                // Using the formula: RER = 70 * (body weight in kg)^0.75
+                const RER = 70 * Math.pow(weightKg, 0.75);
+
+                // Get MER multiplier based on selected pet status
+                const multiplier = MER_MULTIPLIERS[petStatus] || 1.4; // Default multiplier if status is somehow invalid
+
+                // Calculate DER (Daily Energy Requirement) = RER * Multiplier
+                const dailyKcalNeed = RER * multiplier;
+                if (!isFinite(dailyKcalNeed) || dailyKcalNeed <= 0) {
+                   throw new Error('Calculation resulted in invalid daily Kcal need.');
+                }
+                resultDailyKcal.textContent = Math.round(dailyKcalNeed);
+
+                // 4. Calculate Daily Feeding Amount in Ounces
+                const dailyOunces = dailyKcalNeed / kcalPerOunce;
+                 if (!isFinite(dailyOunces) || dailyOunces <= 0) {
+                   throw new Error('Calculation resulted in invalid daily feeding amount.');
+                }
+                resultDailyOz.textContent = dailyOunces.toFixed(1);
+
+                // 5. (Optional) Estimate Cups or Cans if applicable based on original input unit
+                let dailyCupsCans = 0;
+                let cupsCansUnit = '';
+
+                if (unit === 'cup_dry') {
+                    // Calculate ounces per the input cup amount (e.g., if Kcal was per 1 cup, this is oz/cup)
+                    // Note: Uses AVG_GRAMS_PER_DRY_CUP which is an estimate
+                    const ozPerCup = (AVG_GRAMS_PER_DRY_CUP / GRAMS_PER_OUNCE) / amountValue;
+                    if (ozPerCup > 0) {
+                        dailyCupsCans = dailyOunces / ozPerCup;
+                        cupsCansUnit = 'cups (dry, approx)'; // Added approx. note
+                    }
+                } else if (unit === 'cup_wet') {
+                     // Calculate ounces per the input cup amount
+                     // Note: Uses AVG_GRAMS_PER_WET_CUP which is an estimate
+                     const ozPerCup = (AVG_GRAMS_PER_WET_CUP / GRAMS_PER_OUNCE) / amountValue;
+                     if (ozPerCup > 0) {
+                        dailyCupsCans = dailyOunces / ozPerCup;
+                        cupsCansUnit = 'cups (wet, approx)'; // Added approx. note
+                    }
+                } else if (unit === 'can_oz') {
+                    // Assumes amountValue is the oz per can from the input
+                    const ozPerCan = amountValue;
+                     if (ozPerCan > 0) {
+                        dailyCupsCans = dailyOunces / ozPerCan;
+                        // Display the original can size in the unit description
+                        cupsCansUnit = `cans (${amountValue} oz)`;
+                    }
+                } else if (unit === 'can_g') {
+                    // Assumes amountValue is the grams per can from the input
+                    const ozPerCan = amountValue / GRAMS_PER_OUNCE;
+                    if (ozPerCan > 0) {
+                        dailyCupsCans = dailyOunces / ozPerCan;
+                         // Display the original can size in the unit description
+                        cupsCansUnit = `cans (${amountValue} g)`;
+                    }
+                }
+
+                // If a cup/can calculation was successful, display it
+                if (dailyCupsCans > 0 && cupsCansUnit) {
+                    resultCupsCansValue.textContent = dailyCupsCans.toFixed(1);
+                    resultCupsCansUnit.textContent = cupsCansUnit;
+                    resultDailyCupsCansP.classList.remove('hidden');
+                }
+
+                // Display the result box
+                resultDiv.classList.remove('hidden');
+
+            } catch (error) {
+                // Display calculation errors
+                showError(`Calculation Error: ${error.message}`);
+            }
+        }
+
+        /**
+         * Displays an error message in the designated error div.
+         * @param {string} message - The error message to display.
+         */
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            document.getElementById('result').classList.add('hidden'); // Hide results on error
+        }
+
+
+        // Add event listeners to clear errors/results on input change for better UX
+        // This provides immediate feedback if the user corrects an invalid input.
+        document.getElementById('kcalValue').addEventListener('input', clearFeedback);
+        document.getElementById('amountValue').addEventListener('input', clearFeedback);
+        document.getElementById('unit').addEventListener('change', clearFeedback);
+        document.getElementById('petWeight').addEventListener('input', clearFeedback);
+        document.getElementById('petWeightUnit').addEventListener('change', clearFeedback);
+        document.getElementById('petStatus').addEventListener('change', clearFeedback);
+
+        /**
+         * Hides the error and result messages. Called when input changes.
+         */
+        function clearFeedback() {
+             document.getElementById('error').classList.add('hidden');
+             document.getElementById('result').classList.add('hidden');
+        }
+
+    </script>
+
+</body>
+</html>
