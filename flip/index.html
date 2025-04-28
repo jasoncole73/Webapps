@@ -10,7 +10,7 @@
     <body>
         <!-- START OF FLIP EXAMPLE PRESET -->
 
-        <<style>
+       <style>
 .tick {
   font-size:1rem; white-space:nowrap; font-family:arial,sans-serif;
 }
@@ -40,19 +40,19 @@
 }
 
 body {
-   background-color: rgb(255, 255, 255) !important; 
+   background-color: #fff !important; 
 }
 
 .tick-text-inline {
-   color: rgb(90, 93, 99) !important; 
+   color: #595d63 !important; 
 }
 
 .tick-label {
-   color: rgb(90, 93, 99) !important; 
+   color: #595d63 !important; 
 }
 
 .tick-flip-panel {
-   color: rgb(255, 255, 255) !important; 
+   color: #fff !important; 
 }
 
 .tick-flip {
@@ -64,7 +64,7 @@ body {
 }
 
 .tick-flip-panel {
-   background-color: rgb(59, 61, 59) !important; 
+   background-color: #3c3e3c !important; 
 }
 
 .tick-flip {
@@ -73,68 +73,79 @@ body {
 </style>
 
 <div class="tick" data-did-init="handleTickInit">
+              <div data-repeat="true" data-layout="horizontal fit" data-transform="preset(d, h, m, s) -> delay">
+                <div class="tick-group">
+                  <div data-key="value" data-repeat="true" data-transform="pad(00) -> split -> delay">
+                    <span data-view="flip"></span>
+                  </div>
 
-    <div data-repeat="true" data-layout="horizontal fit" data-transform="preset(d, h, m, s) -> delay">
-
-        <div class="tick-group">
-
-            <div data-key="value" data-repeat="true" data-transform="pad(00) -> split -> delay">
-
-                <span data-view="flip"></span>
-
+                  <span data-key="label" data-view="text" class="tick-label"></span>
+                </div>
+              </div>
             </div>
 
-            <span data-key="label" data-view="text" class="tick-label"></span>
+            <script>
+              function handleTickInit(tick) {
+                // uncomment to set labels to different language
+                /*
+        var locale = {
+            YEAR_PLURAL: 'Jaren',
+            YEAR_SINGULAR: 'Jaar',
+            MONTH_PLURAL: 'Maanden',
+            MONTH_SINGULAR: 'Maand',
+            WEEK_PLURAL: 'Weken',
+            WEEK_SINGULAR: 'Week',
+            DAY_PLURAL: 'Dagen',
+            DAY_SINGULAR: 'Dag',
+            HOUR_PLURAL: 'Uren',
+            HOUR_SINGULAR: 'Uur',
+            MINUTE_PLURAL: 'Minuten',
+            MINUTE_SINGULAR: 'Minuut',
+            SECOND_PLURAL: 'Seconden',
+            SECOND_SINGULAR: 'Seconde',
+            MILLISECOND_PLURAL: 'Milliseconden',
+            MILLISECOND_SINGULAR: 'Milliseconde'
+        };
 
-        </div>
-
-    </div>
-
-</div>
-
-<script>
-    function handleTickInit(tick) {
-
-        // define the countdown schedule using natural language,
-        // you can find some example schedules below.
-
-        // - 'every hour'
-        // - 'every minute'
-        // - 'every 2 hours'
-        // - 'every 10 minutes'
-        // - 'every 45 seconds'
-        // - 'till 10 every hour'
-        // - 'from 13 every hour'
-        // - 'from 12 till 15 every hour'
-        // - 'every hour wait 10 minutes'
-        // - 'every day at 13:15:40'
-        // - 'every day at 11'
-        // - 'every day at 11 wait 2 hours'
-        // - 'every monday at 12'
-        // - 'every sunday at 11 wait 2 hours'
-        // - 'sunday every hour from 10 till 12'
-        // - 'sunday every hour wait 10 minutes'
-        // - 'every 1st day of the month at 12:00'
-        // - 'every 2nd day of the month at 12:00'
-        // - 'every first day of the month at 12:00'
-        // - 'every last day of the month at 12:00'
-        // - 'every 1st day of the month at 11:55 wait 10 minutes'
-        // - 'every 2nd day of the month from 10 till 14 every hour wait 10 minutes'
-        // - 'every januari the 12th at 12:00'
-        // - 'every 12th of januari at 12:00'
-
-        // combine multiple schedules
-        // - 'monday at 12, tuesday at 14, friday at 12'
-
-        // pass timezone
-        // Tick.count.schedule('every monday at 12:00', { timezone: '+01:00' })
-
-        // create the schedule counter
-        Tick.count.schedule('monday at 12, friday at 9').onupdate = function(value) {
-            tick.value = value;
+        for (var key in locale) {
+            if (!locale.hasOwnProperty(key)) { continue; }
+            tick.setConstant(key, locale[key]);
         }
-    }
-</script>
+        */
+
+                // format of due date is ISO8601
+                // https://en.wikipedia.org/wiki/ISO_8601
+
+                // '2018-01-31T12:00:00'        to count down to the 31st of January 2018 at 12 o'clock
+                // '2019'                       to count down to 2019
+                // '2018-01-15T10:00:00+01:00'  to count down to the 15th of January 2018 at 10 o'clock in timezone GMT+1
+
+                var nextYear = new Date().getFullYear() + 1;
+
+                // create the countdown counter
+                var counter = Tick.count.down(
+                  nextYear + "-01-01T00:00:00+01:00"
+                );
+
+                counter.onupdate = function (value) {
+                  tick.value = value;
+                };
+
+                counter.onended = function () {
+                  // redirect, uncomment the next line
+                  // window.location = 'my-location.html'
+                  // hide counter, uncomment the next line
+                  // tick.root.style.display = 'none';
+                  // show message, uncomment the next line
+                  // document.querySelector('.tick-onended-message').style.display = '';
+                };
+              }
+            </script>
+
+            <div class="tick-onended-message" style="display: none">
+              <p>Time's up</p>
+            </div>
+
 
             
 
