@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pixel Digital Clock</title>
+    <style>
+        :root {
+            --pixel-color: #39ff14;
+            --background-color: #000;
+            --pixel-size: 5px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--pixel-color);
+            font-family: 'Courier New', monospace;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            width: 100%;
+            transition: background-color 0.3s;
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            width: 100%;
+        }
+
+        .clocks-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 40px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .clock-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+        }
+
+        .timezone-label {
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .clock {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .digit {
+            display: grid;
+            grid-template-columns: repeat(4, var(--pixel-size));
+            grid-template-rows: repeat(7, var(--pixel-size));
+            gap: 1px;
+        }
+
+        .separator {
+            display: grid;
+            grid-template-columns: var(--pixel-size);
+            grid-template-rows: repeat(7, var(--pixel-size));
+            gap: 1px;
+        }
+
+        .pixel {
+            width: var(--pixel-size);
+            height: var(--pixel-size);
+            background-color: var(--pixel-color);
+            opacity: 0.2;
+            transition: opacity 0.1s;
+        }
+
+        .pixel.on {
+            opacity: 1;
+        }
+
+        .date {
+            font-size: 1.2rem;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 10px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .color-option {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .color-option.active {
+            border-color: white;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            background-color: transparent;
+            border: 2px solid var(--pixel-color);
+            color: var(--pixel-color);
+            padding: 8px 15px;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+            text-transform: uppercase;
+        }
+
+        button:hover {
+            background-color: var(--pixel-color);
+            color: var(--background-color);
+        }
+
+        .remove-clock {
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            background: transparent;
+            border: none;
+            color: var(--pixel-color);
+            cursor: pointer;
+            font-size: 1.5rem;
+            line-height: 1;
+            padding: 5px;
+        }
+
+        .instruction {
+            font-size: 0.8rem;
+            margin-top: 20px;
+            opacity: 0.7;
+            text-align: center;
+        }
+
+        /* Fullscreen styles */
+        body.fullscreen {
+            --pixel-size: 15px;
+        }
+        
+        body.fullscreen .controls,
+        body.fullscreen .color-picker,
+        body.fullscreen .instruction {
+            display: none;
+        }
+        
+        body.fullscreen .date {
+            font-size: 2rem;
+            margin-top: 30px;
+        }
+
+        /* Timezone selector modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: var(--background-color);
+            border: 2px solid var(--pixel-color);
+            padding: 20px;
+            max-width: 80%;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+
+        .modal-title {
+            color: var(--pixel-color);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .timezone-selector {
+            background-color: transparent;
+            border: 2px solid var(--pixel-color);
+            color: var(--pixel-color);
+            padding: 8px;
+            font-family: 'Courier New', monospace;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .timezone-selector option {
+            background-color: var(--background-color);
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Media queries for responsive design */
+        @media (max-width: 768px) {
+            :root {
+                --pixel-size: 4px;
+            }
+            
+            .date {
+                font-size: 1rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .clocks-container {
+                gap: 30px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            :root {
+                --pixel-size: 3px;
+            }
+            
+            .clock {
+                gap: 5px;
+            }
+            
+            body.fullscreen {
+                --pixel-size: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="clocks-container" id="clocks-container">
+            <!-- Main clock will be inserted here by JavaScript -->
+        </div>
+        
+        <div class="color-picker" id="color-picker">
+            <div class="color-option active" style="background-color: #39ff14;" data-color="#39ff14"></div>
+            <div class="color-option" style="background-color: #ff3366;" data-color="#ff3366"></div>
+            <div class="color-option" style="background-color: #00bfff;" data-color="#00bfff"></div>
+            <div class="color-option" style="background-color: #ffcc00;" data-color="#ffcc00"></div>
+            <div class="color-option" style="background-color: #ff9900;" data-color="#ff9900"></div>
+            <div class="color-option" style="background-color: #cc66ff;" data-color="#cc66ff"></div>
+            <div class="color-option" style="background-color: #ffffff;" data-color="#ffffff"></div>
+            <div class="color-option" style="background-color: #00ff99;" data-color="#00ff99"></div>
+        </div>
+        
+        <div class="controls">
+            <button id="formatToggle">12/24 Hour</button>
+            <button id="fullscreenToggle">Fullscreen</button>
+            <button id="addClockBtn">Add Clock</button>
+        </div>
+        
+        <div class="instruction" id="instruction">
+            Double-click/tap clock to toggle fullscreen
+        </div>
+    </div>
+
+    <script>
+        // Common timezones
+        const timezones = [
+            { name: "Pacific Time (PT)", value: "America/Los_Angeles" },
+            { name: "Mountain Time (MT)", value: "America/Denver" },
+            { name: "Central Time (CT)", value: "America/Chicago" },
+            { name: "Eastern Time (ET)", value: "America/New_York" },
+            { name: "Atlantic Time (AT)", value: "America/Halifax" },
+            { name: "Brazil Time (BRT)", value: "America/Sao_Paulo" },
+            { name: "UTC", value: "UTC" },
+            { name: "British Time (GMT/BST)", value: "Europe/London" },
+            { name: "Central European (CET/CEST)", value: "Europe/Paris" },
+            { name: "Eastern European (EET/EEST)", value: "Europe/Athens" },
+            { name: "India (IST)", value: "Asia/Kolkata" },
+            { name: "China (CST)", value: "Asia/Shanghai" },
+            { name: "Japan (JST)", value: "Asia/Tokyo" },
+            { name: "Australia Eastern (AEST/AEDT)", value: "Australia/Sydney" },
+            { name: "New Zealand (NZST/NZDT)", value: "Pacific/Auckland" }
+        ];
+        
+        // State variables
+        let is24HourFormat = false;
+        let isFullscreen = false;
+        let clockCount = 1;
+        let selectedColor = '#39ff14';
+        
+        // Digit patterns (0-9)
+        const digitPatterns = [
+            // 0
+            [
+                1, 1, 1, 1,
+                1, 0, 0, 1,
+                1, 0, 0, 1,
+                1, 0, 0, 1,
+                1, 0, 0, 1,
+                1, 0, 0, 1,
+                1, 1, 1, 1
+            ],
+            // 1
+            [
+                0, 0, 1, 0,
+                0, 1, 1, 0,
+                1, 0, 1, 0,
+                0, 0, 1, 0,
+                0, 0, 1, 0,
+                0, 0, 1, 0,
+                1, 1, 1, 1
+            ],
+            // 2
+            [
+                1, 1, 1, 1,
+                0, 0, 0, 1,
+                0, 0, 0, 1,
+                1, 1, 1, 1,
+                1, 0, 0, 0,
+                1, 0, 0, 0,
+                1, 1, 1, 1
+            ],
+            // 3
+            [
+                1, 1, 1, 1,
+                0, 0, 0, 1,
+                0, 0, 0, 1,
+                1, 1, 1, 1,
+                0, 0, 0, 1,
+                0, 0, 0, 1,
+                1, 1, 1, 1
+            ],
+            // 4
+            [
+                1, 0, 0, 1,
+                1, 0, 0, 1,
+                1, 0, 0, 1,
+                1, 1, 1, 1,
+                0, 0, 0, 1,
+                0, 0, 0, 1,
+                0, 0, 0, 1
+            ],
+            // 5
+            [
+                1, 1, 1, 1,
+                1, 0, 0, 0,
+                1, 0, 0, 0,
+                1, 1, 1, 1,
+                0, 0, 0, 1,
+                0, 0, 0, 1,
+                1, 1, 1, 1
+            ],
+            // 6
+            [
+                1, 1, 1, 1,
+                1, 0, 0, 0,
+                1, 0, 0, 0,
+                1, 1, 1, 1,
+                1, 0, 0, 1,
+                1, 0, 0, 1,
+                1, 1, 1, 1
+            ],
+            // 7
+            [
+                1, 1, 1, 1,
+                0, 0, 0, 1,
+                0, 0, 0, 1,
+                0, 0, 0, 1,
+                0, 0, 0, 1,
+                0, 0, 0, 1,
+                0, 0, 0, 1
+            ],
+            // 8
+            [
+                1, 1, 1, 1,
+                1, 0, 0, 1,
+                1, 0, 0, 1,
+                1, 1, 1, 1,
+                1, 0, 0, 1,
+                1, 0, 0, 1,
+                1, 1, 1, 1
+            ],
+            // 9
+            [
+                1, 1, 1, 1,
+                1, 0, 0, 1,
+                1, 0, 0, 1,
+                1, 1, 1, 1,
+                0, 0, 0, 1,
+                0, 0, 0, 1,
+                1, 1, 1, 1
+            ]
+        ];
+        
+        // Separator pattern (colon)
+        const separatorPattern = [
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0
+        ];
+        
+        // Create a clock container with all necessary elements
+        function createClockContainer(id, timezone) {
+            const clockContainer = document.createElement('div');
+            clockContainer.className = 'clock-container';
+            clockContainer.id = `clock-${id}`;
+            
+            // Create timezone label
+            const label = document.createElement('div');
+            label.className = 'timezone-label';
+            const timezoneName = getTimezoneName(timezone);
+            label.textContent = timezoneName;
+            clockContainer.appendChild(label);
+            
+            // Create clock display
+            const clock = document.createElement('div');
+            clock.className = 'clock';
+            
+            // Create hour digits
+            const hour1 = document.createElement('div');
+            hour1.className = 'digit';
+            hour1.id = `hour1-${id}`;
+            clock.appendChild(hour1);
+            
+            const hour2 = document.createElement('div');
+            hour2.className = 'digit';
+            hour2.id = `hour2-${id}`;
+            clock.appendChild(hour2);
+            
+            // Create separator
+            const separator1 = document.createElement('div');
+            separator1.className = 'separator';
+            separator1.id = `separator1-${id}`;
+            clock.appendChild(separator1);
+            
+            // Create minute digits
+            const minute1 = document.createElement('div');
+            minute1.className = 'digit';
+            minute1.id = `minute1-${id}`;
+            clock.appendChild(minute1);
+            
+            const minute2 = document.createElement('div');
+            minute2.className = 'digit';
+            minute2.id = `minute2-${id}`;
+            clock.appendChild(minute2);
+            
+            // Create second separator
+            const separator2 = document.createElement('div');
+            separator2.className = 'separator';
+            separator2.id = `separator2-${id}`;
+            clock.appendChild(separator2);
+            
+            // Create seconds digits
+            const second1 = document.createElement('div');
+            second1.className = 'digit';
+            second1.id = `second1-${id}`;
+            clock.appendChild(second1);
+            
+            const second2 = document.createElement('div');
+            second2.className = 'digit';
+            second2.id = `second2-${id}`;
+            clock.appendChild(second2);
+            
+            // Create AM/PM indicator
+            const ampm = document.createElement('div');
+            ampm.id = `ampm-${id}`;
+            ampm.style.marginLeft = '10px';
+            ampm.style.fontSize = '1.5rem';
+            clock.appendChild(ampm);
+            
+            clockContainer.appendChild(clock);
+            
+            // Create date display
+            const date = document.createElement('div');
+            date.className = 'date';
+            date.id = `date-${id}`;
+            clockContainer.appendChild(date);
+            
+            // Add remove button for additional clocks
+            if (id !== 'main') {
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-clock';
+                removeBtn.innerHTML = '&times;';
+                removeBtn.title = 'Remove Clock';
+                removeBtn.addEventListener('click', function() {
+                    clockContainer.remove();
+                });
+                clockContainer.appendChild(removeBtn);
+            }
+            
+            // Add double-click event for fullscreen
+            clock.addEventListener('dblclick', function() {
+                toggleFullscreen();
+            });
+            
+            return clockContainer;
+        }
+        
+        // Create pixels for a digit
+        function createPixelsForDigit(elementId) {
+            const digit = document.getElementById(elementId);
+            
+            // Clear existing pixels if any
+            digit.innerHTML = '';
+            
+            // Create new pixels
+            for (let i = 0; i < 28; i++) {
+                const pixel = document.createElement('div');
+                pixel.className = 'pixel';
+                digit.appendChild(pixel);
+            }
+        }
+        
+        // Create pixels for a separator (colon)
+        function createPixelsForSeparator(elementId) {
+            const separator = document.getElementById(elementId);
+            
+            // Clear existing pixels if any
+            separator.innerHTML = '';
+            
+            // Create new pixels
+            for (let i = 0; i < 7; i++) {
+                const pixel = document.createElement('div');
+                pixel.className = 'pixel';
+                separator.appendChild(pixel);
+            }
+        }
+        
+        // Set a digit to display a number
+        function setDigit(elementId, number) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            const pattern = digitPatterns[number];
+            const pixels = element.querySelectorAll('.pixel');
+            
+            pixels.forEach((pixel, index) => {
+                if (pattern[index] === 1) {
+                    pixel.classList.add('on');
+                } else {
+                    pixel.classList.remove('on');
+                }
+            });
+        }
+        
+        // Set a separator (colon)
+        function setSeparator(elementId, blinking = false) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            const pixels = element.querySelectorAll('.pixel');
+            
+            pixels.forEach((pixel, index) => {
+                if (separatorPattern[index] === 1) {
+                    if (blinking) {
+                        pixel.classList.toggle('on');
+                    } else {
+                        pixel.classList.add('on');
+                    }
+                } else {
+                    pixel.classList.remove('on');
+                }
+            });
+        }
+        
+        // Get timezone name from value
+        function getTimezoneName(timezone) {
+            const defaultTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const tz = timezone || defaultTimezone;
+            
+            if (tz === defaultTimezone) {
+                return "LOCAL TIME";
+            }
+            
+            const found = timezones.find(item => item.value === tz);
+            return found ? found.name : tz.replace(/_/g, ' ');
+        }
+        
+        // Update the clock for a specific timezone
+        function updateClock(id, timezone) {
+            // Get time in the specified timezone
+            const options = { timeZone: timezone };
+            const now = new Date();
+            
+            // Format the time based on the timezone
+            const formatter = new Intl.DateTimeFormat('en-US', {
+                hour: 'numeric',
+                minute: 'numeric',
+                second: 'numeric',
+                hour12: !is24HourFormat,
+                timeZone: timezone
+            });
+            
+            const timeParts = formatter.formatToParts(now);
+            let hours = parseInt(timeParts.find(part => part.type === 'hour').value, 10);
+            const minutes = parseInt(timeParts.find(part => part.type === 'minute').value, 10);
+            const seconds = parseInt(timeParts.find(part => part.type === 'second').value, 10);
+            let ampm = '';
+            
+            if (!is24HourFormat) {
+                const dayPeriod = timeParts.find(part => part.type === 'dayPeriod');
+                ampm = dayPeriod ? dayPeriod.value : '';
+            }
+            
+            // Update hour digits
+            const hourTens = Math.floor(hours / 10);
+            const hourOnes = hours % 10;
+            
+            // Handle leading zero for 12-hour format
+            if (hourTens === 0 && !is24HourFormat) {
+                document.getElementById(`hour1-${id}`).style.visibility = 'hidden';
+            } else {
+                document.getElementById(`hour1-${id}`).style.visibility = 'visible';
+                setDigit(`hour1-${id}`, hourTens);
+            }
+            
+            setDigit(`hour2-${id}`, hourOnes);
+            
+            // Update minute digits
+            setDigit(`minute1-${id}`, Math.floor(minutes / 10));
+            setDigit(`minute2-${id}`, minutes % 10);
+            
+            // Update second digits
+            setDigit(`second1-${id}`, Math.floor(seconds / 10));
+            setDigit(`second2-${id}`, seconds % 10);
+            
+            // Update separators (blink every second)
+            const shouldBlink = seconds % 2 === 0;
+            setSeparator(`separator1-${id}`, shouldBlink);
+            setSeparator(`separator2-${id}`, shouldBlink);
+            
+            // Update AM/PM indicator
+            document.getElementById(`ampm-${id}`).textContent = ampm;
+            
+            // Update date
+            const dateFormatter = new Intl.DateTimeFormat('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                timeZone: timezone
+            });
+            
+            document.getElementById(`date-${id}`).textContent = dateFormatter.format(now);
+        }
+        
+        // Update all clocks
+        function updateAllClocks() {
+            const clockContainers = document.querySelectorAll('.clock-container');
+            clockContainers.forEach(container => {
+                const id = container.id.split('-')[1] || 'main';
+                const label = container.querySelector('.timezone-label').textContent;
+                const timezone = getTimezoneByName(label);
+                updateClock(id, timezone);
+            });
+        }
+        
+        // Get timezone value from name
+        function getTimezoneByName(name) {
+            if (name === "LOCAL TIME") {
+                return Intl.DateTimeFormat().resolvedOptions().timeZone;
+            }
+            
+            const found = timezones.find(tz => tz.name === name);
+            return found ? found.value : Intl.DateTimeFormat().resolvedOptions().timeZone;
+        }
+        
+        // Add a new clock for a specific timezone
+        function addClock(timezone) {
+            const id = `tz${clockCount++}`;
+            const clockContainer = createClockContainer(id, timezone);
+            document.getElementById('clocks-container').appendChild(clockContainer);
+            
+            // Create pixels for all digits and separators
+            createPixelsForDigit(`hour1-${id}`);
+            createPixelsForDigit(`hour2-${id}`);
+            createPixelsForSeparator(`separator1-${id}`);
+            createPixelsForDigit(`minute1-${id}`);
+            createPixelsForDigit(`minute2-${id}`);
+            createPixelsForSeparator(`separator2-${id}`);
+            createPixelsForDigit(`second1-${id}`);
+            createPixelsForDigit(`second2-${id}`);
+            
+            // Update the clock immediately
+            updateClock(id, timezone);
+        }
+        
+        // Show timezone selector modal
+        function showTimezoneSelector() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            
+            const modalContent = document.createElement('div');
+            modalContent.className = 'modal-content';
+            
+            const title = document.createElement('h2');
+            title.className = 'modal-title';
+            title.textContent = 'Select Timezone';
+            modalContent.appendChild(title);
+            
+            const select = document.createElement('select');
+            select.className = 'timezone-selector';
+            
+            // Add timezone options
+            timezones.forEach(tz => {
+                const option = document.createElement('option');
+                option.value = tz.value;
+                option.textContent = tz.name;
+                select.appendChild(option);
+            });
+            
+            modalContent.appendChild(select);
+            
+            const buttonContainer = document.createElement('div');
+            buttonContainer.className = 'modal-buttons';
+            
+            const cancelBtn = document.createElement('button');
+            cancelBtn.textContent = 'Cancel';
+            cancelBtn.addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+            
+            const addBtn = document.createElement('button');
+            addBtn.textContent = 'Add Clock';
+            addBtn.addEventListener('click', () => {
+                addClock(select.value);
+                document.body.removeChild(modal);
+            });
+            
+            buttonContainer.appendChild(cancelBtn);
+            buttonContainer.appendChild(addBtn);
+            modalContent.appendChild(buttonContainer);
+            
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+        }
+        
+        // Setup color picker
+        function setupColorPicker() {
+            const colorOptions = document.querySelectorAll('.color-option');
+            colorOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Remove active class from all options
+                    colorOptions.forEach(opt => opt.classList.remove('active'));
+                    
+                    // Add active class to selected option
+                    this.classList.add('active');
+                    
+                    // Update color variable
+                    selectedColor = this.getAttribute('data-color');
+                    document.documentElement.style.setProperty('--pixel-color', selectedColor);
+                });
+            });
+        }
+        
+        // Toggle fullscreen
+        function toggleFullscreen() {
+            if (!isFullscreen) {
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                } else if (document.documentElement.mozRequestFullScreen) {
+                    document.documentElement.mozRequestFullScreen();
+                } else if (document.documentElement.webkitRequestFullscreen) {
+                    document.documentElement.webkitRequestFullscreen();
+                } else if (document.documentElement.msRequestFullscreen) {
+                    document.documentElement.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        }
+        
+        // Handle fullscreen change
+        function handleFullscreenChange() {
+            isFullscreen = !!document.fullscreenElement;
+            document.body.classList.toggle('fullscreen', isFullscreen);
+        }
+        
+        // Initialize the clock
+        function initClock() {
+            // Create the main clock
+            const mainClock = createClockContainer('main');
+            document.getElementById('clocks-container').appendChild(mainClock);
+            
+            // Create pixels for all digits and separators
+            createPixelsForDigit('hour1-main');
+            createPixelsForDigit('hour2-main');
+            createPixelsForSeparator('separator1-main');
+            createPixelsForDigit('minute1-main');
+            createPixelsForDigit('minute2-main');
+            createPixelsForSeparator('separator2-main');
+            createPixelsForDigit('second1-main');
+            createPixelsForDigit('second2-main');
+            
+            // Setup event listeners
+            document.getElementById('formatToggle').addEventListener('click', function() {
+                is24HourFormat = !is24HourFormat;
+                updateAllClocks();
+            });
+            
+            document.getElementById('fullscreenToggle').addEventListener('click', toggleFullscreen);
+            document.getElementById('addClockBtn').addEventListener('click', showTimezoneSelector);
+            
+            // Listen for fullscreen change
+            document.addEventListener('fullscreenchange', handleFullscreenChange);
+            document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+            document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+            document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+            
+            // Setup color picker
+            setupColorPicker();
+            
+            // Update clock every second
+            setInterval(updateAllClocks, 1000);
+            
+            // Initial update
+            updateAllClocks();
+        }
+        
+        // Initialize the clock when the document is ready
+        document.addEventListener('DOMContentLoaded', initClock);
+        
+        // Call init directly as well (in case DOMContentLoaded already fired)
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initClock);
+        } else {
+            initClock();
+        }
+    </script>
+</body>
+</html>
