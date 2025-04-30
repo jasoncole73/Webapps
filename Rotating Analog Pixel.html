@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Watch Style Clock</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a1a; /* Dark background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden; /* Prevent scrollbars */
+            margin: 0; /* Remove default body margin */
+        }
+
+        .clock-container {
+            position: relative;
+            /* Use vmin for responsive sizing */
+            width: 80vmin;
+            height: 80vmin;
+            max-width: 400px; /* Max size */
+            max-height: 400px; /* Max size */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .clock-face {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Digital time display - Only Hour */
+        .digital-time {
+            color: white;
+            z-index: 10; /* Above highlight */
+            position: absolute; /* Center it */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            white-space: nowrap; /* Prevent wrapping */
+        }
+
+        .hour-display {
+             font-size: 14vmin; /* Larger responsive font size for hour only */
+             font-weight: bold;
+             line-height: 1; /* Adjust line height */
+        }
+
+         /* Media query for larger screens */
+         @media (min-width: 450px) {
+            .hour-display {
+                font-size: 5rem; /* Approx 80px */
+            }
+        }
+
+
+        /* Base styles for rings */
+        .ring {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            /* Rotation handled by JS */
+            transform-origin: center center; /* Ensure rotation is around the center */
+        }
+
+        /* Minute ring styles (ROTATES with markers) */
+        .minute-ring {
+            width: 75%; /* Inner ring size */
+            height: 75%;
+            top: 12.5%; /* Center the ring */
+            left: 12.5%;
+             z-index: 1; /* Below highlight, above second ring */
+             /* Smooth rotation handled by JS animation frame */
+        }
+
+        /* Second ring styles (rotates with markers - clockwise, ticking) */
+        .second-ring {
+            width: 100%; /* Outer ring size */
+            height: 100%;
+            z-index: 0; /* Furthest back */
+             /* Ticking handled by JS animation frame */
+        }
+
+        /* Styles for markers (ticks and numbers) */
+        .marker {
+            position: absolute;
+            /* Position marker origin at the center of its parent ring */
+            top: 50%;
+            left: 50%;
+            /* Set width/height to match the ring diameter for easier positioning */
+            width: 100%;
+            height: 100%;
+            transform-origin: center center; /* Rotate around the center */
+            color: rgba(255, 255, 255, 0.7); /* Slightly transparent white */
+        }
+
+        .marker .tick {
+            position: absolute;
+            background-color: currentColor; /* Use marker color */
+            transform: translateX(-50%); /* Center the tick horizontally */
+            border-radius: 1px;
+            /* Position the tick at the top center of the marker container */
+            top: 0;
+            left: 50%;
+        }
+
+        .marker .number {
+            position: absolute;
+            font-size: 2.5vmin; /* Responsive font size */
+            transform: translate(-50%, -50%); /* Center the number text */
+            text-align: center;
+            /* Position the number slightly below the top center */
+            top: 10%; /* Adjust as needed for vertical spacing */
+            left: 50%;
+            /* Counter-rotate the number to keep it upright */
+            transform-origin: center center;
+        }
+         /* Media query for larger screens */
+         @media (min-width: 450px) {
+            .marker .number {
+                 font-size: 0.8rem; /* Approx 13px */
+                 top: 8%; /* Adjust fixed spacing */
+            }
+        }
+
+
+        /* Minute marker specific styles */
+        .minute-marker .tick {
+            width: 1px;
+            height: 12px; /* Length of minute ticks */
+        }
+        .minute-marker.major .tick {
+            height: 16px; /* Even longer for major markers (0, 5, 10...) */
+        }
+        .minute-marker.major .number {
+            font-weight: bold;
+            color: white; /* Brighter numbers */
+        }
+
+        /* Second marker specific styles */
+        .second-marker .tick {
+            width: 1px;
+            height: 5px; /* Length of second ticks */
+        }
+        .second-marker.major .tick {
+            height: 8px; /* Longer for major second markers (0, 5, 10...) */
+        }
+         .second-marker.major .number {
+            font-weight: normal; /* Normal weight for second numbers */
+             color: rgba(255, 255, 255, 0.7); /* Match marker color */
+         }
+
+
+        /* Minute highlight circle - Outline, contains minute number, FIXED near 3 o'clock, magnified */
+        .minute-highlight {
+            position: absolute;
+            /* top and left set by JS */
+            width: 11vmin; /* Slightly larger size for magnification effect */
+            height: 11vmin;
+            max-width: 50px; /* Max size */
+            max-height: 50px;
+            background-color: transparent; /* Make background transparent */
+            border: 2px solid #8A2BE2; /* Add purple border */
+            border-radius: 50%;
+            transform-origin: center center; /* Ensure transforms relative to center */
+            /* Transform centers and scales */
+            transform: translate(-50%, -50%) scale(1.1);
+            z-index: 5; /* Ensure it's above rings but below digital time */
+            pointer-events: none; /* Prevent interaction */
+            display: flex; /* Use flexbox to center text */
+            justify-content: center;
+            align-items: center;
+            color: white; /* Text color */
+            font-weight: bold;
+            font-size: 4.5vmin; /* Slightly larger font size */
+            /* No transition needed for static position */
+        }
+         /* Media query for larger screens */
+         @media (min-width: 450px) {
+            .minute-highlight {
+                 width: 50px; /* Fixed size on larger screens */
+                 height: 50px;
+                 font-size: 1.7rem; /* Approx 27px */
+            }
+        }
+
+        /* --- Removed Blue Rings CSS --- */
+        /* The .decorative-ring, .blue-inner-ring, .blue-outer-ring styles are intentionally removed */
+
+    </style>
+</head>
+<body>
+    <div class="clock-container" id="clock-container">
+        <div class="clock-face">
+            <div class="digital-time">
+                <span id="hours" class="hour-display">00</span>
+            </div>
+
+            <div class="minute-highlight" id="minute-highlight">
+                <span id="highlight-minute">00</span> </div>
+
+            <div class="ring minute-ring" id="minute-ring">
+                </div>
+
+            <div class="ring second-ring" id="second-ring">
+                </div>
+
+            </div>
+    </div>
+
+    <script>
+        // Get DOM elements
+        const hourElement = document.getElementById('hours');
+        const secondRing = document.getElementById('second-ring');
+        const minuteRing = document.getElementById('minute-ring'); // Rotates
+        const minuteHighlight = document.getElementById('minute-highlight'); // Static position
+        const highlightMinuteElement = document.getElementById('highlight-minute'); // Text inside highlight
+        const clockContainer = document.getElementById('clock-container');
+
+        // Define ring radii as percentages of the clock container size
+        const minuteRingRadiusPercentage = 37.5; // (75% width / 2)
+        const secondRingRadiusPercentage = 50;   // (100% width / 2)
+
+        // --- Function to Create Markers (Ticks and Numbers) ---
+        function createMarkers(ringElement, radiusPercentage, type) {
+            const isMinuteRing = type === 'minute';
+
+            for (let i = 0; i < 60; i++) {
+                const angleDegrees = (i / 60) * 360;
+                const isMajor = i % 5 === 0;
+
+                const marker = document.createElement('div');
+                marker.classList.add('marker', `${type}-marker`);
+                 if (isMajor) {
+                    marker.classList.add('major');
+                }
+                // Rotate the marker container around the center of the ring
+                marker.style.transform = `translate(-50%, -50%) rotate(${angleDegrees}deg)`;
+
+                const tick = document.createElement('div');
+                tick.classList.add('tick');
+                marker.appendChild(tick);
+
+                if (isMajor) {
+                    const number = document.createElement('div');
+                    number.classList.add('number');
+                    number.textContent = i === 0 ? '0' : i;
+                    // Counter-rotate the number to keep it upright relative to the clock face
+                    number.style.transform = `translate(-50%, -50%) rotate(${-angleDegrees}deg)`;
+                    marker.appendChild(number);
+                }
+                ringElement.appendChild(marker);
+            }
+        }
+
+        // Create minute and second markers
+        createMarkers(minuteRing, minuteRingRadiusPercentage, 'minute');
+        createMarkers(secondRing, secondRingRadiusPercentage, 'second');
+
+        // --- Function to Position Highlight Statically near 3 o'clock using top/left ---
+        function positionHighlightFixed() {
+             // Ensure highlight element exists
+             if (!minuteHighlight) return;
+
+             // Calculate the base position for 3 o'clock (90 degrees) relative to the center
+             const angleDegrees = 90; // 3 o'clock position
+             const angleRad = (angleDegrees - 90) * (Math.PI / 180); // Offset by -90 for calculation
+             const baseX = minuteRingRadiusPercentage * Math.cos(angleRad); // X offset percentage
+             const baseY = minuteRingRadiusPercentage * Math.sin(angleRad); // Y offset percentage
+
+             // --- Horizontal Offset Adjustment ---
+             const horizontalOffsetPercentage = -3; // Negative value moves left. Adjust as needed.
+             // --- End Adjustment ---
+
+             // Calculate final top and left percentages relative to the container
+             const finalTop = 50 + baseY; // No vertical offset needed
+             const finalLeft = 50 + baseX + horizontalOffsetPercentage; // Apply horizontal offset
+
+             // Apply final position using top/left styles
+             minuteHighlight.style.top = `${finalTop}%`;
+             minuteHighlight.style.left = `${finalLeft}%`;
+             // Keep transform for centering the element itself and scaling
+             minuteHighlight.style.transform = `translate(-50%, -50%) scale(1.1)`;
+        }
+
+        // --- Clock Update Function (called repeatedly via requestAnimationFrame) ---
+        let lastSecond = -1; // Track the last second to update only on change
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours(); // This is already 0-23
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds(); // Use integer seconds
+
+            // --- Update Digital Time Display (Hour Only - 24-Hour Format) ---
+            // const displayHours = hours % 12 || 12; // Old 12-hour logic
+            // Use the raw 'hours' variable and pad with zero if needed
+            hourElement.textContent = String(hours).padStart(2, '0'); // Changed this line
+
+            // --- Rotate Second Ring (Clockwise - Ticking) ---
+            // Only update rotation if the second has changed
+            if (seconds !== lastSecond) {
+                // Standard clockwise rotation based on integer seconds
+                const secondRingAngle = (seconds / 60) * 360;
+                // Apply rotation
+                secondRing.style.transform = `rotate(${secondRingAngle}deg)`;
+                lastSecond = seconds; // Update the last second processed
+            }
+
+
+            // --- Rotate Minute Ring (To place current minute at 3 o'clock - Smooth) ---
+            // Use totalMinutes for smooth rotation between minutes
+            const totalMinutes = minutes + seconds / 60; // Milliseconds removed for simplicity, can be added back if needed
+            // Calculate rotation needed: 90 degrees (target) minus the natural angle of the current minute
+            const minuteRingAngle = 90 - (totalMinutes / 60) * 360;
+            // Apply rotation smoothly using JS (no CSS transition needed)
+            minuteRing.style.transform = `rotate(${minuteRingAngle}deg)`;
+
+            // --- Update Minute Number in Fixed Highlight Circle ---
+            // Ensure the element exists before updating
+            if (highlightMinuteElement) {
+                highlightMinuteElement.textContent = String(minutes).padStart(2, '0');
+            }
+
+            // --- Highlight remains static (positioned once on load) ---
+
+            // Request the next animation frame
+            requestAnimationFrame(updateClock);
+        }
+
+        // --- Initial Setup ---
+
+        // Position the highlight statically at 3 o'clock once the DOM is ready
+        requestAnimationFrame(positionHighlightFixed);
+
+        // Start the clock animation loop
+        requestAnimationFrame(updateClock);
+
+        // Optional: Reposition highlight on resize if layout might change significantly
+        // window.addEventListener('resize', positionHighlightFixed);
+
+    </script>
+</body>
+</html>
