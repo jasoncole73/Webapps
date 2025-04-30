@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Clock with Date Inside (AM/PM)</title> <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex; /* Use flex to center the clock */
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #e2e8f0;
+            padding: 1rem;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .clock {
+            /* Size relative to viewport */
+            width: 90vmin;
+            max-width: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ffffff 80%, #f8fafc 100%);
+            border: max(6px, 3.5vmin) solid #cbd5e1;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15),
+                        0 8px 15px rgba(0, 0, 0, 0.1),
+                        inset 0 0 10px rgba(0,0,0,0.05);
+            position: relative; /* Needed for absolute positioning inside */
+            margin: auto; /* Center the clock */
+            box-sizing: border-box;
+            aspect-ratio: 1 / 1;
+        }
+
+        .clock-face {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Date display inside the clock */
+        .date-display-inside {
+            position: absolute;
+            top: 68%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(255, 255, 255, 0.8);
+            /* Adjust padding slightly for potentially longer text */
+            padding: max(2px, 0.5vmin) max(6px, 1.2vmin);
+            border-radius: max(3px, 0.5vmin);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            color: #334155;
+            font-size: max(0.6rem, 1.5vmin);
+            font-weight: 600;
+            line-height: 1.3;
+            z-index: 3;
+            white-space: nowrap;
+            border: 1px solid rgba(203, 213, 225, 0.5);
+        }
+
+
+        /* --- Internal clock element styles --- */
+        .center-dot {
+            position: absolute; top: 50%; left: 50%;
+            width: max(9px, 2vmin); height: max(9px, 2vmin);
+            background-color: #ef4444;
+            border: max(1.5px, 0.6vmin) solid #ffffff;
+            border-radius: 50%; transform: translate(-50%, -50%);
+            z-index: 10; box-shadow: 0 0 max(2px, 0.5vmin) rgba(0,0,0,0.2);
+        }
+        .hand {
+            position: absolute; bottom: 50%; left: 50%;
+            background-color: #1e293b; transform-origin: bottom center;
+            border-radius: max(1.5px, 0.4vmin) max(1.5px, 0.4vmin) 0 0;
+            z-index: 5; filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.2));
+        }
+        .hour-hand { width: max(5px, 1.4vmin); height: 28%; transform: translateX(-50%) rotate(0deg); z-index: 6; }
+        .minute-hand { width: max(4px, 1vmin); height: 38%; transform: translateX(-50%) rotate(0deg); z-index: 7; }
+        .second-hand { width: max(2.5px, 0.6vmin); height: 42%; background-color: #ef4444; transform: translateX(-50%) rotate(0deg); z-index: 8; border-radius: max(1px, 0.3vmin); }
+
+        .marker {
+            position: absolute; left: 50%; bottom: 50%;
+            width: max(1.5px, 0.4vmin);
+            height: 50%;
+            transform-origin: bottom center; z-index: 1;
+        }
+        .marker::before {
+            content: ''; position: absolute; top: 0; left: 50%;
+            transform: translateX(-50%); background-color: #64748b;
+            border-radius: max(0.7px, 0.15vmin);
+        }
+        .marker.minute::before { width: max(1.5px, 0.25vmin); height: max(6px, 1.8vmin); }
+        .marker.hour::before { width: max(3px, 0.8vmin); height: max(12px, 3.5vmin); background-color: #334155; }
+
+        .number {
+            position: absolute; width: max(24px, 6vmin); height: max(24px, 6vmin);
+            display: flex; justify-content: center; align-items: center;
+            font-size: max(0.9rem, 3vmin);
+            font-weight: 600;
+            color: #1e293b; transform-origin: center center; z-index: 2;
+        }
+
+         @media (max-width: 768px) {
+             /* Media query might not be needed anymore unless adjusting base size */
+         }
+
+    </style>
+</head>
+<body>
+    <div class="clock">
+        <div class="clock-face">
+            <div id="date-display" class="date-display-inside">
+                Loading date...
+            </div>
+            </div>
+    </div>
+
+    <script>
+        // Define variables for clock elements using let
+        let hourHand;
+        let minuteHand;
+        let secondHand;
+        const clockElement = document.querySelector('.clock');
+        const clockFace = document.querySelector('.clock-face');
+        const dateDisplay = document.getElementById('date-display');
+        let animationFrameId = null;
+        let lastDisplayedString = null; // Track last full displayed string
+
+        /**
+         * Generates the hour and minute markers around the clock face.
+         */
+        function createMarkers() {
+            if (!clockFace) return;
+            const markerContainer = document.createDocumentFragment();
+            for (let i = 1; i <= 60; i++) {
+                const marker = document.createElement('div');
+                const angle = i * 6;
+                marker.classList.add('marker');
+                if (i % 5 === 0) { marker.classList.add('hour'); }
+                else { marker.classList.add('minute'); }
+                marker.style.transform = `translateX(-50%) rotate(${angle}deg)`;
+                markerContainer.appendChild(marker);
+            }
+             clockFace.appendChild(markerContainer);
+        }
+
+        /**
+         * Generates and positions the hour numbers (1-12) inside the markers.
+         */
+        function createNumbers() {
+            if (!clockFace || !clockElement || clockElement.offsetWidth === 0) return;
+
+            const faceWidth = clockElement.offsetWidth;
+            const faceHeight = clockElement.offsetHeight;
+            const baseRadius = Math.min(faceWidth, faceHeight) / 2;
+            const numberRadiusFactor = 0.80; // Keep numbers inside
+            const numberRadius = baseRadius * numberRadiusFactor;
+            const numberContainer = document.createDocumentFragment();
+
+            for (let i = 1; i <= 12; i++) {
+                const numberDiv = document.createElement('div');
+                numberDiv.classList.add('number');
+                numberDiv.textContent = i;
+
+                const angleDeg = i * 30;
+                const angleRad = angleDeg * Math.PI / 180;
+                const positionAngleRad = angleRad - Math.PI / 2;
+
+                const x = 50 + (numberRadius / baseRadius) * 50 * Math.cos(positionAngleRad);
+                const y = 50 + (numberRadius / baseRadius) * 50 * Math.sin(positionAngleRad);
+
+                numberDiv.style.left = `${x}%`;
+                numberDiv.style.top = `${y}%`;
+                numberDiv.style.transform = `translate(-50%, -50%)`; // Keep upright
+
+                numberContainer.appendChild(numberDiv);
+            }
+             clockFace.appendChild(numberContainer);
+        }
+
+
+        /**
+         * Updates the clock hands based on the current time.
+         */
+        function setClock() {
+            if (!hourHand || !minuteHand || !secondHand) return;
+
+            const now = new Date();
+            const seconds = now.getSeconds() + now.getMilliseconds() / 1000;
+            const minutes = now.getMinutes() + seconds / 60;
+            const hours = (now.getHours() % 12 + minutes / 60) || 12; // Use 12-hour format for rotation logic
+
+            const secondsRotation = seconds * 6;
+            const minutesRotation = minutes * 6;
+            const hoursRotation = hours * 30;
+
+            setRotation(secondHand, secondsRotation);
+            setRotation(minuteHand, minutesRotation);
+            setRotation(hourHand, hoursRotation);
+        }
+
+        /**
+         * Updates the date display including AM/PM.
+         */
+        function setDate() {
+            if (!dateDisplay) return;
+            const now = new Date();
+
+            // Get date part
+            const dateOptions = { weekday: 'short', month: 'short', day: 'numeric' };
+            const dateString = now.toLocaleDateString(undefined, dateOptions); // e.g., Wed, Apr 30
+
+            // Determine AM/PM
+            const hours = now.getHours(); // Get 24-hour format hour
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+
+            // Combine date and AM/PM
+            const fullDisplayString = `${dateString} ${ampm}`;
+
+            // Only update the DOM if the displayed string needs to change
+            if (fullDisplayString !== lastDisplayedString) {
+                 dateDisplay.textContent = fullDisplayString;
+                 lastDisplayedString = fullDisplayString; // Store the full string for comparison
+            }
+        }
+
+
+        /**
+         * Helper function to apply rotation style to hand elements.
+         */
+        function setRotation(element, rotationDegrees) {
+            if (element) {
+                 element.style.transform = `translateX(-50%) rotate(${rotationDegrees}deg)`;
+            }
+        }
+
+        /**
+         * Animation loop using requestAnimationFrame.
+         */
+         function tick() {
+            setClock();
+            setDate(); // Update date and AM/PM
+            animationFrameId = requestAnimationFrame(tick);
+         }
+
+        /**
+         * Initializes or re-initializes the clock elements and animation.
+         */
+        function initClock() {
+             if (animationFrameId) {
+                 cancelAnimationFrame(animationFrameId);
+                 animationFrameId = null;
+             }
+             const dynamicElements = clockFace.querySelectorAll('.marker, .number, .hand, .center-dot');
+             dynamicElements.forEach(el => el.remove());
+
+             const centerDot = document.createElement('div');
+             centerDot.classList.add('center-dot');
+             clockFace.appendChild(centerDot);
+
+             hourHand = document.createElement('div'); hourHand.classList.add('hand', 'hour-hand'); clockFace.appendChild(hourHand);
+             minuteHand = document.createElement('div'); minuteHand.classList.add('hand', 'minute-hand'); clockFace.appendChild(minuteHand);
+             secondHand = document.createElement('div'); secondHand.classList.add('hand', 'second-hand'); clockFace.appendChild(secondHand);
+
+             requestAnimationFrame(() => {
+                 if (clockElement.offsetWidth > 0 && clockFace.offsetWidth > 0) {
+                     createMarkers();
+                     createNumbers();
+                     setClock();
+                     setDate(); // Set initial date with AM/PM
+                     tick();
+                 } else {
+                     console.warn("Clock dimensions not ready, retrying initialization.");
+                     setTimeout(initClock, 100);
+                 }
+             });
+        }
+
+        // --- Event Listeners ---
+        document.addEventListener('DOMContentLoaded', () => { initClock(); });
+
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                initClock();
+            }, 150);
+        });
+
+    </script>
+
+</body>
+</html>
