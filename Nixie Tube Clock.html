@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nixie Tube Clock - Date Toggle</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nixie+One&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for Nixie effect */
+        html, body {
+            height: 100%; /* Ensure body takes full height */
+            margin: 0; /* Remove default body margin */
+            background-color: #1a1a1a; /* Dark background */
+            font-family: 'Inter', sans-serif; /* Default font */
+        }
+
+        body {
+            display: flex;
+            flex-direction: column; /* Stack clock container and button vertically */
+            min-height: 100vh; /* Ensure body takes at least full viewport height */
+        }
+
+        /* Container for the clock and date */
+        .clock-container {
+            flex-grow: 1; /* Allow this container to take up available space */
+            display: flex;
+            flex-direction: column; /* Stack clock and date vertically */
+            justify-content: center; /* Center content vertically */
+            align-items: center; /* Center content horizontally */
+            padding: 20px; /* Add some padding */
+            overflow: hidden; /* Hide any potential overflow from scaling */
+        }
+
+        .nixie-clock {
+            display: flex;
+            align-items: center;
+            gap: 10px; /* Space between tubes/separators */
+            padding: 20px;
+            background: linear-gradient(145deg, #2e2e2e, #242424); /* Subtle gradient for base */
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6), inset 0 2px 5px rgba(0,0,0,0.4); /* Enhanced shadow */
+            transition: transform 0.3s ease-in-out; /* Add transition for scaling */
+            margin-bottom: 15px; /* Add space between clock and date */
+        }
+
+        .nixie-tube {
+            position: relative; /* Crucial for pseudo-elements */
+            width: 60px; /* Width of a single tube */
+            height: 100px; /* Height of a single tube */
+            background-color: rgba(10, 10, 10, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.08); /* More subtle border */
+            border-radius: 8px;
+            display: flex; /* Use flexbox to center the digit */
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; /* Keep pseudo-elements contained */
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.6);
+            transition: width 0.3s ease, height 0.3s ease; /* Smooth transition for responsiveness */
+        }
+
+        /* Inner mesh/filament simulation */
+        .nixie-tube::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 4px 4px; /* Size of the grid squares */
+            opacity: 0.5; /* Make the grid subtle */
+            z-index: 1; /* Place behind the digit */
+            transition: background-size 0.3s ease; /* Smooth transition */
+        }
+
+        /* Glass highlight/reflection */
+        .nixie-tube::after {
+            content: '';
+            position: absolute;
+            top: 5%; /* Position the highlight near the top */
+            left: 5%;
+            width: 90%;
+            height: 20%; /* Height of the highlight */
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0));
+            border-radius: 6px 6px 0 0; /* Curve the top of the highlight */
+            z-index: 3; /* Place above the digit and mesh */
+            pointer-events: none; /* Allow clicks to pass through */
+            transition: height 0.3s ease; /* Smooth transition */
+        }
+
+
+        .nixie-digit {
+            font-family: 'Nixie One', cursive; /* Using Nixie One */
+            font-size: 4.5rem; /* Slightly increased size for this font */
+            font-weight: 400; /* Nixie One only has regular weight */
+            color: #ff8c00; /* Bright orange for active digit */
+            text-shadow: 0 0 5px #ff8c00, /* Inner glow */
+                         0 0 10px rgba(255, 174, 66, 0.7); /* Slightly stronger outer glow */
+            line-height: 1; /* Adjust line-height for better centering */
+            position: relative; /* Ensure digit is part of stacking context */
+            z-index: 2; /* Place digit between mesh and highlight */
+             transition: font-size 0.3s ease; /* Smooth transition */
+        }
+
+        .separator {
+            font-family: 'Nixie One', cursive; /* Using Nixie One */
+            font-size: 3.5rem; /* Adjusted size */
+            font-weight: 400; /* Match digit weight */
+            color: #ff8c00; /* Match active digit color */
+            text-shadow: 0 0 5px #ff8c00, 0 0 10px rgba(255, 174, 66, 0.7);
+            line-height: 100px; /* Align vertically with tubes */
+            animation: blink 1s infinite alternate; /* Blinking effect */
+            position: relative; /* Needed for z-index stacking */
+            z-index: 2; /* Ensure separator is visible */
+            transform: translateY(2px);
+            transition: font-size 0.3s ease, line-height 0.3s ease; /* Smooth transition */
+        }
+
+        /* --- Date Display Style --- */
+        #date-display {
+            font-family: 'Nixie One', cursive;
+            font-size: 1.5rem; /* Smaller than clock digits */
+            color: #cc7000; /* Slightly dimmer orange */
+            text-shadow: 0 0 3px #cc7000, 0 0 6px rgba(255, 174, 66, 0.5); /* Subtle glow */
+            text-align: center;
+            transition: font-size 0.3s ease, opacity 0.3s ease, transform 0.3s ease; /* Add opacity transition */
+            opacity: 1; /* Default visible */
+        }
+        /* Class to hide the date */
+        #date-display.hidden {
+            opacity: 0;
+            font-size: 0; /* Collapse space when hidden */
+            pointer-events: none; /* Prevent interaction when hidden */
+        }
+
+
+        /* Blinking animation for separator */
+        @keyframes blink {
+            from { opacity: 1; text-shadow: 0 0 5px #ff8c00, 0 0 10px rgba(255, 174, 66, 0.7); }
+            to { opacity: 0.5; text-shadow: 0 0 3px #ff8c00, 0 0 6px rgba(255, 174, 66, 0.4); } /* Fade glow too */
+        }
+
+        /* Button container style */
+        .button-container {
+            /* Centers the button horizontally and adds padding */
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem; /* Add space between buttons */
+            padding: 1rem; /* Add padding around the button */
+            flex-wrap: wrap; /* Allow buttons to wrap on small screens */
+        }
+        /* Common button styles */
+        .control-btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem; /* text-sm */
+            font-weight: 600; /* font-semibold */
+            color: #d1d5db; /* text-gray-300 */
+            background-color: #374151; /* bg-gray-700 */
+            border: 1px solid #4b5563; /* border-gray-600 */
+            border-radius: 0.375rem; /* rounded-md */
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .control-btn:hover {
+            background-color: #4b5563; /* hover:bg-gray-600 */
+        }
+        .control-btn:focus {
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+        }
+
+
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+             /* Adjust clock container padding */
+             .clock-container {
+                padding: 15px;
+            }
+            .nixie-tube {
+                width: 45px;
+                height: 75px;
+            }
+            .nixie-digit {
+                font-size: 3.2rem; /* Adjusted font size */
+            }
+            .separator {
+                font-size: 2.5rem; /* Adjusted font size */
+                line-height: 75px; /* Match new tube height */
+            }
+            .nixie-clock {
+                gap: 6px;
+                padding: 15px;
+                margin-bottom: 10px; /* Adjust space */
+            }
+            #date-display:not(.hidden) { /* Only apply font size if not hidden */
+                 font-size: 1.2rem; /* Adjust date size */
+            }
+            /* Adjust pseudo-element grid size */
+            .nixie-tube::before {
+                background-size: 3px 3px;
+            }
+        }
+         @media (max-width: 420px) {
+             /* Adjust clock container padding */
+             .clock-container {
+                padding: 10px;
+            }
+            .nixie-tube {
+                width: 35px;
+                height: 60px;
+            }
+            .nixie-digit {
+                font-size: 2.4rem; /* Adjusted font size */
+            }
+            .separator {
+                font-size: 1.9rem; /* Adjusted font size */
+                line-height: 60px; /* Match new tube height */
+            }
+            .nixie-clock {
+                gap: 4px;
+                padding: 10px;
+                 margin-bottom: 8px; /* Adjust space */
+            }
+             #date-display:not(.hidden) { /* Only apply font size if not hidden */
+                 font-size: 1rem; /* Adjust date size */
+            }
+             /* Adjust pseudo-element grid size */
+            .nixie-tube::before {
+                background-size: 2px 2px;
+            }
+             /* Adjust highlight position/size */
+            .nixie-tube::after {
+                height: 15%;
+            }
+             /* Adjust button container padding */
+             .button-container {
+                padding: 0.75rem;
+                gap: 0.5rem; /* Adjust gap for smaller screens */
+            }
+        }
+
+        /* Styles for fullscreen mode */
+        :fullscreen .clock-container {
+             /* Ensure clock container takes full height and centers content */
+             height: 100%;
+             padding: 0; /* Remove padding in fullscreen */
+             display: flex; /* Ensure flex properties are active */
+             flex-direction: column; /* Keep vertical stacking */
+             justify-content: center;
+             align-items: center;
+        }
+        :fullscreen .nixie-clock {
+            /* Scale up the clock in fullscreen */
+            transform: scale(1.8); /* Adjust scale factor as needed */
+            margin-bottom: 25px; /* Increase space between clock and date in fullscreen */
+        }
+         :fullscreen #date-display {
+             /* Scale date along with clock */
+             transform: scale(1.8);
+         }
+         /* Hide button container in fullscreen */
+        :fullscreen .button-container {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="clock-container">
+        <div class="nixie-clock">
+            <div class="nixie-tube"><span id="hour1" class="nixie-digit">0</span></div>
+            <div class="nixie-tube"><span id="hour2" class="nixie-digit">0</span></div>
+            <div class="separator">:</div>
+            <div class="nixie-tube"><span id="min1" class="nixie-digit">0</span></div>
+            <div class="nixie-tube"><span id="min2" class="nixie-digit">0</span></div>
+            <div class="separator">:</div>
+            <div class="nixie-tube"><span id="sec1" class="nixie-digit">0</span></div>
+            <div class="nixie-tube"><span id="sec2" class="nixie-digit">0</span></div>
+        </div>
+        <div id="date-display" class="hidden"></div>
+    </div>
+
+    <div class="button-container">
+        <button id="toggle-date-btn" class="control-btn">Show Date</button>
+        <button id="fullscreen-btn" class="control-btn">Enter Fullscreen</button>
+    </div>
+
+    <script>
+        // --- Get Element References ---
+        const hour1Digit = document.getElementById('hour1');
+        const hour2Digit = document.getElementById('hour2');
+        const min1Digit = document.getElementById('min1');
+        const min2Digit = document.getElementById('min2');
+        const sec1Digit = document.getElementById('sec1');
+        const sec2Digit = document.getElementById('sec2');
+        const dateDisplay = document.getElementById('date-display'); // Date element
+        const toggleDateBtn = document.getElementById('toggle-date-btn'); // Date toggle button
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const docElement = document.documentElement;
+
+        let displayedDate = ''; // Variable to store the currently displayed date
+        let isDateVisible = false; // Track date visibility state
+
+        // --- Update Functions ---
+        function updateClockAndDate() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+
+            // Update Time
+            const h1 = Math.floor(hours / 10);
+            const h2 = hours % 10;
+            const m1 = Math.floor(minutes / 10);
+            const m2 = minutes % 10;
+            const s1 = Math.floor(seconds / 10);
+            const s2 = seconds % 10;
+
+            if (hour1Digit.textContent !== String(h1)) hour1Digit.textContent = h1;
+            if (hour2Digit.textContent !== String(h2)) hour2Digit.textContent = h2;
+            if (min1Digit.textContent !== String(m1)) min1Digit.textContent = m1;
+            if (min2Digit.textContent !== String(m2)) min2Digit.textContent = m2;
+            if (sec1Digit.textContent !== String(s1)) sec1Digit.textContent = s1;
+            if (sec2Digit.textContent !== String(s2)) sec2Digit.textContent = s2;
+
+            // Update Date (only if it changed and needed)
+            // We always calculate it in case the user toggles it on
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const currentDate = now.toLocaleDateString(undefined, options); // Use locale-specific format
+
+            if (currentDate !== displayedDate) {
+                displayedDate = currentDate;
+                // Update the text content even if hidden, so it's ready when shown
+                dateDisplay.textContent = displayedDate;
+            }
+        }
+
+        // --- Event Listeners ---
+
+        // Date Toggle Button Click
+        toggleDateBtn.addEventListener('click', () => {
+            isDateVisible = !isDateVisible; // Toggle the state
+            dateDisplay.classList.toggle('hidden', !isDateVisible); // Add/remove 'hidden' class
+            toggleDateBtn.textContent = isDateVisible ? 'Hide Date' : 'Show Date'; // Update button text
+        });
+
+        // Fullscreen Button Click
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement &&
+                !document.mozFullScreenElement &&
+                !document.webkitFullscreenElement &&
+                !document.msFullscreenElement) {
+
+                if (docElement.requestFullscreen) {
+                    docElement.requestFullscreen();
+                } else if (docElement.mozRequestFullScreen) { /* Firefox */
+                    docElement.mozRequestFullScreen();
+                } else if (docElement.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+                    docElement.webkitRequestFullscreen();
+                } else if (docElement.msRequestFullscreen) { /* IE/Edge */
+                    docElement.msRequestFullscreen();
+                }
+                 fullscreenBtn.textContent = 'Exit Fullscreen';
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.mozCancelFullScreen) { /* Firefox */
+                    document.mozCancelFullScreen();
+                } else if (document.webkitExitFullscreen) { /* Chrome, Safari and Opera */
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { /* IE/Edge */
+                    document.msExitFullscreen();
+                }
+                 fullscreenBtn.textContent = 'Enter Fullscreen';
+            }
+        });
+
+        // Fullscreen Change Handler
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+        document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+        function handleFullscreenChange() {
+            if (!document.fullscreenElement &&
+                !document.mozFullScreenElement &&
+                !document.webkitFullscreenElement &&
+                !document.msFullscreenElement) {
+                fullscreenBtn.textContent = 'Enter Fullscreen';
+            } else {
+                 fullscreenBtn.textContent = 'Exit Fullscreen';
+            }
+        }
+
+        // --- Initial Setup ---
+        updateClockAndDate(); // Initial call to set time and date text
+        // Date starts hidden via CSS class, button text is set in HTML
+        setInterval(updateClockAndDate, 1000); // Start the interval
+
+
+    </script>
+
+</body>
+</html>
