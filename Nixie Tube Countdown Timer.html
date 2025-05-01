@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nixie Countdown Timer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Nixie+One&display=swap" rel="stylesheet">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            background-color: #1a1a1a;
+            font-family: 'Inter', sans-serif;
+            color: #e5e7eb;
+            overflow: hidden; /* Prevent scrollbars caused by confetti */
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            position: relative; /* Needed for absolute positioning of confetti container */
+        }
+
+        .countdown-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden;
+            z-index: 10; /* Ensure countdown is above confetti */
+            position: relative; /* Ensure stacking context */
+        }
+
+        #holiday-title {
+            font-family: 'Nixie One', cursive;
+            font-size: 2rem;
+            font-weight: 400;
+            color: #ffae42;
+            text-shadow: 0 0 4px #ffae42, 0 0 8px rgba(255, 174, 66, 0.6);
+            text-align: center;
+            margin-bottom: 15px;
+            line-height: 1.2;
+            min-height: 2.4rem;
+            transition: opacity 0.3s ease, font-size 0.3s ease, margin-bottom 0.3s ease, transform 0.3s ease, text-transform 0.3s ease;
+            opacity: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            max-width: 90%; /* Prevent title from getting too wide */
+            word-wrap: break-word; /* Wrap long titles */
+        }
+        #holiday-title.visible {
+            opacity: 1;
+        }
+
+
+        .nixie-countdown {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 15px;
+            background: linear-gradient(145deg, #2e2e2e, #242424);
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6), inset 0 2px 5px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease-in-out;
+            margin-bottom: 20px;
+        }
+
+        .time-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .tubes-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+
+        .nixie-tube {
+            position: relative;
+            width: 55px;
+            height: 90px;
+            background-color: rgba(10, 10, 10, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.6);
+            transition: width 0.3s ease, height 0.3s ease, opacity 0.3s ease;
+        }
+
+        .day-tube-00,
+        .day-tube-0 {
+             display: none;
+        }
+
+
+        .nixie-tube::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 4px 4px;
+            opacity: 0.5;
+            z-index: 1;
+            transition: background-size 0.3s ease;
+        }
+
+        .nixie-tube::after {
+            content: '';
+            position: absolute;
+            top: 5%; left: 5%; width: 90%; height: 20%;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0));
+            border-radius: 6px 6px 0 0;
+            z-index: 3;
+            pointer-events: none;
+            transition: height 0.3s ease;
+        }
+
+        .nixie-digit {
+            font-family: 'Nixie One', cursive;
+            font-size: 4rem;
+            font-weight: 400;
+            color: #ff8c00;
+            text-shadow: 0 0 5px #ff8c00, 0 0 10px rgba(255, 174, 66, 0.7);
+            line-height: 1;
+            position: relative;
+            z-index: 2;
+            transition: font-size 0.3s ease;
+        }
+
+        .separator {
+            font-family: 'Nixie One', cursive;
+            font-size: 3rem;
+            font-weight: 400;
+            color: #ff8c00;
+            text-shadow: 0 0 5px #ff8c00, 0 0 10px rgba(255, 174, 66, 0.7);
+            line-height: 90px;
+            animation: blink 1.5s infinite alternate;
+            position: relative;
+            z-index: 2;
+            transform: translateY(2px);
+            transition: font-size 0.3s ease, line-height 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .nixie-label {
+            font-family: 'Nixie One', cursive;
+            font-size: 1.1rem;
+            font-weight: 400;
+            color: #dd7700;
+            text-shadow: 0 0 2px #dd7700, 0 0 4px rgba(255, 174, 66, 0.5);
+            text-align: center;
+            width: 100%;
+            line-height: 1.2;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: font-size 0.3s ease;
+        }
+
+        @keyframes blink {
+            from { opacity: 1; text-shadow: 0 0 5px #ff8c00, 0 0 10px rgba(255, 174, 66, 0.7); }
+            to { opacity: 0.5; text-shadow: 0 0 3px #ff8c00, 0 0 6px rgba(255, 174, 66, 0.4); }
+        }
+
+        .controls-container {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            width: 100%;
+            box-sizing: border-box;
+            z-index: 10;
+            position: relative;
+        }
+
+        .styled-input {
+            padding: 0 0.75rem;
+            height: 2.5rem;
+            line-height: 2.5rem;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            color: #e5e7eb;
+            background-color: #374151;
+            border: 1px solid #4b5563;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            width: auto;
+            min-width: 200px;
+            box-sizing: border-box;
+            text-align: center;
+            appearance: none;
+            flex-shrink: 0;
+        }
+        #holiday-select.styled-input {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23d1d5db" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1em;
+            text-align-last: center;
+             -moz-text-align-last: center;
+        }
+        #countdown-datetime.styled-input {
+             background-image: none;
+             appearance: auto;
+             min-width: 210px;
+             padding: 0 0.75rem;
+        }
+        #custom-title-input.styled-input {
+             min-width: 200px;
+             text-align: left;
+             padding: 0 0.75rem;
+        }
+
+
+        #countdown-datetime::-webkit-calendar-picker-indicator {
+            filter: invert(0.8);
+            cursor: pointer;
+        }
+        #countdown-datetime::-moz-calendar-picker-indicator {
+             filter: invert(0.8);
+             cursor: pointer;
+        }
+
+        .button-group {
+             display: flex;
+             gap: 0.75rem;
+             justify-content: center;
+             flex-wrap: wrap;
+             flex-shrink: 0;
+        }
+
+        .control-btn {
+            padding: 0 1rem;
+            height: 2.5rem;
+            line-height: 2.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #d1d5db;
+            background-color: #374151;
+            border: 1px solid #4b5563;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease, opacity 0.2s ease, visibility 0.2s ease;
+            flex-grow: 0;
+            flex-basis: auto;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .control-btn:hover {
+            background-color: #4b5563;
+        }
+        .control-btn:focus {
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+        }
+        .control-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background-color: #4b5563;
+        }
+        .hidden-btn {
+            display: none;
+        }
+
+
+        #message-area {
+            min-height: 1.25rem;
+            font-size: 0.875rem;
+            color: #fca5a5;
+            text-align: center;
+            width: 100%;
+            order: 3;
+            margin-top: 0.5rem;
+            flex-basis: 100%;
+        }
+
+        /* --- Confetti Styles --- */
+        #confetti-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 8px;
+            height: 16px;
+            background-color: #ff8c00;
+            border-radius: 2px;
+            opacity: 0.8;
+            /* Animation remains infinite */
+            animation: fall 8s linear infinite;
+            box-shadow: 0 0 3px #ff8c00;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-10vh) rotateZ(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(110vh) rotateZ(720deg);
+                opacity: 0;
+            }
+        }
+
+
+        /* --- Responsive adjustments --- */
+         @media (max-width: 1024px) {
+              .controls-container {
+                  flex-direction: column;
+                  gap: 0.75rem;
+              }
+              .styled-input {
+                  max-width: 90%;
+                  width: 100%;
+              }
+              .button-group {
+                  width: auto;
+                  max-width: 90%;
+              }
+              #message-area {
+                  margin-top: 0.25rem;
+              }
+         }
+
+
+        @media (max-width: 780px) {
+             #holiday-title { font-size: 1.8rem; }
+             .nixie-countdown { gap: 10px; padding: 12px; }
+             .tubes-row { gap: 6px; }
+             .nixie-tube { width: 45px; height: 75px; }
+             .nixie-digit { font-size: 3.2rem; }
+             .separator { font-size: 2.5rem; line-height: 75px; }
+             .nixie-label { font-size: 1rem; }
+        }
+         @media (max-width: 600px) {
+             #holiday-title { font-size: 1.6rem; }
+             .nixie-countdown { gap: 8px; padding: 10px; }
+             .tubes-row { gap: 4px; }
+             .nixie-tube { width: 38px; height: 65px; }
+             .nixie-digit { font-size: 2.6rem; }
+             .separator { font-size: 2.0rem; line-height: 65px; }
+             .nixie-label { font-size: 0.9rem; }
+             .nixie-tube::before { background-size: 3px 3px; }
+             .controls-container { padding: 0.75rem; }
+             .styled-input { min-width: 180px; font-size: 0.9rem; height: 2.25rem; line-height: 2.25rem;}
+             .control-btn { height: 2.25rem; line-height: 2.25rem;}
+             .confetti { width: 6px; height: 12px; }
+        }
+        @media (max-width: 480px) {
+             #holiday-title { font-size: 1.4rem; }
+             .nixie-countdown { gap: 5px; padding: 8px; }
+             .tubes-row { gap: 3px; }
+             .nixie-tube { width: 32px; height: 55px; }
+             .nixie-digit { font-size: 2.2rem; }
+             .separator { font-size: 1.7rem; line-height: 55px; }
+             .nixie-label { font-size: 0.8rem; }
+             .nixie-tube::before { background-size: 2px 2px; }
+             .nixie-tube::after { height: 15%; }
+        }
+         @media (max-width: 420px) {
+             .nixie-countdown { gap: 10px; }
+             .time-unit { flex-basis: calc(50% - 10px); }
+             .time-unit .separator { display: none; }
+         }
+
+
+        /* --- Fullscreen styles --- */
+        :fullscreen .countdown-container {
+            height: 100%; padding: 0;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        :fullscreen #holiday-title {
+             margin-bottom: 70px;
+             font-size: 2.5rem;
+        }
+        :fullscreen .nixie-countdown {
+            transform: scale(1.5);
+        }
+        :fullscreen .controls-container { display: none; }
+        :fullscreen #confetti-container { z-index: 15; }
+
+
+    </style>
+</head>
+<body>
+    <div id="confetti-container"></div>
+
+    <div class="countdown-container">
+        <div id="holiday-title"></div>
+
+        <div class="nixie-countdown">
+            <div class="time-unit days">
+                <div class="tubes-row">
+                    <div class="nixie-tube day-tube-00"><span id="day00" class="nixie-digit">0</span></div>
+                    <div class="nixie-tube day-tube-0"><span id="day0" class="nixie-digit">0</span></div>
+                    <div class="nixie-tube"><span id="day1" class="nixie-digit">0</span></div>
+                    <div class="nixie-tube"><span id="day2" class="nixie-digit">0</span></div>
+                    <div class="separator day-separator">:</div>
+                </div>
+                <div class="nixie-label">Days</div>
+            </div>
+            <div class="time-unit">
+                <div class="tubes-row">
+                    <div class="nixie-tube"><span id="hour1" class="nixie-digit">0</span></div>
+                    <div class="nixie-tube"><span id="hour2" class="nixie-digit">0</span></div>
+                    <div class="separator hour-separator">:</div>
+                </div>
+                <div class="nixie-label">Hours</div>
+            </div>
+            <div class="time-unit">
+                <div class="tubes-row">
+                    <div class="nixie-tube"><span id="min1" class="nixie-digit">0</span></div>
+                    <div class="nixie-tube"><span id="min2" class="nixie-digit">0</span></div>
+                    <div class="separator min-separator">:</div>
+                </div>
+                <div class="nixie-label">Minutes</div>
+            </div>
+            <div class="time-unit">
+                 <div class="tubes-row">
+                    <div class="nixie-tube"><span id="sec1" class="nixie-digit">0</span></div>
+                    <div class="nixie-tube"><span id="sec2" class="nixie-digit">0</span></div>
+                 </div>
+                 <div class="nixie-label">Seconds</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls-container">
+         <select id="holiday-select" class="styled-input">
+             <option value="">Select a Holiday</option>
+         </select>
+
+         <input type="datetime-local" id="countdown-datetime" class="styled-input">
+
+         <input type="text" id="custom-title-input" class="styled-input" placeholder="Custom Title (Optional)">
+
+         <div class="button-group">
+            <button id="start-countdown-btn" class="control-btn">Start Countdown</button>
+            <button id="stop-countdown-btn" class="control-btn hidden-btn">Stop Countdown</button>
+            <button id="fullscreen-btn" class="control-btn">Enter Fullscreen</button>
+         </div>
+         <div id="message-area"></div>
+    </div>
+
+    <script>
+        const day00Digit = document.getElementById('day00');
+        const day0Digit = document.getElementById('day0');
+        const day1Digit = document.getElementById('day1');
+        const day2Digit = document.getElementById('day2');
+        const hour1Digit = document.getElementById('hour1');
+        const hour2Digit = document.getElementById('hour2');
+        const min1Digit = document.getElementById('min1');
+        const min2Digit = document.getElementById('min2');
+        const sec1Digit = document.getElementById('sec1');
+        const sec2Digit = document.getElementById('sec2');
+
+        const day00Tube = document.querySelector('.day-tube-00');
+        const day0Tube = document.querySelector('.day-tube-0');
+        const holidayTitle = document.getElementById('holiday-title');
+        const holidaySelect = document.getElementById('holiday-select');
+        const dateTimeInput = document.getElementById('countdown-datetime');
+        const customTitleInput = document.getElementById('custom-title-input');
+        const startBtn = document.getElementById('start-countdown-btn');
+        const stopBtn = document.getElementById('stop-countdown-btn');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const messageArea = document.getElementById('message-area');
+        const confettiContainer = document.getElementById('confetti-container');
+        const docElement = document.documentElement;
+
+        let targetDate = null;
+        let countdownInterval = null;
+        let isConfettiActive = false; // Flag to track confetti state
+
+        // Store listener references to remove them later
+        const clickListener = () => clearConfetti();
+        const touchListener = () => clearConfetti();
+
+
+        const holidays = {
+            "New Year's Day": { month: 0, day: 1, time: "00:00" },
+            "Valentine's Day": { month: 1, day: 14, time: "00:00" },
+            "St. Patrick's Day": { month: 2, day: 17, time: "00:00" },
+            "April Fools' Day": { month: 3, day: 1, time: "00:00" },
+            "Independence Day": { month: 6, day: 4, time: "00:00" },
+            "Halloween": { month: 9, day: 31, time: "18:00" },
+            "Thanksgiving": { month: 10, day: 28, time: "12:00" },
+            "Christmas Eve": { month: 11, day: 24, time: "18:00" },
+            "Christmas Day": { month: 11, day: 25, time: "00:00" },
+            "New Year's Eve": { month: 11, day: 31, time: "00:00" }
+        };
+
+        function getThanksgivingDate(year) {
+            const novemberFirst = new Date(year, 10, 1);
+            const firstDayOfWeek = novemberFirst.getDay();
+            let daysUntilFirstThursday = (4 - firstDayOfWeek + 7) % 7;
+            const thanksgivingDay = 1 + daysUntilFirstThursday + 21;
+            return thanksgivingDay;
+        }
+
+        function getNextHolidayDate(holidayData) {
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            let holidayYear = currentYear;
+            let holidayDay = holidayData.day;
+
+            if (holidayData.month === 10 && holidayDay === 28) {
+                 holidayDay = getThanksgivingDate(holidayYear);
+            }
+
+            const [hours, minutes] = holidayData.time.split(':').map(Number);
+            let holidayDateThisYear = new Date(holidayYear, holidayData.month, holidayDay, hours, minutes, 0);
+
+            if (holidayDateThisYear < now) {
+                holidayYear++;
+                 if (holidayData.month === 10 && holidayData.day === 28) {
+                     holidayDay = getThanksgivingDate(holidayYear);
+                 }
+                 holidayDateThisYear = new Date(holidayYear, holidayData.month, holidayDay, hours, minutes, 0);
+            }
+            return holidayDateThisYear;
+        }
+
+        function formatDateTimeLocal(date) {
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+
+        function populateHolidayDropdown() {
+            const sortedHolidayNames = Object.keys(holidays).sort((a, b) => {
+                const dateA = getNextHolidayDate(holidays[a]);
+                const dateB = getNextHolidayDate(holidays[b]);
+                return dateA - dateB;
+            });
+
+            sortedHolidayNames.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                holidaySelect.appendChild(option);
+            });
+        }
+
+        function updateDigit(element, value) {
+            const safeValue = Math.max(0, value);
+            const stringValue = String(safeValue);
+            if (element.textContent !== stringValue) {
+                element.textContent = stringValue;
+            }
+        }
+
+        function createConfetti() {
+            if (isConfettiActive) return; // Don't create if already active
+
+            const confettiCount = 100;
+            const colors = ['#ff8c00', '#ffa500', '#ffae42'];
+
+            clearConfetti(); // Clear any remnants just in case
+
+            for (let i = 0; i < confettiCount; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                confetti.style.left = `${Math.random() * 100}vw`;
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = `${Math.random() * 3}s`;
+                confetti.style.transform = `rotateZ(${Math.random() * 360}deg)`;
+
+                confettiContainer.appendChild(confetti);
+            }
+            isConfettiActive = true;
+            // Add listeners to stop confetti on interaction
+            document.body.addEventListener('click', clickListener);
+            document.body.addEventListener('touchstart', touchListener);
+        }
+
+        function clearConfetti() {
+            confettiContainer.innerHTML = '';
+            isConfettiActive = false;
+            // Remove listeners when clearing
+            document.body.removeEventListener('click', clickListener);
+            document.body.removeEventListener('touchstart', touchListener);
+        }
+
+
+        function resetCountdownState() {
+            clearInterval(countdownInterval);
+            countdownInterval = null;
+            targetDate = null;
+            updateDigit(day00Digit, 0);
+            updateDigit(day0Digit, 0);
+            updateDigit(day1Digit, 0); updateDigit(day2Digit, 0);
+            updateDigit(hour1Digit, 0); updateDigit(hour2Digit, 0);
+            updateDigit(min1Digit, 0); updateDigit(min2Digit, 0);
+            updateDigit(sec1Digit, 0); updateDigit(sec2Digit, 0);
+            day00Tube.style.display = 'none';
+            day0Tube.style.display = 'none';
+            holidayTitle.classList.remove('visible');
+            holidayTitle.textContent = "";
+            messageArea.textContent = "";
+            startBtn.classList.remove('hidden-btn');
+            stopBtn.classList.add('hidden-btn');
+            holidaySelect.value = "";
+            customTitleInput.value = "";
+            clearConfetti(); // Ensure confetti and listeners are cleared
+        }
+
+
+        function updateCountdown() {
+            let showDay00 = false;
+            let showDay0 = false;
+            let days = 0;
+
+            if (targetDate) {
+                 const now = new Date().getTime();
+                 const distance = targetDate - now;
+                 if (distance >= 0) {
+                     days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                     showDay00 = days >= 1000;
+                     showDay0 = days >= 100;
+                 }
+            }
+            day00Tube.style.display = showDay00 ? 'flex' : 'none';
+            day0Tube.style.display = showDay0 ? 'flex' : 'none';
+
+
+            if (!targetDate) {
+                 updateDigit(day00Digit, 0);
+                 updateDigit(day0Digit, 0);
+                 updateDigit(day1Digit, 0); updateDigit(day2Digit, 0);
+                 updateDigit(hour1Digit, 0); updateDigit(hour2Digit, 0);
+                 updateDigit(min1Digit, 0); updateDigit(min2Digit, 0);
+                 updateDigit(sec1Digit, 0); updateDigit(sec2Digit, 0);
+                 day00Tube.style.display = 'none';
+                 day0Tube.style.display = 'none';
+                 return;
+            }
+
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+
+            if (distance < 0) {
+                // Don't reset state here, just stop the interval
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+                // Keep final state (00:00:00)
+                updateDigit(day00Digit, 0);
+                updateDigit(day0Digit, 0);
+                updateDigit(day1Digit, 0); updateDigit(day2Digit, 0);
+                updateDigit(hour1Digit, 0); updateDigit(hour2Digit, 0);
+                updateDigit(min1Digit, 0); updateDigit(min2Digit, 0);
+                updateDigit(sec1Digit, 0); updateDigit(sec2Digit, 0);
+                day00Tube.style.display = 'none';
+                day0Tube.style.display = 'none';
+                messageArea.textContent = "Countdown finished! Click/Tap to clear.";
+                startBtn.classList.remove('hidden-btn'); // Show start button again
+                stopBtn.classList.add('hidden-btn'); // Hide stop button
+                createConfetti(); // Start persistent confetti
+                return;
+            }
+
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            const d00 = Math.max(0, Math.floor(days / 1000));
+            const d0 = Math.max(0, Math.floor((days % 1000) / 100));
+            const d1 = Math.max(0, Math.floor((days % 100) / 10));
+            const d2 = Math.max(0, days % 10);
+            const h1 = Math.max(0, Math.floor(hours / 10));
+            const h2 = Math.max(0, hours % 10);
+            const m1 = Math.max(0, Math.floor(minutes / 10));
+            const m2 = Math.max(0, minutes % 10);
+            const s1 = Math.max(0, Math.floor(seconds / 10));
+            const s2 = Math.max(0, seconds % 10);
+
+            updateDigit(day00Digit, d00);
+            updateDigit(day0Digit, d0);
+            updateDigit(day1Digit, d1); updateDigit(day2Digit, d2);
+            updateDigit(hour1Digit, h1); updateDigit(hour2Digit, h2);
+            updateDigit(min1Digit, m1); updateDigit(min2Digit, m2);
+            updateDigit(sec1Digit, s1); updateDigit(sec2Digit, s2);
+        }
+
+        holidaySelect.addEventListener('change', (event) => {
+            const selectedHolidayName = event.target.value;
+            messageArea.textContent = "";
+            clearConfetti();
+            customTitleInput.value = "";
+
+            if (selectedHolidayName && holidays[selectedHolidayName]) {
+                const holidayData = holidays[selectedHolidayName];
+                const nextDate = getNextHolidayDate(holidayData);
+                const formattedDate = formatDateTimeLocal(nextDate);
+                dateTimeInput.value = formattedDate;
+                holidayTitle.textContent = `${selectedHolidayName} Countdown`;
+                holidayTitle.style.textTransform = 'uppercase';
+                holidayTitle.classList.add('visible');
+
+                if (countdownInterval) {
+                    resetCountdownState();
+                } else {
+                    targetDate = nextDate.getTime();
+                    updateCountdown();
+                    targetDate = null;
+                }
+                messageArea.textContent = "Target set. Press Start.";
+
+            } else {
+                holidayTitle.textContent = "";
+                holidayTitle.classList.remove('visible');
+                if (countdownInterval) {
+                     resetCountdownState();
+                } else {
+                     targetDate = null;
+                     updateCountdown();
+                }
+                dateTimeInput.value = "";
+            }
+        });
+
+
+        startBtn.addEventListener('click', () => {
+            const selectedDateTime = dateTimeInput.value;
+            const customTitle = customTitleInput.value.trim();
+            messageArea.textContent = "";
+            clearConfetti();
+
+            if (!selectedDateTime) {
+                messageArea.textContent = "Please select a target date and time.";
+                return;
+            }
+
+            const targetDateObj = new Date(selectedDateTime);
+            targetDate = targetDateObj.getTime();
+            const now = new Date().getTime();
+
+            if (isNaN(targetDate)) {
+                 messageArea.textContent = "Invalid date/time format selected.";
+                 targetDate = null;
+                 return;
+            }
+
+            if (targetDate <= now) {
+                messageArea.textContent = "Please select a date and time in the future.";
+                targetDate = null;
+                return;
+            }
+
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+
+            if (customTitle) {
+                holidayTitle.textContent = customTitle;
+                holidayTitle.style.textTransform = 'none';
+            } else {
+                const selectedHolidayName = holidaySelect.value;
+                if (selectedHolidayName && holidays[selectedHolidayName]) {
+                    holidayTitle.textContent = `${selectedHolidayName} Countdown`;
+                    holidayTitle.style.textTransform = 'uppercase';
+                } else {
+                    const optionsDate = { year: 'numeric', month: 'long', day: 'numeric' };
+                    const optionsTime = { hour: 'numeric', minute: 'numeric', hour12: true };
+                    const formattedDateStr = targetDateObj.toLocaleDateString(undefined, optionsDate);
+                    const formattedTimeStr = targetDateObj.toLocaleTimeString(undefined, optionsTime);
+                    holidayTitle.textContent = `Countdown to: ${formattedDateStr}, ${formattedTimeStr}`;
+                    holidayTitle.style.textTransform = 'none';
+                }
+            }
+            holidayTitle.classList.add('visible');
+
+
+            updateCountdown();
+            countdownInterval = setInterval(updateCountdown, 1000);
+
+            startBtn.classList.add('hidden-btn');
+            stopBtn.classList.remove('hidden-btn');
+        });
+
+        stopBtn.addEventListener('click', () => {
+            resetCountdownState();
+            messageArea.textContent = "Countdown stopped.";
+        });
+
+
+        fullscreenBtn.addEventListener('click', () => {
+             if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+                 if (docElement.requestFullscreen) { docElement.requestFullscreen(); }
+                 else if (docElement.mozRequestFullScreen) { docElement.mozRequestFullScreen(); }
+                 else if (docElement.webkitRequestFullscreen) { docElement.webkitRequestFullscreen(); }
+                 else if (docElement.msRequestFullscreen) { docElement.msRequestFullscreen(); }
+             } else {
+                 if (document.exitFullscreen) { document.exitFullscreen(); }
+                 else if (document.mozCancelFullScreen) { document.mozCancelFullScreen(); }
+                 else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+                 else if (document.msExitFullscreen) { document.msExitFullscreen(); }
+             }
+        });
+
+        function handleFullscreenChange() {
+            const isFullscreen = document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+            fullscreenBtn.textContent = isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen';
+        }
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+        document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+        populateHolidayDropdown();
+        updateCountdown();
+
+    </script>
+
+</body>
+</html>
