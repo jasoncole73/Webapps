@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Military Time Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Apply Inter font globally */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Style the time input's calendar icon */
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.5) brightness(1);
+            cursor: pointer;
+            padding-left: 0.25rem;
+        }
+        /* Focus transition for time input */
+        input[type="time"]:focus {
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        /* Consistent height for result boxes */
+        .result-box {
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        /* Transition for buttons */
+        .action-button {
+            transition: background-color 0.2s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-200 flex items-center justify-center min-h-screen p-4 sm:p-6">
+
+    <div class="bg-white p-6 sm:p-8 rounded-xl shadow-xl w-full max-w-lg">
+        <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-800 mb-6 sm:mb-8">Time Converter</h1>
+
+        <div class="mb-6 sm:mb-8">
+            <div class="flex justify-between items-center mb-2">
+                <label for="timeInput" class="block text-sm sm:text-base font-medium text-gray-700">Select Time:</label>
+                <div class="flex space-x-2">
+                     <button id="resetBtn" class="px-3 py-1 text-xs sm:text-sm font-medium bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 action-button">
+                        Reset
+                    </button>
+                    <button id="currentTimeBtn" class="px-3 py-1 text-xs sm:text-sm font-medium bg-indigo-100 text-indigo-700 rounded-md hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 action-button">
+                        Use Current Time
+                    </button>
+                </div>
+            </div>
+            <input type="time" id="timeInput" name="timeInput" class="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg shadow-sm text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 ease-in-out">
+        </div>
+
+        <div class="space-y-4 sm:space-y-5">
+            <div class="bg-blue-50 p-4 sm:p-5 rounded-lg shadow-md result-box border border-blue-100">
+                <h2 class="text-sm sm:text-base font-medium text-blue-800 mb-1">Regular Time (AM/PM)</h2>
+                <p id="regularTime" class="text-xl sm:text-2xl font-semibold text-blue-900">-</p>
+            </div>
+            <div class="bg-green-50 p-4 sm:p-5 rounded-lg shadow-md result-box border border-green-100">
+                <h2 class="text-sm sm:text-base font-medium text-green-800 mb-1">Military Hour Time (HH:MM)</h2>
+                <p id="militaryHourTime" class="text-xl sm:text-2xl font-semibold text-green-900">-</p>
+            </div>
+            <div class="bg-purple-50 p-4 sm:p-5 rounded-lg shadow-md result-box border border-purple-100">
+                <h2 class="text-sm sm:text-base font-medium text-purple-800 mb-1">Military Time (HHMM)</h2>
+                <p id="militaryTime" class="text-xl sm:text-2xl font-semibold text-purple-900">-</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get references to DOM elements
+        const timeInput = document.getElementById('timeInput');
+        const regularTimeDisplay = document.getElementById('regularTime');
+        const militaryHourTimeDisplay = document.getElementById('militaryHourTime');
+        const militaryTimeDisplay = document.getElementById('militaryTime');
+        const currentTimeBtn = document.getElementById('currentTimeBtn');
+        // Get reference to the new Reset button
+        const resetBtn = document.getElementById('resetBtn');
+
+        /**
+         * Formats a given hour and minute into different time formats and updates the display.
+         * @param {number} hours - The hour (0-23).
+         * @param {number} minutes - The minute (0-59).
+         */
+        function formatTime(hours, minutes) {
+            const paddedHours = String(hours).padStart(2, '0');
+            const paddedMinutes = String(minutes).padStart(2, '0');
+            militaryHourTimeDisplay.textContent = `${paddedHours}:${paddedMinutes}`;
+            militaryTimeDisplay.textContent = `${paddedHours}${paddedMinutes} hours`;
+
+            let hours12 = hours % 12;
+            if (hours12 === 0) {
+                hours12 = 12;
+            }
+            const ampm = hours < 12 ? 'AM' : 'PM';
+            regularTimeDisplay.textContent = `${hours12}:${paddedMinutes} ${ampm}`;
+        }
+
+        /**
+         * Handles the input event on the time input element.
+         * Reads the selected time and triggers formatting.
+         */
+        function handleTimeChange() {
+            const timeValue = timeInput.value;
+            if (timeValue) {
+                const [hoursStr, minutesStr] = timeValue.split(':');
+                const hours = parseInt(hoursStr, 10);
+                const minutes = parseInt(minutesStr, 10);
+                if (!isNaN(hours) && !isNaN(minutes)) {
+                    formatTime(hours, minutes);
+                } else {
+                    console.error("Invalid time input:", timeValue);
+                    resetDisplays();
+                }
+            } else {
+                // If input is manually cleared, reset displays
+                resetDisplays();
+            }
+        }
+
+        /**
+        * Resets the time display paragraphs to '-' and clears the time input.
+        */
+        function resetConverter() {
+            timeInput.value = ''; // Clear the time input field
+            regularTimeDisplay.textContent = '-';
+            militaryHourTimeDisplay.textContent = '-';
+            militaryTimeDisplay.textContent = '-';
+        }
+
+        /**
+         * Sets the time input to the current local time and triggers the display update.
+         */
+        function setCurrentTime() {
+            const now = new Date();
+            const currentHours = now.getHours();
+            const currentMinutes = now.getMinutes();
+            const currentTimeString = `${String(currentHours).padStart(2, '0')}:${String(currentMinutes).padStart(2, '0')}`;
+            timeInput.value = currentTimeString;
+            formatTime(currentHours, currentMinutes);
+        }
+
+        // --- Event Listeners ---
+        // Update time displays when the user manually selects a time
+        timeInput.addEventListener('input', handleTimeChange);
+
+        // Set time to current when the 'Use Current Time' button is clicked
+        currentTimeBtn.addEventListener('click', setCurrentTime);
+
+        // Reset the converter when the 'Reset' button is clicked
+        resetBtn.addEventListener('click', resetConverter); // Added listener for reset button
+
+        // --- Initialization ---
+        // Ensure displays are reset when the page loads
+        window.addEventListener('DOMContentLoaded', resetConverter); // Use resetConverter on load
+
+    </script>
+
+</body>
+</html>
