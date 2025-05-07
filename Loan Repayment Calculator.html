@@ -16,11 +16,17 @@
         .results-table th {
             text-align: left; font-weight: 600; color: #4b5563;
         }
-        /* Ensure inputs and select don't stretch excessively on large screens and have consistent width */
-        .input-group input, .input-group select {
-           max-width: 300px; /* Max width for larger screens */
-           width: 100%; /* Full width within their grid cell */
+        /* Ensure input fields (text, number) don't stretch excessively on large screens */
+        .input-group input {
+           max-width: 300px; /* Max width for general inputs, especially those in the grid */
+           width: 100%; /* Ensures they fill their grid cell up to max-width */
         }
+        /* Select elements (like the top dropdown) will use Tailwind's w-full for width.
+           By not applying a max-width here, they can be wider if their container is wider. */
+        .input-group select {
+            width: 100%; /* This is effectively handled by Tailwind's w-full class on the select element itself */
+        }
+
         input[type=number]::-webkit-inner-spin-button,
         input[type=number]::-webkit-outer-spin-button {
             -webkit-appearance: none; margin: 0;
@@ -52,7 +58,6 @@
                 <select id="calculation-type" name="calculation-type" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                     <option value="pay-by-date">Pay Off Loan by Specific Date</option>
                     <option value="specific-extra-payment" selected>Make Specific Extra Monthly Payment</option>
-                    <option value="reduce-term-months">Pay Off Loan in Specific Term (Months)</option>
                 </select>
             </div>
 
@@ -71,22 +76,14 @@
                     <input type="text" inputmode="decimal" data-format="currency" id="current-monthly-payment" name="current-monthly-payment" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                 </div>
 
-                <div id="target-payoff-date-group" class="input-group hidden"> <label for="target-payoff-date" class="block text-sm font-medium text-gray-700 mb-1">Target Payoff Date</label>
+                <div id="target-payoff-date-group" class="input-group hidden">
+                    <label for="target-payoff-date" class="block text-sm font-medium text-gray-700 mb-1">Target Payoff Date</label>
                     <input type="date" id="target-payoff-date" name="target-payoff-date" placeholder="YYYY-MM-DD" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                 </div>
 
-                <div id="monthly-extra-payment-group" class="input-group"> <label for="monthly-extra-payment" class="block text-sm font-medium text-gray-700 mb-1">Monthly Extra Payment ($)</label>
+                <div id="monthly-extra-payment-group" class="input-group">
+                    <label for="monthly-extra-payment" class="block text-sm font-medium text-gray-700 mb-1">Monthly Extra Payment ($)</label>
                     <input type="text" inputmode="decimal" data-format="currency" id="monthly-extra-payment" name="monthly-extra-payment" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                </div>
-
-                <div id="current-remaining-term-group" class="input-group hidden">
-                    <label for="current-remaining-term" class="block text-sm font-medium text-gray-700 mb-1">Current Remaining Term (months)</label>
-                    <input type="number" id="current-remaining-term" name="current-remaining-term" step="1" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                </div>
-
-                <div id="desired-shorter-term-group" class="input-group hidden">
-                    <label for="desired-shorter-term" class="block text-sm font-medium text-gray-700 mb-1">Desired Shorter Term (months)</label>
-                     <input type="number" id="desired-shorter-term" name="desired-shorter-term" step="1" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                 </div>
             </div>
 
@@ -125,10 +122,6 @@
         const targetPayoffDateInput = document.getElementById('target-payoff-date');
         const monthlyExtraPaymentGroup = document.getElementById('monthly-extra-payment-group');
         const monthlyExtraPaymentInput = document.getElementById('monthly-extra-payment');
-        const currentRemainingTermGroup = document.getElementById('current-remaining-term-group');
-        const currentRemainingTermInput = document.getElementById('current-remaining-term');
-        const desiredShorterTermGroup = document.getElementById('desired-shorter-term-group');
-        const desiredShorterTermInput = document.getElementById('desired-shorter-term');
 
         const clearButton = document.getElementById('clear-button');
         const resultsDiv = document.getElementById('results');
@@ -153,9 +146,9 @@
             clearResults(); hideError();
 
             // Hide all conditional groups first
-            [currentMonthlyPaymentGroup, targetPayoffDateGroup, monthlyExtraPaymentGroup, currentRemainingTermGroup, desiredShorterTermGroup].forEach(g => g.classList.add('hidden'));
+            [currentMonthlyPaymentGroup, targetPayoffDateGroup, monthlyExtraPaymentGroup].forEach(g => g.classList.add('hidden'));
             // Remove required from all conditional inputs
-            [currentMonthlyPaymentInput, targetPayoffDateInput, monthlyExtraPaymentInput, currentRemainingTermInput, desiredShorterTermInput].forEach(i => i.removeAttribute('required'));
+            [currentMonthlyPaymentInput, targetPayoffDateInput, monthlyExtraPaymentInput].forEach(i => i.removeAttribute('required'));
 
             if (type === 'pay-by-date') {
                 currentMonthlyPaymentGroup.classList.remove('hidden');
@@ -171,17 +164,9 @@
                 currentMonthlyPaymentGroup.classList.remove('hidden');
                 monthlyExtraPaymentGroup.classList.remove('hidden');
                 currentMonthlyPaymentInput.setAttribute('required', '');
-                // monthlyExtraPaymentInput is not strictly required (defaults to 0 if empty)
-
-            } else if (type === 'reduce-term-months') {
-                currentRemainingTermGroup.classList.remove('hidden');
-                desiredShorterTermGroup.classList.remove('hidden');
-                currentRemainingTermInput.setAttribute('required', '');
-                desiredShorterTermInput.setAttribute('required', '');
             }
              // Clear input values when mode changes for better UX
             currentMonthlyPaymentInput.value = ''; targetPayoffDateInput.value = ''; monthlyExtraPaymentInput.value = '';
-            currentRemainingTermInput.value = ''; desiredShorterTermInput.value = '';
         });
 
         form.addEventListener('submit', (e) => { e.preventDefault(); hideError(); calculateAndDisplay(); });
@@ -189,7 +174,6 @@
             form.reset();
             loanBalanceInput.value = ''; interestRateInput.value = '';
             currentMonthlyPaymentInput.value = ''; targetPayoffDateInput.value = ''; monthlyExtraPaymentInput.value = '';
-            currentRemainingTermInput.value = ''; desiredShorterTermInput.value = '';
             calculationTypeSelect.value = 'specific-extra-payment'; // Reset to default selection
             calculationTypeSelect.dispatchEvent(new Event('change'));
             clearResults(); hideError();
@@ -213,71 +197,46 @@
             let summary = '';
             let isValidCalculation = true;
 
-            // Set a common baseline for comparison if current monthly payment is available
-            if (type === 'pay-by-date' || type === 'specific-extra-payment') {
-                currentM_baseline = getNumericValue(currentMonthlyPaymentInput);
-                if (isNaN(currentM_baseline) || currentM_baseline <= 0) {
-                     if (currentMonthlyPaymentInput.value.trim() === '' && currentMonthlyPaymentInput.hasAttribute('required')) {
-                         showError("Please enter a value for Current Monthly Payment.");
-                     } else if (currentMonthlyPaymentInput.hasAttribute('required')) {
-                        showError("Please enter a valid positive number for Current Monthly Payment.");
-                     } else {
-                        // If not required and empty, maybe proceed without baseline? Or error. For now, error if needed.
-                        showError("Current Monthly Payment is needed for this calculation mode.");
-                     }
-                     return;
-                }
-                currentN_raw = calculateNumberOfMonths(P, i, currentM_baseline);
-                if (currentN_raw === null || !isFinite(currentN_raw)) { showError(`Baseline: Current payment of ${formatCurrency(currentM_baseline)} doesn't cover interest or term is invalid.`); return; }
-                currentN_rounded = Math.ceil(currentN_raw);
-                currentTotalInterest_baseline = calculateTotalInterest(P, currentM_baseline, currentN_raw, i);
+            currentM_baseline = getNumericValue(currentMonthlyPaymentInput);
+            if (isNaN(currentM_baseline) || currentM_baseline <= 0) {
+                 if (currentMonthlyPaymentInput.value.trim() === '' && currentMonthlyPaymentInput.hasAttribute('required')) { showError("Please enter a value for Current Monthly Payment."); }
+                 else if (currentMonthlyPaymentInput.hasAttribute('required')) { showError("Please enter a valid positive number for Current Monthly Payment."); }
+                 else { showError("Current Monthly Payment is needed for baseline comparison."); }
+                 return;
             }
-
+            currentN_raw = calculateNumberOfMonths(P, i, currentM_baseline);
+            if (currentN_raw === null || !isFinite(currentN_raw)) { showError(`Baseline: Current payment of ${formatCurrency(currentM_baseline)} doesn't cover interest or term is invalid.`); return; }
+            currentN_rounded = Math.ceil(currentN_raw);
+            currentTotalInterest_baseline = calculateTotalInterest(P, currentM_baseline, currentN_raw, i);
 
             if (type === 'pay-by-date') {
                 const targetDateStr = targetPayoffDateInput.value;
                 if (!targetDateStr) { showError("Please select a Target Payoff Date."); return; }
-
                 const today = new Date(); today.setHours(0,0,0,0);
-                const targetDate = new Date(targetDateStr + "T00:00:00"); // Ensure local timezone
-
+                const targetDate = new Date(targetDateStr + "T00:00:00");
                 if (targetDate <= today) { showError("Target Payoff Date must be in the future."); return; }
 
-                // Calculate number of payment periods (months) until target date
-                // This counts the number of full month cycles from the start of today's month to the start of the target month, +1.
-                // E.g., Today: May 7. Target: Aug 15. Normalized: May 1 to Aug 1.
-                // (Aug.getFullYear() - May.getFullYear())*12 + (Aug.getMonth() - May.getMonth()) + 1
-                // (2025-2025)*12 + (7-4) + 1 = 0 + 3 + 1 = 4 payments (May, June, July, August)
                 const todayNorm = new Date(today.getFullYear(), today.getMonth(), 1);
                 const targetNorm = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
                 newN_raw = (targetNorm.getFullYear() - todayNorm.getFullYear()) * 12 + (targetNorm.getMonth() - todayNorm.getMonth()) + 1;
 
-
                 if (newN_raw <= 0) { showError("Target Payoff Date is too soon or results in zero payment periods."); return; }
-                // Compare with baseline term if available
-                if (currentN_raw && newN_raw >= currentN_raw) { showError(`Target Payoff Date (${formatMonths(newN_raw)}) does not result in a shorter term than current (${formatMonths(currentN_raw)}).`); return; }
+                if (newN_raw >= currentN_raw) { showError(`Target Payoff Date (${formatMonths(newN_raw)}) does not result in a shorter term than current (${formatMonths(currentN_raw)}).`); return; }
 
-
-                newN_rounded = Math.ceil(newN_raw); // Should be same as newN_raw since it's integer months
+                newN_rounded = Math.ceil(newN_raw);
                 newM_calculated = calculateMonthlyPayment(P, i, newN_raw);
 
                 if (newM_calculated === null || newM_calculated <= 0) { showError(`Cannot calculate a valid payment for the target payoff date. Term might be too short.`); isValidCalculation = false; }
                 else {
                     newTotalInterest_calculated = calculateTotalInterest(P, newM_calculated, newN_raw, i);
-                    const extraPaymentRequired = newM_calculated - (currentM_baseline || 0); // Default baseline to 0 if not set
-                    summary = `To pay off by ${targetDate.toLocaleDateString()}, your new monthly payment will be ${formatCurrency(newM_calculated)}`;
-                    if (currentM_baseline > 0) {
-                        summary += ` (an extra ${formatCurrency(Math.max(0,extraPaymentRequired))} over your current $${currentM_baseline.toFixed(2)} payment). This saves ${formatCurrency(currentTotalInterest_baseline - newTotalInterest_calculated)} in interest.`;
-                    } else {
-                        summary += `. Total interest will be ${formatCurrency(newTotalInterest_calculated)}.`;
-                    }
+                    const extraPaymentRequired = newM_calculated - currentM_baseline;
+                    summary = `To pay off by ${targetDate.toLocaleDateString()}, your new monthly payment will be ${formatCurrency(newM_calculated)} (an extra ${formatCurrency(Math.max(0,extraPaymentRequired))} over your current $${currentM_baseline.toFixed(2)} payment). This saves ${formatCurrency(currentTotalInterest_baseline - newTotalInterest_calculated)} in interest.`;
                 }
 
             } else if (type === 'specific-extra-payment') {
-                const extraM = getNumericValue(monthlyExtraPaymentInput) || 0; // Defaults to 0 if empty/invalid
+                const extraM = getNumericValue(monthlyExtraPaymentInput) || 0;
                 if (isNaN(extraM) || extraM < 0) { showError("Monthly Extra Payment must be a non-negative number."); return; }
 
-                // Baseline (currentM_baseline, currentN_raw, etc.) already calculated above
                 newM_calculated = currentM_baseline + extraM;
                 newN_raw = calculateNumberOfMonths(P, i, newM_calculated);
 
@@ -297,38 +256,12 @@
                         newN_raw = currentN_raw; newN_rounded = currentN_rounded; newM_calculated = currentM_baseline; newTotalInterest_calculated = currentTotalInterest_baseline;
                     }
                 }
-
-            } else if (type === 'reduce-term-months') {
-                const remainingN_input = parseInt(currentRemainingTermInput.value, 10);
-                const desiredN_input = parseInt(desiredShorterTermInput.value, 10);
-
-                if (isNaN(remainingN_input) || remainingN_input <= 0) { showError("Please enter a valid Current Remaining Term."); return; }
-                if (isNaN(desiredN_input) || desiredN_input <= 0) { showError("Please enter a valid Desired Shorter Term."); return; }
-                if (desiredN_input >= remainingN_input) { showError(`Desired Term (${desiredN_input}m) must be shorter than Remaining Term (${remainingN_input}m).`); return; }
-
-                // For this mode, the 'current' is based on the remainingN_input term
-                currentN_raw = remainingN_input; currentN_rounded = remainingN_input;
-                currentM_baseline = calculateMonthlyPayment(P, i, currentN_raw);
-                if (currentM_baseline === null || currentM_baseline <= 0) { showError(`Cannot calculate current payment for ${currentN_rounded} months term.`); return; }
-                currentTotalInterest_baseline = calculateTotalInterest(P, currentM_baseline, currentN_raw, i);
-
-                newN_raw = desiredN_input; newN_rounded = desiredN_input;
-                newM_calculated = calculateMonthlyPayment(P, i, newN_raw);
-
-                if (newM_calculated === null || newM_calculated <= 0) { showError(`Cannot calculate payment for desired ${newN_rounded} months term.`); isValidCalculation = false; }
-                else {
-                    newTotalInterest_calculated = calculateTotalInterest(P, newM_calculated, newN_raw, i);
-                    const monthsReduced = currentN_rounded - newN_rounded;
-                    const interestSaved = Math.max(0, currentTotalInterest_baseline - newTotalInterest_calculated);
-                    summary = `To pay off in ${formatMonths(newN_raw)} (reduced by ${formatMonths(monthsReduced)}), your new monthly payment needs to be ${formatCurrency(newM_calculated)}. This saves ${formatCurrency(interestSaved)} in interest compared to the original plan (original payment approx ${formatCurrency(currentM_baseline)}).`;
-                }
             }
 
             if (isValidCalculation) {
-                // Ensure baseline values are valid for display, even if not fully used in some paths
-                const displayCurrentM = currentM_baseline || 0;
-                const displayCurrentN = currentN_rounded || 0;
-                const displayCurrentInterest = currentTotalInterest_baseline || 0;
+                const displayCurrentM = currentM_baseline;
+                const displayCurrentN = currentN_rounded;
+                const displayCurrentInterest = currentTotalInterest_baseline;
                 displayResults(displayCurrentN, displayCurrentM, displayCurrentInterest, newN_rounded, newM_calculated, newTotalInterest_calculated, summary);
             } else {
                 clearResults();
