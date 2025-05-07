@@ -21,10 +21,9 @@
            max-width: 300px; /* Max width for general inputs, especially those in the grid */
            width: 100%; /* Ensures they fill their grid cell up to max-width */
         }
-        /* Select elements (like the top dropdown) will use Tailwind's w-full for width.
-           By not applying a max-width here, they can be wider if their container is wider. */
+        /* Select elements (like the top dropdown) will use Tailwind's w-full for width. */
         .input-group select {
-            width: 100%; /* This is effectively handled by Tailwind's w-full class on the select element itself */
+            width: 100%;
         }
 
         input[type=number]::-webkit-inner-spin-button,
@@ -38,12 +37,8 @@
         #loan-form input[type="date"] {
             text-align: left;
         }
-        /* Style for date input placeholder - will show browser default if placeholder attribute is removed */
-        input[type="date"]:not(:valid):before {
-            content: attr(placeholder); /* If placeholder is present, show it */
-            color: #9ca3af; /* Tailwind gray-400, adjust as needed */
-             /* If no placeholder attribute, browser default (e.g., mm/dd/yyyy) may show */
-        }
+        /* Removed the CSS rule for input[type="date"]:not(:valid):before
+           The browser will now use its default rendering for an empty date input. */
     </style>
      <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
