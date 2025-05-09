@@ -9,66 +9,103 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            overscroll-behavior: none;
+            overscroll-behavior: none; /* Prevents pull-to-refresh on mobile */
+            margin: 0; /* Ensure no default margin */
         }
         canvas {
             display: block;
             border-radius: 0.5rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            background-color: #D2B48C; /* Fallback canvas background */
+            background-color: #D2B48C; /* Fallback canvas background if JS ground draw fails */
         }
-        .info-panel-item {
-            min-width: 120px;
-        }
+        /* Removed fixed min-width for info-panel-item, relying on flex properties and padding */
         .action-button {
             padding: 0.5rem 1rem;
-            background-color: #3b82f6;
+            background-color: #3b82f6; /* blue-500 */
             color: white;
             font-weight: 600;
-            border-radius: 0.375rem;
+            border-radius: 0.375rem; /* rounded-md */
             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             transition: background-color 0.15s ease-in-out;
             cursor: pointer;
         }
         .action-button:hover {
-            background-color: #2563eb;
+            background-color: #2563eb; /* blue-600 */
         }
         .action-button:focus {
             outline: none;
             box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
         }
-        canvas:fullscreen { width: 100vw !important; height: 100vh !important; object-fit: contain; }
-        canvas:-webkit-full-screen { width: 100vw !important; height: 100vh !important; object-fit: contain; }
-        canvas:-moz-full-screen { width: 100vw !important; height: 100vh !important; object-fit: contain; }
-        canvas:-ms-fullscreen { width: 100vw !important; height: 100vh !important; object-fit: contain; }
+
+        /* Fullscreen canvas styling */
+        canvas:fullscreen {
+            width: 100vw !important;
+            height: 100vh !important;
+            /* object-fit: contain; Not directly applicable to canvas, aspect ratio handled in JS */
+            border-radius: 0 !important; /* Remove border radius in fullscreen */
+            box-shadow: none !important; /* Remove shadow in fullscreen */
+        }
+        canvas:-webkit-full-screen { /* Safari */
+            width: 100vw !important;
+            height: 100vh !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+        canvas:-moz-full-screen { /* Firefox */
+            width: 100vw !important;
+            height: 100vh !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+        canvas:-ms-fullscreen { /* IE/Edge */
+            width: 100vw !important;
+            height: 100vh !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+        /* Hide other elements when canvas is fullscreen */
+        body:has(canvas:fullscreen) #simulationContainer > *:not(canvas) {
+            display: none;
+        }
+         body:has(canvas:-webkit-full-screen) #simulationContainer > *:not(canvas) {
+            display: none;
+        }
+         body:has(canvas:-moz-full-screen) #simulationContainer > *:not(canvas) {
+            display: none;
+        }
+         body:has(canvas:-ms-fullscreen) #simulationContainer > *:not(canvas) {
+            display: none;
+        }
+
+
     </style>
 </head>
-<body class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen p-4 overflow-hidden">
+<body class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen p-2 sm:p-4 overflow-hidden">
 
     <div class="w-full max-w-4xl" id="simulationContainer">
-        <header class="mb-6 text-center">
-            <h1 class="text-4xl font-bold text-red-500">Fire Ant Colony Simulation</h1>
-            <p class="text-gray-300 mt-1">Watch the colony grow and thrive!</p>
+        <header class="mb-4 sm:mb-6 text-center">
+            <h1 class="text-3xl sm:text-4xl font-bold text-red-500">Fire Ant Colony</h1>
+            <p class="text-gray-300 mt-1 text-sm sm:text-base">Watch the colony grow and thrive!</p>
         </header>
 
-        <div id="infoPanel" class="mb-4 p-4 bg-gray-700 rounded-lg shadow-lg flex flex-wrap justify-center items-center gap-4 text-center">
-            <div class="info-panel-item p-3 bg-gray-600 rounded-md">
-                <span class="block text-sm text-gray-300">Ant Count</span>
-                <span id="antCount" class="text-2xl font-semibold text-red-400">0</span>
+        <div id="infoPanel" class="mb-4 p-2 sm:p-4 bg-gray-700 rounded-lg shadow-lg flex flex-wrap justify-center items-center gap-2 sm:gap-4 text-center">
+            <div class="p-2 sm:p-3 bg-gray-600 rounded-md flex-grow sm:flex-grow-0">
+                <span class="block text-xs sm:text-sm text-gray-300">Ants</span>
+                <span id="antCount" class="text-xl sm:text-2xl font-semibold text-red-400">0</span>
             </div>
-            <div class="info-panel-item p-3 bg-gray-600 rounded-md">
-                <span class="block text-sm text-gray-300">Food at Nest</span>
-                <span id="foodAtNest" class="text-2xl font-semibold text-yellow-400">0</span>
+            <div class="p-2 sm:p-3 bg-gray-600 rounded-md flex-grow sm:flex-grow-0">
+                <span class="block text-xs sm:text-sm text-gray-300">Nest Food</span>
+                <span id="foodAtNest" class="text-xl sm:text-2xl font-semibold text-yellow-400">0</span>
             </div>
-            <div class="info-panel-item p-3 bg-gray-600 rounded-md">
-                <span class="block text-sm text-gray-300">Elapsed Time</span>
-                <span id="elapsedTime" class="text-2xl font-semibold text-blue-400">0m 00s</span>
+            <div class="p-2 sm:p-3 bg-gray-600 rounded-md flex-grow sm:flex-grow-0">
+                <span class="block text-xs sm:text-sm text-gray-300">Time</span>
+                <span id="elapsedTime" class="text-xl sm:text-2xl font-semibold text-blue-400">0m 00s</span>
             </div>
-            <div class="info-panel-item p-3">
-                 <button id="feedColonyButton" class="action-button">Feed Colony</button>
+            <div class="p-1 sm:p-3">
+                 <button id="feedColonyButton" class="action-button text-sm sm:text-base">Feed Colony</button>
             </div>
-            <div class="info-panel-item p-3">
-                 <button id="fullscreenButton" class="action-button">Full Screen</button>
+            <div class="p-1 sm:p-3">
+                 <button id="fullscreenButton" class="action-button text-sm sm:text-base">Full Screen</button>
             </div>
         </div>
 
@@ -108,13 +145,13 @@
         const FOOD_RADIUS = 5;
         const FOOD_COLOR = '#34D399';
         const MAX_FOOD_SOURCES = 15;
-        const FOOD_SPAWN_INTERVAL = 4500; // ms
+        const FOOD_SPAWN_INTERVAL = 4500;
         const MANUAL_FEED_AMOUNT = 25;
         const MANUAL_FEED_DISTANCE_MIN = NEST_MOUND_RADIUS_BASE * 2.5;
         const MANUAL_FEED_DISTANCE_MAX = NEST_MOUND_RADIUS_BASE * 6;
 
         // Colony Growth Parameters
-        const ANT_SPAWN_INTERVAL = 2500; // ms
+        const ANT_SPAWN_INTERVAL = 2500;
         const FOOD_REQUIRED_FOR_NEW_ANT = 3;
         const SIGHT_RADIUS = 70;
 
@@ -122,26 +159,25 @@
         const GROUND_COLOR_LIGHT = '#D2B48C';
         const GROUND_COLOR_DARK = '#C19A6B';
         const GROUND_SPECKLE_COUNT = 500;
-        const GRASS_COLORS = ['#2E8B57', '#3CB371', '#228B22']; // SeaGreen, MediumSeaGreen, ForestGreen
+        const GRASS_COLORS = ['#2E8B57', '#3CB371', '#228B22'];
         const GRASS_TUFT_COUNT = 300;
-        const ROCK_COLOR_LIGHT = '#A9A9A9'; // DarkGray
-        const ROCK_COLOR_DARK = '#696969';  // DimGray
+        const ROCK_COLOR_LIGHT = '#A9A9A9';
+        const ROCK_COLOR_DARK = '#696969';
         const NUM_ROCKS = 15;
 
         // Ant Behavior Parameters
-        const NESTING_DURATION = 5 * 60 * 1000; // 5 real-time minutes
+        const NESTING_DURATION = 5 * 60 * 1000;
         const PROBABILITY_TO_DECIDE_TO_REST = 0.0003;
 
         // Weather Parameters
-        const RAIN_DURATION_MS = 30 * 60 * 1000; // 30 real-time minutes
-        const MIN_TIME_BETWEEN_RAIN_MS = 5 * 60 * 1000; // Minimum 5 real-time minutes before next rain can start
-        const MAX_TIME_BETWEEN_RAIN_MS = 15 * 60 * 1000; // Maximum 15 real-time minutes before next rain can start
-        const RAIN_START_PROBABILITY = 0.5; // 50% chance to start rain when interval is up
+        const RAIN_DURATION_MS = 30 * 60 * 1000;
+        const MIN_TIME_BETWEEN_RAIN_MS = 5 * 60 * 1000;
+        const MAX_TIME_BETWEEN_RAIN_MS = 15 * 60 * 1000;
+        const RAIN_START_PROBABILITY = 0.5;
         const RAINDROP_COUNT = 150;
-        const RAINDROP_COLOR = 'rgba(173, 216, 230, 0.6)'; // Light blue, semi-transparent
         const RAINDROP_SPEED_MIN = 4;
         const RAINDROP_SPEED_MAX = 8;
-        const RAIN_DARKEN_OVERLAY_COLOR = 'rgba(0, 0, 0, 0.05)'; // Subtle darkening effect
+        const RAIN_DARKEN_OVERLAY_COLOR = 'rgba(0, 0, 0, 0.05)';
 
         // State Variables
         let ants = [];
@@ -157,14 +193,14 @@
         let lastFoodSpawnTime = 0;
         let lastAntSpawnTime = 0;
         let gameLoopRequestId = null;
+        let simulationInitializedOnce = false; // Flag to track if sim has run its first init
 
         // Weather State
         let isRaining = false;
         let rainStopTime = 0;
         let nextRainDecisionTime = Date.now() + MIN_TIME_BETWEEN_RAIN_MS + Math.random() * (MAX_TIME_BETWEEN_RAIN_MS - MIN_TIME_BETWEEN_RAIN_MS);
 
-
-        // Ant Class
+        // Ant Class (no changes to internal logic)
         class Ant {
             constructor(x, y) {
                 this.x = x; this.y = y;
@@ -173,34 +209,22 @@
                 this.state = 'WANDERING'; this.hasFood = false; this.targetFood = null;
                 this.isActuallyInsideNest = false; this.nestingStartTime = 0; this.intention = null;
             }
-            draw() { /* ... (no changes from previous version) ... */
+            draw() {
                 if (this.isActuallyInsideNest) return;
-                const bodyMajorRadius = ANT_RADIUS * 1.8;
-                const bodyMinorRadius = ANT_RADIUS * 1.0;
+                const bodyMajorRadius = ANT_RADIUS * 1.8; const bodyMinorRadius = ANT_RADIUS * 1.0;
                 const headRadius = ANT_RADIUS * 0.9;
                 const antDrawColor = this.hasFood ? ANT_CARRYING_FOOD_COLOR : ANT_COLOR;
-                ctx.save();
-                ctx.translate(this.x, this.y);
-                const angle = Math.atan2(this.vy, this.vx);
-                ctx.rotate(angle);
-                ctx.beginPath();
-                ctx.ellipse(-bodyMajorRadius * 0.2, 0, bodyMajorRadius * 0.8, bodyMinorRadius, 0, 0, Math.PI * 2);
-                ctx.fillStyle = antDrawColor;
-                ctx.fill();
-                ctx.closePath();
+                ctx.save(); ctx.translate(this.x, this.y);
+                const angle = Math.atan2(this.vy, this.vx); ctx.rotate(angle);
+                ctx.beginPath(); ctx.ellipse(-bodyMajorRadius * 0.2, 0, bodyMajorRadius * 0.8, bodyMinorRadius, 0, 0, Math.PI * 2);
+                ctx.fillStyle = antDrawColor; ctx.fill(); ctx.closePath();
                 const headOffsetX = bodyMajorRadius * 0.6;
-                ctx.beginPath();
-                ctx.arc(headOffsetX, 0, headRadius, 0, Math.PI * 2);
-                ctx.fillStyle = ANT_COLOR;
-                ctx.fill();
-                ctx.closePath();
+                ctx.beginPath(); ctx.arc(headOffsetX, 0, headRadius, 0, Math.PI * 2);
+                ctx.fillStyle = ANT_COLOR; ctx.fill(); ctx.closePath();
                 if (!this.hasFood) {
-                    ctx.strokeStyle = ANT_COLOR;
-                    ctx.lineWidth = 1;
-                    const antennaBaseX = headOffsetX + headRadius * 0.6;
-                    const antennaLength = headRadius * 1.2;
-                    ctx.beginPath();
-                    ctx.moveTo(antennaBaseX, -headRadius * 0.3);
+                    ctx.strokeStyle = ANT_COLOR; ctx.lineWidth = 1;
+                    const antennaBaseX = headOffsetX + headRadius * 0.6; const antennaLength = headRadius * 1.2;
+                    ctx.beginPath(); ctx.moveTo(antennaBaseX, -headRadius * 0.3);
                     ctx.lineTo(antennaBaseX + antennaLength * 0.7, -headRadius * 0.3 - antennaLength * 0.7);
                     ctx.moveTo(antennaBaseX, headRadius * 0.3);
                     ctx.lineTo(antennaBaseX + antennaLength * 0.7, headRadius * 0.3 + antennaLength * 0.7);
@@ -208,158 +232,95 @@
                 }
                 ctx.restore();
             }
-            update() { /* ... (no changes from previous version, uses this.speed) ... */
+            update() {
                 if (this.state === 'NESTING') {
                     if (Date.now() - this.nestingStartTime > NESTING_DURATION) {
-                        this.isActuallyInsideNest = false;
-                        this.state = 'WANDERING';
-                        this.nestingStartTime = 0;
-                        this.intention = null;
+                        this.isActuallyInsideNest = false; this.state = 'WANDERING'; this.nestingStartTime = 0; this.intention = null;
                         this.x = nest.x + (Math.random() - 0.5) * nest.entranceRadius * 0.5;
                         this.y = nest.y + (Math.random() - 0.5) * nest.entranceRadius * 0.5;
                         const randomAngle = Math.random() * Math.PI * 2;
-                        this.vx = Math.cos(randomAngle) * this.speed;
-                        this.vy = Math.sin(randomAngle) * this.speed;
-                    }
-                    return;
+                        this.vx = Math.cos(randomAngle) * this.speed; this.vy = Math.sin(randomAngle) * this.speed;
+                    } return;
                 }
                 if (this.state === 'WANDERING') {
-                    this.wander();
-                    this.lookForFood();
+                    this.wander(); this.lookForFood();
                     if (!this.hasFood && distance(this.x, this.y, nest.x, nest.y) < nest.moundRadius * 1.2) {
-                        if (Math.random() < PROBABILITY_TO_DECIDE_TO_REST) {
-                            this.intention = 'RESTING';
-                            this.state = 'RETURNING';
-                        }
+                        if (Math.random() < PROBABILITY_TO_DECIDE_TO_REST) { this.intention = 'RESTING'; this.state = 'RETURNING';}
                     }
-                } else if (this.state === 'FORAGING') {
-                    this.forage();
-                } else if (this.state === 'RETURNING') {
-                    this.returnToNest();
-                }
-                this.x += this.vx;
-                this.y += this.vy;
+                } else if (this.state === 'FORAGING') { this.forage(); } else if (this.state === 'RETURNING') { this.returnToNest(); }
+                this.x += this.vx; this.y += this.vy;
                 if (this.x - ANT_RADIUS * 1.5 < 0 || this.x + ANT_RADIUS * 1.5 > canvas.width) {
-                    this.vx *= -1;
-                    this.x = Math.max(ANT_RADIUS * 1.5, Math.min(this.x, canvas.width - ANT_RADIUS * 1.5));
+                    this.vx *= -1; this.x = Math.max(ANT_RADIUS * 1.5, Math.min(this.x, canvas.width - ANT_RADIUS * 1.5));
                 }
                 if (this.y - ANT_RADIUS * 1.5 < 0 || this.y + ANT_RADIUS * 1.5 > canvas.height) {
-                    this.vy *= -1;
-                    this.y = Math.max(ANT_RADIUS * 1.5, Math.min(this.y, canvas.height - ANT_RADIUS * 1.5));
+                    this.vy *= -1; this.y = Math.max(ANT_RADIUS * 1.5, Math.min(this.y, canvas.height - ANT_RADIUS * 1.5));
                 }
             }
-            wander() { /* ... (no changes, uses this.speed) ... */
+            wander() {
                 if (Math.random() < 0.05) {
                     const wanderAngle = Math.atan2(this.vy, this.vx) + (Math.random() - 0.5) * Math.PI / 4;
-                    this.vx = Math.cos(wanderAngle) * this.speed;
-                    this.vy = Math.sin(wanderAngle) * this.speed;
+                    this.vx = Math.cos(wanderAngle) * this.speed; this.vy = Math.sin(wanderAngle) * this.speed;
                 }
                 const currentSpeedMagnitude = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
                 if (currentSpeedMagnitude === 0) {
-                     this.vx = (Math.random() - 0.5) * this.speed * 2;
-                     this.vy = (Math.random() - 0.5) * this.speed * 2;
+                     this.vx = (Math.random() - 0.5) * this.speed * 2; this.vy = (Math.random() - 0.5) * this.speed * 2;
                 } else if (Math.abs(currentSpeedMagnitude - this.speed) > 0.1) {
-                    this.vx = (this.vx / currentSpeedMagnitude) * this.speed;
-                    this.vy = (this.vy / currentSpeedMagnitude) * this.speed;
+                    this.vx = (this.vx / currentSpeedMagnitude) * this.speed; this.vy = (this.vy / currentSpeedMagnitude) * this.speed;
                 }
             }
-            lookForFood() { /* ... (no changes, uses this.speed) ... */
-                if (this.hasFood) return;
-                let closestFood = null;
-                let minDistance = SIGHT_RADIUS;
+            lookForFood() {
+                if (this.hasFood) return; let closestFood = null; let minDistance = SIGHT_RADIUS;
                 for (let food of foodSources) {
-                    if (food.amount <= 0) continue;
-                    const dist = distance(this.x, this.y, food.x, food.y);
-                    if (dist < minDistance) {
-                        minDistance = dist;
-                        closestFood = food;
-                    }
+                    if (food.amount <= 0) continue; const dist = distance(this.x, this.y, food.x, food.y);
+                    if (dist < minDistance) { minDistance = dist; closestFood = food;}
                 }
                 if (closestFood) {
-                    this.targetFood = closestFood;
-                    this.state = 'FORAGING';
+                    this.targetFood = closestFood; this.state = 'FORAGING';
                     const angle = Math.atan2(closestFood.y - this.y, closestFood.x - this.x);
-                    this.vx = Math.cos(angle) * this.speed;
-                    this.vy = Math.sin(angle) * this.speed;
+                    this.vx = Math.cos(angle) * this.speed; this.vy = Math.sin(angle) * this.speed;
                 }
             }
-            forage() { /* ... (no changes, uses this.speed) ... */
+            forage() {
                 if (!this.targetFood || this.targetFood.amount <= 0) {
-                    this.state = 'WANDERING';
-                    this.targetFood = null;
-                    this.intention = null;
-                    return;
+                    this.state = 'WANDERING'; this.targetFood = null; this.intention = null; return;
                 }
                 const distToFood = distance(this.x, this.y, this.targetFood.x, this.targetFood.y);
                 if (distToFood < (ANT_RADIUS * 1.5 + FOOD_RADIUS + this.speed)) {
                     if (this.targetFood.amount > 0) {
-                        this.targetFood.amount--;
-                        this.hasFood = true;
-                        this.state = 'RETURNING';
-                        this.intention = null;
-                    } else {
-                        this.state = 'WANDERING';
-                    }
+                        this.targetFood.amount--; this.hasFood = true; this.state = 'RETURNING'; this.intention = null;
+                    } else { this.state = 'WANDERING';}
                     this.targetFood = null;
                 } else {
                     const angle = Math.atan2(this.targetFood.y - this.y, this.targetFood.x - this.x);
-                    this.vx = Math.cos(angle) * this.speed;
-                    this.vy = Math.sin(angle) * this.speed;
+                    this.vx = Math.cos(angle) * this.speed; this.vy = Math.sin(angle) * this.speed;
                 }
             }
-            returnToNest() { /* ... (no changes, uses this.speed) ... */
+            returnToNest() {
                 const distToNest = distance(this.x, this.y, nest.x, nest.y);
                 if (distToNest < nest.entranceRadius) {
-                    if (this.hasFood) {
-                        nest.food++;
-                        this.hasFood = false;
-                    }
+                    if (this.hasFood) { nest.food++; this.hasFood = false; }
                     if (this.intention === 'RESTING') {
-                        this.state = 'NESTING';
-                        this.isActuallyInsideNest = true;
-                        this.nestingStartTime = Date.now();
-                        this.x = nest.x; this.y = nest.y;
-                        this.vx = 0; this.vy = 0;
+                        this.state = 'NESTING'; this.isActuallyInsideNest = true; this.nestingStartTime = Date.now();
+                        this.x = nest.x; this.y = nest.y; this.vx = 0; this.vy = 0;
                     } else {
-                        this.state = 'WANDERING';
-                        this.intention = null;
+                        this.state = 'WANDERING'; this.intention = null;
                         const randomAngle = Math.atan2(this.y - nest.y, this.x - nest.x) + (Math.random() - 0.5) * (Math.PI/2) ;
-                        this.vx = Math.cos(randomAngle) * this.speed;
-                        this.vy = Math.sin(randomAngle) * this.speed;
+                        this.vx = Math.cos(randomAngle) * this.speed; this.vy = Math.sin(randomAngle) * this.speed;
                     }
                 } else {
                     const angle = Math.atan2(nest.y - this.y, nest.x - this.x);
-                    this.vx = Math.cos(angle) * this.speed;
-                    this.vy = Math.sin(angle) * this.speed;
+                    this.vx = Math.cos(angle) * this.speed; this.vy = Math.sin(angle) * this.speed;
                 }
             }
         }
-
-        // FoodSource Class
         class FoodSource { /* ... (no changes) ... */
-            constructor(x, y, amount = Math.floor(Math.random() * 8) + 4) {
-                this.x = x;
-                this.y = y;
-                this.amount = amount;
-            }
-            draw() {
-                if (this.amount <= 0) return;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, FOOD_RADIUS + this.amount / 2.5, 0, Math.PI * 2);
-                ctx.fillStyle = FOOD_COLOR;
-                ctx.fill();
-                ctx.closePath();
-            }
+            constructor(x, y, amount = Math.floor(Math.random() * 8) + 4) { this.x = x; this.y = y; this.amount = amount;}
+            draw() { if (this.amount <= 0) return; ctx.beginPath(); ctx.arc(this.x, this.y, FOOD_RADIUS + this.amount / 2.5, 0, Math.PI * 2); ctx.fillStyle = FOOD_COLOR; ctx.fill(); ctx.closePath();}
         }
-
-        // Rock Class
         class Rock { /* ... (no changes) ... */
             constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.radius = Math.random() * 10 + 8;
-                this.sides = Math.floor(Math.random() * 3) + 5;
-                this.angleOffset = Math.random() * Math.PI * 2;
+                this.x = x; this.y = y; this.radius = Math.random() * 10 + 8;
+                this.sides = Math.floor(Math.random() * 3) + 5; this.angleOffset = Math.random() * Math.PI * 2;
                 this.shapePoints = [];
                 for (let i = 0; i < this.sides; i++) {
                     const angle = (i / this.sides) * Math.PI * 2 + this.angleOffset;
@@ -368,69 +329,46 @@
                 }
             }
             draw() {
-                ctx.beginPath();
-                ctx.moveTo(this.shapePoints[0].x, this.shapePoints[0].y);
+                ctx.beginPath(); ctx.moveTo(this.shapePoints[0].x, this.shapePoints[0].y);
                 for (let i = 1; i < this.sides; i++) { ctx.lineTo(this.shapePoints[i].x, this.shapePoints[i].y); }
                 ctx.closePath();
                 const gradient = ctx.createLinearGradient(this.x - this.radius, this.y - this.radius, this.x + this.radius, this.y + this.radius);
-                gradient.addColorStop(0, ROCK_COLOR_LIGHT);
-                gradient.addColorStop(1, ROCK_COLOR_DARK);
-                ctx.fillStyle = gradient;
-                ctx.fill();
+                gradient.addColorStop(0, ROCK_COLOR_LIGHT); gradient.addColorStop(1, ROCK_COLOR_DARK);
+                ctx.fillStyle = gradient; ctx.fill();
             }
         }
-
-        // Raindrop Class
-        class Raindrop {
+        class Raindrop { /* ... (no changes) ... */
             constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * -canvas.height; // Start off-screen above
-                this.length = Math.random() * 15 + 10; // Length of the streak
+                this.x = Math.random() * canvas.width; this.y = Math.random() * -canvas.height;
+                this.length = Math.random() * 15 + 10;
                 this.speed = Math.random() * (RAINDROP_SPEED_MAX - RAINDROP_SPEED_MIN) + RAINDROP_SPEED_MIN;
-                this.opacity = Math.random() * 0.3 + 0.4; // Random opacity for depth
+                this.opacity = Math.random() * 0.3 + 0.4;
             }
-
             update() {
                 this.y += this.speed;
-                if (this.y > canvas.height) { // Reset if it goes off-screen
-                    this.y = Math.random() * -100 - this.length; // Reset above screen
-                    this.x = Math.random() * canvas.width;
-                }
+                if (this.y > canvas.height) { this.y = Math.random() * -100 - this.length; this.x = Math.random() * canvas.width;}
             }
-
             draw() {
-                ctx.beginPath();
-                ctx.moveTo(this.x, this.y);
-                ctx.lineTo(this.x, this.y + this.length);
-                ctx.strokeStyle = `rgba(173, 216, 230, ${this.opacity})`; // Use RAINDROP_COLOR with individual opacity
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(this.x, this.y); ctx.lineTo(this.x, this.y + this.length);
+                ctx.strokeStyle = `rgba(173, 216, 230, ${this.opacity})`; ctx.lineWidth = 1.5; ctx.stroke();
             }
         }
 
-
-        function distance(x1, y1, x2, y2) { /* ... (no changes) ... */
-            const dx = x2 - x1; const dy = y2 - y1; return Math.sqrt(dx * dx + dy * dy);
-        }
+        function distance(x1, y1, x2, y2) { const dx = x2 - x1; const dy = y2 - y1; return Math.sqrt(dx * dx + dy * dy); }
         function generateGroundSpeckles() { /* ... (no changes) ... */
             groundSpeckles = [];
-            for (let i = 0; i < GROUND_SPECKLE_COUNT; i++) {
-                groundSpeckles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, radius: Math.random() * 1.5 + 0.5 });
-            }
+            for (let i = 0; i < GROUND_SPECKLE_COUNT; i++) { groundSpeckles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, radius: Math.random() * 1.5 + 0.5 });}
         }
         function generateGrassTufts() { /* ... (no changes) ... */
             grassTufts = [];
             for (let i = 0; i < GRASS_TUFT_COUNT; i++) {
                 const x = Math.random() * canvas.width; const y = Math.random() * canvas.height;
                 if (distance(x, y, nest.x, nest.y) > NEST_MOUND_RADIUS_BASE * 1.5) {
-                    const numBlades = Math.floor(Math.random() * 3) + 3;
-                    const tuftHeight = Math.random() * 10 + 5;
-                    const baseAngle = (Math.random() - 0.5) * 0.5;
-                    let blades = [];
+                    const numBlades = Math.floor(Math.random() * 3) + 3; const tuftHeight = Math.random() * 10 + 5;
+                    const baseAngle = (Math.random() - 0.5) * 0.5; let blades = [];
                     const tuftColor = GRASS_COLORS[Math.floor(Math.random() * GRASS_COLORS.length)];
                     for (let j = 0; j < numBlades; j++) {
-                        const bladeAngle = baseAngle + (Math.random() - 0.5) * 0.3;
-                        const bladeHeight = tuftHeight * (Math.random() * 0.4 + 0.8);
+                        const bladeAngle = baseAngle + (Math.random() - 0.5) * 0.3; const bladeHeight = tuftHeight * (Math.random() * 0.4 + 0.8);
                         const startX = x + (Math.random() - 0.5) * 5; const startY = y + (Math.random() - 0.5) * 2;
                         const cpX = startX + (Math.random() - 0.5) * 3 + Math.sin(bladeAngle + j * 0.5) * bladeHeight * 0.3;
                         const cpY = startY - bladeHeight * 0.5 + (Math.random() - 0.5) * 3;
@@ -458,134 +396,113 @@
                 if (validPosition) { rocks.push(new Rock(x, y)); }
             }
         }
-
-        // Weather Management Functions
-        function manageWeather() {
+        function manageWeather() { /* ... (no changes) ... */
             const currentTime = Date.now();
             if (isRaining) {
-                if (currentTime > rainStopTime) {
-                    stopRain();
-                }
+                if (currentTime > rainStopTime) { stopRain(); }
             } else {
                 if (currentTime > nextRainDecisionTime) {
-                    if (Math.random() < RAIN_START_PROBABILITY) {
-                        startRain();
-                    } else {
-                        // If it doesn't rain, schedule next decision time
-                        nextRainDecisionTime = currentTime + MIN_TIME_BETWEEN_RAIN_MS + Math.random() * (MAX_TIME_BETWEEN_RAIN_MS - MIN_TIME_BETWEEN_RAIN_MS);
-                    }
+                    if (Math.random() < RAIN_START_PROBABILITY) { startRain(); }
+                    else { nextRainDecisionTime = currentTime + MIN_TIME_BETWEEN_RAIN_MS + Math.random() * (MAX_TIME_BETWEEN_RAIN_MS - MIN_TIME_BETWEEN_RAIN_MS); }
                 }
             }
         }
-
-        function startRain() {
-            isRaining = true;
-            rainStopTime = Date.now() + RAIN_DURATION_MS;
-            raindrops = []; // Clear any old raindrops
-            for (let i = 0; i < RAINDROP_COUNT; i++) {
-                raindrops.push(new Raindrop());
-            }
+        function startRain() { /* ... (no changes) ... */
+            isRaining = true; rainStopTime = Date.now() + RAIN_DURATION_MS; raindrops = [];
+            for (let i = 0; i < RAINDROP_COUNT; i++) { raindrops.push(new Raindrop()); }
             console.log("Rain started at:", new Date().toLocaleTimeString());
         }
-
-        function stopRain() {
-            isRaining = false;
-            raindrops = []; // Clear raindrops
-            // Schedule next rain decision
+        function stopRain() { /* ... (no changes) ... */
+            isRaining = false; raindrops = [];
             nextRainDecisionTime = Date.now() + MIN_TIME_BETWEEN_RAIN_MS + Math.random() * (MAX_TIME_BETWEEN_RAIN_MS - MIN_TIME_BETWEEN_RAIN_MS);
             console.log("Rain stopped at:", new Date().toLocaleTimeString(), "Next rain check around:", new Date(nextRainDecisionTime).toLocaleTimeString());
         }
-
-        function updateAndDrawRain() {
-            if (!isRaining && raindrops.length === 0) return; // No need to process if not raining and no drops left
-
-            // Darken overlay if raining
-            if (isRaining) {
-                ctx.fillStyle = RAIN_DARKEN_OVERLAY_COLOR;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-            }
-
-            // If rain stopped but drops are still falling, continue updating them
-            // Or if it's raining, update and draw
+        function updateAndDrawRain() { /* ... (no changes) ... */
+            if (!isRaining && raindrops.length === 0) return;
+            if (isRaining) { ctx.fillStyle = RAIN_DARKEN_OVERLAY_COLOR; ctx.fillRect(0, 0, canvas.width, canvas.height); }
             if (raindrops.length > 0) {
-                 for (let i = raindrops.length - 1; i >= 0; i--) {
-                    raindrops[i].update();
-                    raindrops[i].draw();
-                    // If rain has stopped and a drop is off screen, remove it
-                    // (This part is handled by the reset in Raindrop.update, but good to be explicit if needed)
-                    // if (!isRaining && raindrops[i].y > canvas.height + raindrops[i].length) {
-                    //     raindrops.splice(i, 1);
-                    // }
-                }
+                 for (let i = raindrops.length - 1; i >= 0; i--) { raindrops[i].update(); raindrops[i].draw(); }
             }
         }
 
-
-        function init() { /* ... (no changes to general structure, but calls generateRaindrops if needed) ... */
+        function init() {
             if (gameLoopRequestId) { cancelAnimationFrame(gameLoopRequestId); gameLoopRequestId = null; }
 
-            if (document.fullscreenElement === canvas) {
+            // Determine if this is a fullscreen transition or a regular resize/initial load
+            const isFullscreen = document.fullscreenElement === canvas ||
+                               document.webkitFullscreenElement === canvas || // Safari
+                               document.mozFullScreenElement === canvas ||  // Firefox
+                               document.msFullscreenElement === canvas;    // IE/Edge
+
+            if (isFullscreen) {
                 const screenWidth = window.innerWidth;
                 const screenHeight = window.innerHeight;
-                canvas.width = screenWidth;
-                canvas.height = screenWidth * (9 / 16);
-                if (canvas.height > screenHeight) {
-                    canvas.height = screenHeight;
-                    canvas.width = screenHeight * (16 / 9);
+                // Attempt to fit 16:9 aspect ratio within the screen
+                let newCanvasWidth = screenWidth;
+                let newCanvasHeight = screenWidth * (9 / 16);
+                if (newCanvasHeight > screenHeight) {
+                    newCanvasHeight = screenHeight;
+                    newCanvasWidth = screenHeight * (16 / 9);
                 }
-            } else if (canvas.parentElement) {
+                canvas.width = newCanvasWidth;
+                canvas.height = newCanvasHeight;
+            } else if (canvas.parentElement) { // Normal mode, size based on parent
                 const containerWidth = canvas.parentElement.clientWidth;
-                canvas.width = Math.max(300, containerWidth);
-                canvas.height = Math.max(200, canvas.width * (9 / 16));
-            } else {
+                canvas.width = Math.max(300, containerWidth); // Ensure a minimum width
+                canvas.height = Math.max(200, canvas.width * (9 / 16)); // Maintain aspect ratio
+            } else { // Fallback if parent isn't found (shouldn't happen with current HTML)
                 console.error("Canvas parent element not found. Using fallback dimensions.");
                 canvas.width = 800; canvas.height = 450;
             }
 
-            nest.x = canvas.width / 2; nest.y = canvas.height / 2;
-            nest.entranceRadius = NEST_ENTRANCE_RADIUS_BASE; nest.moundRadius = NEST_MOUND_RADIUS_BASE;
+            // Recalculate nest position based on new canvas size
+            nest.x = canvas.width / 2;
+            nest.y = canvas.height / 2;
 
-            generateGroundSpeckles(); generateGrassTufts(); generateRocks();
+            // Regenerate visual elements that depend on canvas size
+            generateGroundSpeckles();
+            generateGrassTufts();
+            generateRocks();
 
-            // Preserve ants and their states during resize/fullscreen toggle
-            // Adjust their positions if they go out of new bounds (simplified here)
+            // If raining, re-initialize raindrops for new canvas size
+            if (isRaining) {
+                raindrops = [];
+                for (let i = 0; i < RAINDROP_COUNT; i++) {
+                    raindrops.push(new Raindrop());
+                }
+            }
+
+            // Preserve ants and their states, adjust positions if out of new bounds
             ants.forEach(ant => {
                 ant.x = Math.max(ANT_RADIUS * 1.5, Math.min(ant.x, canvas.width - ANT_RADIUS * 1.5));
                 ant.y = Math.max(ANT_RADIUS * 1.5, Math.min(ant.y, canvas.height - ANT_RADIUS * 1.5));
             });
-            if (ants.length === 0) { // Only create initial ants if there are none
-                 for (let i = 0; i < 7; i++) {
-                    ants.push(new Ant(nest.x + (Math.random()-0.5)*nest.entranceRadius, nest.y + (Math.random()-0.5)*nest.entranceRadius));
-                }
-            }
-
 
             // Preserve food sources and adjust positions
             foodSources.forEach(food => {
                 food.x = Math.max(FOOD_RADIUS, Math.min(food.x, canvas.width - FOOD_RADIUS));
                 food.y = Math.max(FOOD_RADIUS, Math.min(food.y, canvas.height - FOOD_RADIUS));
             });
-             if (foodSources.length === 0 && !document.fullscreenElement) { // Only spawn initial food if none and not just entering fullscreen
-                spawnFoodSources(Math.floor(MAX_FOOD_SOURCES / 3));
-            }
 
 
-            // Only reset startTime and nest.food on a true initial load, not on resize/fullscreen
-            const isInitialLoad = !gameLoopRequestId && ants.length <= 7; // Heuristic for initial load
-            if (isInitialLoad) {
+            if (!simulationInitializedOnce) { // True initial load
                 startTime = Date.now();
                 nest.food = 0;
+                ants = []; // Start with fresh ants on first load
+                for (let i = 0; i < 7; i++) {
+                    ants.push(new Ant(nest.x + (Math.random()-0.5)*nest.entranceRadius, nest.y + (Math.random()-0.5)*nest.entranceRadius));
+                }
+                foodSources = []; // Start with fresh food on first load
+                spawnFoodSources(Math.floor(MAX_FOOD_SOURCES / 3));
                 // Reset weather timers on initial load
                 nextRainDecisionTime = Date.now() + MIN_TIME_BETWEEN_RAIN_MS + Math.random() * (MAX_TIME_BETWEEN_RAIN_MS - MIN_TIME_BETWEEN_RAIN_MS);
-                if (isRaining) { // If was raining and re-init, re-populate raindrops for new canvas size
-                    raindrops = [];
-                    for (let i = 0; i < RAINDROP_COUNT; i++) {
-                        raindrops.push(new Raindrop());
-                    }
-                }
+                isRaining = false; // Ensure rain isn't carried over from a previous unfinished state if page reloaded
+                raindrops = [];
+
+                simulationInitializedOnce = true;
             }
 
-
+            // These timers should be reset on every init to avoid immediate spawns after resize/fullscreen
             lastFoodSpawnTime = Date.now();
             lastAntSpawnTime = Date.now();
 
@@ -667,21 +584,12 @@
         }
 
         function gameLoop() {
-            drawGround();
-            drawGrass();
-            drawRocks();
-
-            manageColonyGrowth();
-            manageWeather(); // Manage rain start/stop logic
-
-            drawNest();
-
+            drawGround(); drawGrass(); drawRocks();
+            manageColonyGrowth(); manageWeather(); drawNest();
             foodSources = foodSources.filter(food => food.amount > 0);
             foodSources.forEach(food => food.draw());
-
             ants.forEach(ant => { ant.update(); ant.draw(); });
-
-            updateAndDrawRain(); // Draw raindrops if it's raining
+            updateAndDrawRain();
 
             antCountDisplay.textContent = ants.length;
             foodAtNestDisplay.textContent = nest.food;
@@ -694,10 +602,15 @@
         }
 
         function handleWindowResize() {
-            // Only call init if not currently in fullscreen transition,
-            // as fullscreenchange listener will also call init.
-            if (!document.fullscreenElement && !document.webkitIsFullScreen && !document.mozFullScreen) {
-                 init();
+            // This function is called on window resize.
+            // Fullscreen changes are handled by the 'fullscreenchange' event listener,
+            // which also calls init(). We want to avoid calling init() twice too rapidly.
+            // So, only call init() here if not currently in a fullscreen state.
+            if (!document.fullscreenElement &&
+                !document.webkitFullscreenElement &&
+                !document.mozFullScreenElement &&
+                !document.msFullscreenElement) {
+                init();
             }
         }
         window.addEventListener('resize', handleWindowResize);
@@ -707,56 +620,48 @@
             else { console.log("Max food sources reached."); }
         });
 
-        function toggleFullScreen() { /* ... (no changes) ... */
-            if (!document.fullscreenElement &&    // Standard
-                !document.mozFullScreenElement && // Firefox
-                !document.webkitFullscreenElement && // Chrome, Safari and Opera
-                !document.msFullscreenElement) {  // IE/Edge
-                if (canvas.requestFullscreen) {
-                    canvas.requestFullscreen();
-                } else if (canvas.mozRequestFullScreen) {
-                    canvas.mozRequestFullScreen();
-                } else if (canvas.webkitRequestFullscreen) {
-                    canvas.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-                } else if (canvas.msRequestFullscreen) {
-                    canvas.msRequestFullscreen();
-                }
+        function toggleFullScreen() {
+            if (!document.fullscreenElement &&
+                !document.mozFullScreenElement &&
+                !document.webkitFullscreenElement &&
+                !document.msFullscreenElement) {
+                if (canvas.requestFullscreen) { canvas.requestFullscreen(); }
+                else if (canvas.mozRequestFullScreen) { canvas.mozRequestFullScreen(); }
+                else if (canvas.webkitRequestFullscreen) { canvas.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT); }
+                else if (canvas.msRequestFullscreen) { canvas.msRequestFullscreen(); }
             } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.mozCancelFullScreen) {
-                    document.mozCancelFullScreen();
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
-                } else if (document.msExitFullscreen) {
-                    document.msExitFullscreen();
-                }
+                if (document.exitFullscreen) { document.exitFullscreen(); }
+                else if (document.mozCancelFullScreen) { document.mozCancelFullScreen(); }
+                else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+                else if (document.msExitFullscreen) { document.msExitFullscreen(); }
             }
         }
         fullscreenButton.addEventListener('click', toggleFullScreen);
 
-        document.addEventListener('fullscreenchange', () => { /* ... (no changes) ... */
-            if (document.fullscreenElement === canvas ||
-                document.mozFullScreenElement === canvas ||
-                document.webkitFullscreenElement === canvas ||
-                document.msFullscreenElement === canvas) {
-                fullscreenButton.textContent = 'Exit Full Screen';
-            } else {
-                fullscreenButton.textContent = 'Full Screen';
-            }
+        function onFullscreenChange() {
+            const isCurrentlyFullscreen = document.fullscreenElement === canvas ||
+                                        document.webkitFullscreenElement === canvas ||
+                                        document.mozFullScreenElement === canvas ||
+                                        document.msFullscreenElement === canvas;
+            fullscreenButton.textContent = isCurrentlyFullscreen ? 'Exit Full Screen' : 'Full Screen';
+            // Use a short timeout to ensure browser has processed fullscreen change dimensions
             setTimeout(init, 50);
-        });
-        document.addEventListener('webkitfullscreenchange', () => { if(document.fullscreenchange) document.dispatchEvent(new Event('fullscreenchange')) });
-        document.addEventListener('mozfullscreenchange', () => { if(document.fullscreenchange) document.dispatchEvent(new Event('fullscreenchange')) });
-        document.addEventListener('MSFullscreenChange', () => { if(document.fullscreenchange) document.dispatchEvent(new Event('fullscreenchange')) });
+        }
+        document.addEventListener('fullscreenchange', onFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+        document.addEventListener('mozfullscreenchange', onFullscreenChange);
+        document.addEventListener('MSFullscreenChange', onFullscreenChange);
 
-        document.addEventListener('keydown', (event) => { /* ... (no changes) ... */
-            if (event.key === 'Escape' && (document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement)) {
-                toggleFullScreen();
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' &&
+                (document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement)) {
+                // toggleFullScreen(); // This can sometimes interfere if browser handles ESC natively first
+                                  // It's often better to let the browser's native ESC handling exit,
+                                  // and our 'fullscreenchange' listener will pick up the state change.
             }
         });
 
-        init();
+        init(); // Initial call to start the simulation
     </script>
 </body>
 </html>
