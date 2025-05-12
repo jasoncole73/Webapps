@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+    /* Styles specific to Calculator */
+    body { margin: 0; padding: 10px; height: 100vh; box-sizing: border-box; background-color: #ece9d8; font-family: Tahoma, sans-serif; display: flex; flex-direction: column;}
+    #calc-display { width: 100%; margin-bottom: 5px; padding: 5px; text-align: right; font-size: 16px; background-color: #e0f0e0; border: 1px inset #ccc; box-sizing: border-box; flex-shrink: 0;}
+     .calc-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; flex-grow: 1; /* Buttons fill remaining space */}
+     .calc-buttons button {
+         padding: 5px; font-size: 14px; cursor: pointer; background-color: #d4d0c8;
+         border: 1px outset #eee; height: 100%; /* Make buttons fill grid cell */
+         display: flex; align-items: center; justify-content: center; /* Center text */
+      }
+     .calc-buttons button:active { border-style: inset; background-color: #c0c0c0; }
+     .calc-op { background-color: #c0d8f0; } .calc-eq { background-color: #f0d0b0; } .calc-c { background-color: #f0b0b0; }
+</style>
+</head>
+<body>
+     <input type="text" id="calc-display" readonly value="0">
+     <div class="calc-buttons">
+         <button onclick="calcClear()" class="calc-c">C</button> <button onclick="calcInput('/')" class="calc-op">/</button> <button onclick="calcInput('*')" class="calc-op">*</button> <button onclick="calcInput('-')" class="calc-op">-</button>
+         <button onclick="calcInput('7')">7</button> <button onclick="calcInput('8')">8</button> <button onclick="calcInput('9')">9</button> <button onclick="calcInput('+')" class="calc-op" style="grid-row: span 2;">+</button>
+         <button onclick="calcInput('4')">4</button> <button onclick="calcInput('5')">5</button> <button onclick="calcInput('6')">6</button>
+         <button onclick="calcInput('1')">1</button> <button onclick="calcInput('2')">2</button> <button onclick="calcInput('3')">3</button> <button onclick="calcEquals()" class="calc-eq" style="grid-row: span 2;">=</button>
+         <button onclick="calcInput('0')" style="grid-column: span 2;">0</button> <button onclick="calcInput('.')">.</button>
+     </div>
+
+     <script>
+        const calcDisplay = document.getElementById('calc-display');
+        let currentCalcInput = '0', calcOperator = null, prevCalcInput = null, resetCalcDisplay = false;
+        function calcClear() { currentCalcInput = '0'; calcOperator = null; prevCalcInput = null; resetCalcDisplay = false; updateCalcDisplay(); }
+        function updateCalcDisplay() { calcDisplay.value = currentCalcInput; }
+        function calcInput(val) { if (resetCalcDisplay && !['+', '-', '*', '/'].includes(val)) { currentCalcInput = '0'; resetCalcDisplay = false; } if (!isNaN(val) || val === '.') { if (val === '.' && currentCalcInput.includes('.')) return; currentCalcInput = (currentCalcInput === '0' && val !== '.') ? val : (currentCalcInput.length < 15 ? currentCalcInput + val : currentCalcInput); } else if (['+', '-', '*', '/'].includes(val)) { if (calcOperator && prevCalcInput !== null) calcEquals(); prevCalcInput = currentCalcInput; calcOperator = val; resetCalcDisplay = true; } updateCalcDisplay(); }
+        function calcEquals() { if (!calcOperator || prevCalcInput === null) return; let res; const prev = parseFloat(prevCalcInput), curr = parseFloat(currentCalcInput); try { switch(calcOperator) { case '+': res = prev + curr; break; case '-': res = prev - curr; break; case '*': res = prev * curr; break; case '/': if (curr === 0) { alert("Cannot divide by zero"); calcClear(); return; } res = prev / curr; break; default: return; } currentCalcInput = String(parseFloat(res.toPrecision(12))).slice(0, 15); calcOperator = null; prevCalcInput = null; resetCalcDisplay = true; updateCalcDisplay(); } catch (e) { alert("Calculation Error"); calcClear(); } }
+        updateCalcDisplay(); // Initial display
+        function cleanupGame() { console.log("Cleaning up Calculator"); }
+     </script>
+</body>
+</html>

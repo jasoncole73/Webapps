@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Snake Game</title>
+<style>
+    /* Styles specific to Snake */
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        font-family: Tahoma, sans-serif;
+        background-color: #ece9d8; /* Match XP window background */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start; /* Align content to top */
+        height: 100%; /* Full iframe height */
+        overflow: hidden; /* Prevent scrollbars on body */
+        padding-top: 5px;
+    }
+    .game-controls {
+        padding: 5px;
+        text-align: center;
+        width: 100%;
+        flex-shrink: 0; /* Prevent controls from shrinking */
+    }
+    .game-controls button {
+        font-size: 12px;
+        padding: 3px 10px;
+        font-family: Tahoma, sans-serif;
+        border: 1px outset #ccc;
+        background-color: #d4d0c8;
+    }
+    .game-status {
+        font-weight: bold;
+        margin: 5px 0;
+        min-height: 1.2em;
+        font-size: 14px;
+        color: #333;
+    }
+    #snake-canvas {
+        border: 2px solid #333;
+        background-color: #c2f0c2; /* Lighter green for game area */
+        display: block; /* Remove extra space under canvas */
+        margin-top: 5px;
+    }
+</style>
+</head>
+<body>
+    <div class="game-controls">
+        <button id="snake-new-game">New Game</button>
+        <div id="snake-status" class="game-status">Score: 0</div>
+    </div>
+    <canvas id="snake-canvas" width="400" height="400" tabindex="0"></canvas>
+    <!-- tabindex="0" makes the canvas focusable for keyboard events -->
+
+    <script>
+        const canvas = document.getElementById('snake-canvas');
+        const ctx = canvas.getContext('2d');
+        const statusDiv = document.getElementById('snake-status');
+        const newGameButton = document.getElementById('snake-new-game');
+
+        const scale = 20; // Size of each grid unit / snake segment
+        const rows = canvas.height / scale;
+        const cols = canvas.width / scale;
+
+        let snake;
+        let food;
+        let direction; // 'Up', 'Down', 'Left', 'Right' (Current actual movement direction)
+        let currentKeyDirection; // Intended direction from last key press
+        let score;
+        let gameLoopInterval = null; // Store the interval ID
+        let gameIsOver = false;
+
+        // Store the event handler function itself so it can be removed correctly
+        const snakeKeyDownHandler = (event) => {
+            // Only change intended direction if the game isn't over
+            if (gameIsOver) return;
+
+            switch (event.key) {
+                case 'ArrowUp':
+                    if (direction !== 'Down') currentKeyDirection = 'Up'; // Prevent immediate reversal
+                    break;
+                case 'ArrowDown':
+                    if (direction !== 'Up') currentKeyDirection = 'Down';
+                    break;
+                case 'ArrowLeft':
+                    if (direction !== 'Right') currentKeyDirection = 'Left';
+                    break;
+                case 'ArrowRight':
+                    if (direction !== 'Left') currentKeyDirection = 'Right';
+                    break;
+            }
+            event.preventDefault(); // Prevent arrow keys from scrolling the parent page/iframe
+        };
+
+        function setupSnakeGame() {
+            cleanupGame(); // Clear any existing game state first
+
+            snake = [{ x: Math.floor(cols / 2) * scale, y: Math.floor(rows / 2) * scale }];
+            direction = 'Right';
+            currentKeyDirection = 'Right';
+            score = 0;
+            gameIsOver = false;
+            statusDiv.textContent = `Score: ${score}`;
+            placeFood();
+
+            // Add event listener for keyboard input
+            // Ensure it's added to the document of this iframe, or canvas if focused
+            document.addEventListener('keydown', snakeKeyDownHandler);
+            canvas.focus(); // Focus the canvas to ensure it receives key events
+
+            gameLoopInterval = setInterval(gameLoop, 130); // Adjust speed (lower = faster)
+        }
+
+        function placeFood() {
+            let foodX, foodY;
+            do {
+                foodX = Math.floor(Math.random() * cols) * scale;
+                foodY = Math.floor(Math.random() * rows) * scale;
+            } while (snake.some(segment => segment.x === foodX && segment.y === foodY));
+            food = { x: foodX, y: foodY };
+        }
+
+        function draw() {
+            ctx.fillStyle = '#c2f0c2'; // Background color from CSS
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = 'red';
+            ctx.fillRect(food.x, food.y, scale, scale);
+            ctx.strokeStyle = 'darkred';
+            ctx.strokeRect(food.x, food.y, scale, scale);
+
+
+            snake.forEach((segment, index) => {
+                ctx.fillStyle = (index === 0) ? 'darkgreen' : 'green'; // Head different color
+                ctx.fillRect(segment.x, segment.y, scale, scale);
+                ctx.strokeStyle = (index === 0) ? 'black' : 'darkgreen';
+                ctx.strokeRect(segment.x, segment.y, scale, scale);
+            });
+        }
+
+        function moveSnake() {
+            if (gameIsOver) return;
+
+            // Update actual movement direction based on last valid key press
+            // This prevents self-collision by trying to reverse into itself in the same game tick
+            if (currentKeyDirection === 'Up' && direction !== 'Down') direction = 'Up';
+            else if (currentKeyDirection === 'Down' && direction !== 'Up') direction = 'Down';
+            else if (currentKeyDirection === 'Left' && direction !== 'Right') direction = 'Left';
+            else if (currentKeyDirection === 'Right' && direction !== 'Left') direction = 'Right';
+
+            const head = { ...snake[0] };
+
+            switch (direction) {
+                case 'Up': head.y -= scale; break;
+                case 'Down': head.y += scale; break;
+                case 'Left': head.x -= scale; break;
+                case 'Right': head.x += scale; break;
+            }
+
+            snake.unshift(head);
+
+            if (head.x === food.x && head.y === food.y) {
+                score++;
+                statusDiv.textContent = `Score: ${score}`;
+                placeFood();
+            } else {
+                snake.pop();
+            }
+        }
+
+        function checkCollision() {
+            const head = snake[0];
+            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
+                return true; // Wall collision
+            }
+            for (let i = 1; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) {
+                    return true; // Self collision
+                }
+            }
+            return false;
+        }
+
+        function gameLoop() {
+            moveSnake();
+            if (checkCollision()) {
+                gameIsOver = true;
+                cleanupGame(); // Stop interval, remove listener
+                statusDiv.textContent = `Game Over! Final Score: ${score}`;
+                return;
+            }
+            draw();
+        }
+
+        // --- Cleanup Function (Called by parent window or internally) ---
+        function cleanupGame() {
+            console.log("Cleaning up Snake game");
+            if (gameLoopInterval) {
+                clearInterval(gameLoopInterval);
+                gameLoopInterval = null;
+            }
+            // Important: Remove the specific event listener function
+            document.removeEventListener('keydown', snakeKeyDownHandler);
+        }
+
+        // --- Initialization ---
+        newGameButton.addEventListener('click', setupSnakeGame);
+        setupSnakeGame(); // Start game on load
+
+        // Ensure this iframe window attempts to grab focus for keyboard events.
+        // The parent window also attempts to focus the iframe.
+        window.focus();
+    </script>
+</body>
+</html>

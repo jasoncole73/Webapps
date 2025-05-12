@@ -1,1 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows XP Desktop</title>
+    <style>
+        /* Basic Reset & Body */
+        * { box-sizing: border-box; user-select: none; }
+        html, body { height: 100%; margin: 0; overflow: hidden; font-family: 'Tahoma', sans-serif; }
 
+        /* Desktop */
+        #desktop {
+            width: 100%; height: 100%;
+            background: url('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAEAAQDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAfEAACAQMFAQAAAAAAAAAAAAABAgMABAUGERIhMTL/xAAVAQEBAAAAAAAAAAAAAAAAAAAAA//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AIbS8ltpY4pYg6MACQSD+VUrA83D8RZ66aKNbWz3I2p0UAeBgeKUpT/2Q==') /* Simple blue fallback */;
+            background-color: #005cbe; background-size: cover; background-repeat: no-repeat; position: relative;
+        }
+
+        /* Icons */
+        .icon {
+            position: absolute; width: 80px; text-align: center; padding: 10px 5px; cursor: pointer;
+            color: white; text-shadow: 1px 1px 2px black; border-radius: 5px;
+        }
+        .icon:hover { background-color: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.4); padding: 9px 4px; }
+        .icon::before { /* Placeholder Icon Visuals */
+            content: '📄'; font-size: 38px; line-height: 48px; display: block; margin-bottom: 5px;
+            background-color: #eee; border-radius: 3px; width: 48px; height: 48px; margin: 0 auto 5px auto;
+            color: #333; text-shadow: none;
+        }
+        .icon span { display: block; font-size: 12px; word-wrap: break-word; }
+
+        /* Specific Icon Positions & Styles */
+        #paint-icon { top: 30px; left: 30px; } #paint-icon::before { content: '🎨'; background-color: lightblue; }
+        #video-icon { top: 130px; left: 30px; } #video-icon::before { content: '▶️'; background-color: lightcoral; }
+        #calc-icon { top: 230px; left: 30px; } #calc-icon::before { content: '🧮'; background-color: lightgreen; }
+        #solitaire-icon { top: 30px; left: 120px; } #solitaire-icon::before { content: '🃏'; background-color: lightgoldenrodyellow; }
+        #chess-icon { top: 130px; left: 120px; } #chess-icon::before { content: '♚'; background-color: #ddd; font-size: 42px;}
+        #minesweeper-icon { top: 230px; left: 120px; } #minesweeper-icon::before { content: '💣'; background-color: #silver; font-size: 38px;}
+        #tictactoe-icon { top: 30px; left: 210px; } #tictactoe-icon::before { content: '⭕'; background-color: #eee; font-size: 38px; color: blue;}
+        #memory-icon { top: 130px; left: 210px; } #memory-icon::before { content: '🧠'; background-color: #ffcc99; font-size: 38px;}
+        #snake-icon { top: 230px; left: 210px; } #snake-icon::before { content: '🐍'; background-color: #90ee90; font-size: 38px;}
+        #pong-icon { top: 330px; left: 30px; } #pong-icon::before { content: '||'; background-color: #add8e6; font-size: 38px; line-height: 45px; letter-spacing: 15px;}
+
+
+        /* Taskbar */
+        #taskbar {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 30px;
+            background: linear-gradient(to bottom, #245edc, #3f8cf5); border-top: 1px solid #6aa2f7;
+            display: flex; align-items: center; padding: 0 5px; z-index: 10000;
+        }
+        #start-button {
+            background: linear-gradient(to bottom, #5bde5b, #3aa53a); border: 1px outset #4caf4c; color: white;
+            font-weight: bold; font-style: italic; padding: 2px 15px; border-radius: 3px; cursor: pointer;
+            text-shadow: 1px 1px 1px #333; font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif; font-size: 14px;
+        }
+        #start-button:active { background: linear-gradient(to top, #5bde5b, #3aa53a); border-style: inset; }
+        #clock {
+            margin-left: auto; background-color: #6aa2f7; border: 1px inset #3f8cf5;
+            color: white; padding: 2px 8px; font-size: 12px; border-radius: 2px;
+        }
+
+        /* Windows (General Frame Styles) */
+        .window {
+            position: absolute; border: 1px solid #005cbf; box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.3);
+            background-color: #ece9d8; display: none; /* Initially hidden */
+            overflow: hidden; border-radius: 5px 5px 0 0;
+            /* Default sizes - can be overridden by data attributes */
+            min-width: 200px; min-height: 150px;
+            width: 400px; height: 300px;
+            top: 50px; left: 150px; /* Default position */
+        }
+        .title-bar {
+            background: linear-gradient(to bottom, #005cbf, #0053a8); color: white; padding: 3px 5px;
+            font-weight: bold; font-size: 13px; cursor: move; display: flex; align-items: center; height: 24px;
+        }
+        .title-bar-text { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 3px; }
+        .window-buttons { display: flex; }
+        .window-button {
+            width: 18px; height: 18px; border: 1px outset #ccc; margin-left: 2px; cursor: pointer;
+            font-weight: bold; font-size: 10px; line-height: 16px; text-align: center; background-color: #d4d0c8;
+        }
+        .close-button { background-color: #ff6347; color: white; }
+        .close-button:hover { background-color: #e55337; }
+        .window-button:active { border-style: inset; }
+        .window-content {
+            /* Content area takes remaining height */
+            height: calc(100% - 24px); /* Subtract title bar height */
+            background-color: #fff; /* Default background */
+            overflow: hidden; /* Prevent iframe scrollbars unless needed inside */
+            position: relative; /* Needed for iframe absolute positioning */
+        }
+        /* Iframe takes full space of content area */
+        .window-content iframe {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            border: none; /* Remove default iframe border */
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="desktop">
+        <!-- Icons for each app/game -->
+        <div class="icon" id="paint-icon" data-appid="paint" data-title="Paint" data-url="paint.html" data-width="450" data-height="400"><span>Paint</span></div>
+        <div class="icon" id="video-icon" data-appid="video" data-title="Video Player" data-url="video.html" data-width="500" data-height="400"><span>Video Player</span></div>
+        <div class="icon" id="calc-icon" data-appid="calc" data-title="Calculator" data-url="calculator.html" data-width="220" data-height="280"><span>Calculator</span></div>
+        <div class="icon" id="solitaire-icon" data-appid="solitaire" data-title="Solitaire" data-url="solitaire.html" data-width="600" data-height="500"><span>Solitaire</span></div>
+        <div class="icon" id="chess-icon" data-appid="chess" data-title="Chess" data-url="chess.html" data-width="450" data-height="520"><span>Chess</span></div>
+        <div class="icon" id="minesweeper-icon" data-appid="minesweeper" data-title="Minesweeper" data-url="minesweeper.html" data-width="300" data-height="490"><span>Minesweeper</span></div>
+        <div class="icon" id="tictactoe-icon" data-appid="tictactoe" data-title="Tic Tac Toe" data-url="tictactoe.html" data-width="300" data-height="380"><span>Tic Tac Toe</span></div>
+        <div class="icon" id="memory-icon" data-appid="memory" data-title="Memory Game" data-url="memory.html" data-width="450" data-height="450"><span>Memory Game</span></div>
+        <div class="icon" id="snake-icon" data-appid="snake" data-title="Snake" data-url="snake.html" data-width="430" data-height="480"><span>Snake</span></div>
+        <div class="icon" id="pong-icon" data-appid="pong" data-title="Pong" data-url="pong.html" data-width="630" data-height="480"><span>Pong</span></div>
+
+        <!-- Windows will be created dynamically here by the script -->
+
+        <!-- Taskbar -->
+        <div id="taskbar"><button id="start-button">Start</button><div id="clock"></div></div>
+    </div>
+
+    <script>
+        // --- Global State & Window Management ---
+        let highestZIndex = 1;
+        let activeWindow = null; // Keep track of the currently interacting window element
+        let isDragging = false;
+        let dragOffsetX, dragOffsetY;
+        let openWindows = {}; // Keep track of open window elements by ID
+
+        // --- Clock ---
+        function updateClock() {
+            const clockElement = document.getElementById('clock');
+            if (clockElement) {
+                const now = new Date();
+                clockElement.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // --- Window Management ---
+        function bringToFront(winElement) {
+            if (!winElement) return;
+            highestZIndex++;
+            winElement.style.zIndex = highestZIndex;
+            const iframe = winElement.querySelector('iframe');
+            if (iframe) {
+                 try {
+                     iframe.contentWindow?.focus();
+                 } catch (e) {
+                     // This can happen due to cross-origin restrictions or if the iframe content isn't fully loaded/interactive yet.
+                     // console.warn("Could not focus iframe content for window:", winElement.id, e);
+                 }
+            }
+        }
+
+        function makeDraggable(winElement) {
+            const titleBar = winElement.querySelector('.title-bar');
+            if (!titleBar) return;
+
+            titleBar.addEventListener('mousedown', (e) => {
+                if (e.target.classList.contains('window-button')) return;
+                isDragging = true;
+                activeWindow = winElement;
+                bringToFront(activeWindow);
+                dragOffsetX = e.clientX - activeWindow.offsetLeft;
+                dragOffsetY = e.clientY - activeWindow.offsetTop;
+                document.addEventListener('mousemove', handleDrag);
+                document.addEventListener('mouseup', stopDrag);
+                document.addEventListener('mouseleave', stopDrag);
+            });
+
+            winElement.addEventListener('mousedown', () => {
+                 // If not currently dragging, or if clicking a different window than the one being dragged.
+                 if (!isDragging || activeWindow !== winElement) {
+                    bringToFront(winElement);
+                 }
+            }, true); // Use capture phase
+        }
+
+        function handleDrag(e) {
+            if (!isDragging || !activeWindow) return;
+            e.preventDefault();
+            let newX = e.clientX - dragOffsetX;
+            let newY = e.clientY - dragOffsetY;
+            const desk = document.getElementById('desktop');
+            const task = document.getElementById('taskbar');
+            const maxW = desk.offsetWidth - activeWindow.offsetWidth;
+            const maxH = desk.offsetHeight - activeWindow.offsetHeight - task.offsetHeight;
+            newX = Math.max(0, Math.min(newX, maxW));
+            newY = Math.max(0, Math.min(newY, maxH));
+            activeWindow.style.left = newX + 'px';
+            activeWindow.style.top = newY + 'px';
+        }
+
+        function stopDrag() {
+            if (isDragging) {
+                isDragging = false;
+                // No longer setting activeWindow to null here,
+                // it allows the last dragged/clicked window to remain "active" conceptually
+                document.removeEventListener('mousemove', handleDrag);
+                document.removeEventListener('mouseup', stopDrag);
+                document.removeEventListener('mouseleave', stopDrag);
+            }
+        }
+
+        function createWindow(appId, title, url, width, height) {
+            const windowId = `window-${appId}`;
+
+            if (openWindows[windowId]) {
+                const existingWindow = openWindows[windowId];
+                existingWindow.style.display = 'block';
+                bringToFront(existingWindow);
+                const iframe = existingWindow.querySelector('iframe');
+                if (iframe && iframe.getAttribute('src') === 'about:blank') {
+                    // If window was closed and src reset, reload it
+                    iframe.setAttribute('src', url);
+                } else if (iframe) {
+                     // Attempt to focus if already loaded
+                     try { iframe.contentWindow?.focus(); } catch(e) {}
+                }
+                return;
+            }
+
+            const win = document.createElement('div');
+            win.className = 'window';
+            win.id = windowId;
+            win.style.width = `${parseInt(width) || 400}px`;
+            win.style.height = `${parseInt(height) || 300}px`;
+            const initialLeft = 100 + (Object.keys(openWindows).length % 6) * 25; // Stagger new windows
+            const initialTop = 50 + (Object.keys(openWindows).length % 6) * 25;
+            win.style.left = `${initialLeft}px`;
+            win.style.top = `${initialTop}px`;
+
+            win.innerHTML = `
+                <div class="title-bar">
+                    <span class="title-bar-text">${title}</span>
+                    <div class="window-buttons">
+                        <button class="window-button close-button">X</button>
+                    </div>
+                </div>
+                <div class="window-content">
+                    <iframe src="${url}" title="${title}" sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-modals allow-forms"></iframe>
+                    // Added sandbox attribute for better security and to allow pointer lock for games like Pong if needed,
+                    // and allow-modals for alerts, allow-forms for inputs.
+                </div>
+            `;
+
+            document.getElementById('desktop').appendChild(win);
+            openWindows[windowId] = win;
+
+            makeDraggable(win);
+
+            const closeButton = win.querySelector('.close-button');
+            closeButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const iframe = win.querySelector('iframe');
+                if (iframe && iframe.contentWindow) {
+                    // Attempt to call cleanupGame if it exists in the iframe's context
+                    if (typeof iframe.contentWindow.cleanupGame === 'function') {
+                        try {
+                            iframe.contentWindow.cleanupGame();
+                            console.log(`Cleanup function called for ${title}`);
+                        } catch (err) {
+                            console.error(`Error calling cleanupGame in ${title}:`, err);
+                        }
+                    }
+                    // Crucially, reset the iframe source to stop all scripts and clear content
+                    iframe.setAttribute('src', 'about:blank');
+                }
+                win.style.display = 'none';
+            });
+
+            bringToFront(win);
+            // Attempt to focus iframe after a slight delay to allow it to load
+            setTimeout(() => {
+                const iframe = win.querySelector('iframe');
+                if (iframe) {
+                    try {iframe.contentWindow?.focus(); } catch(e) {}
+                }
+            }, 200);
+        }
+
+        // --- Application Launching ---
+        document.querySelectorAll('.icon').forEach(icon => {
+            icon.addEventListener('dblclick', () => {
+                const appId = icon.dataset.appid;
+                const title = icon.dataset.title || 'Application';
+                const url = icon.dataset.url;
+                const width = icon.dataset.width;
+                const height = icon.dataset.height;
+
+                if (appId && title && url) {
+                    createWindow(appId, title, url, width, height);
+                } else {
+                    console.error("Icon is missing required data attributes (appid, title, url):", icon.id);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
