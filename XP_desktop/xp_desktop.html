@@ -116,6 +116,7 @@
         let isDragging = false;
         let dragOffsetX, dragOffsetY;
         let openWindows = {};
+        let appOpeningState = {}; // To prevent rapid re-entrant calls
 
         function updateClock() {
             const clockElement = document.getElementById('clock');
@@ -133,7 +134,12 @@
             winElement.style.zIndex = highestZIndex;
             const iframe = winElement.querySelector('iframe');
             if (iframe) {
-                 try { iframe.contentWindow?.focus(); } catch (e) { /* console.warn("Could not focus iframe on bringToFront:", e.message); */ }
+                setTimeout(() => { // Defer focus slightly
+                    try {
+                        // console.log(`[Desktop] Attempting focus in bringToFront for ${winElement.id}`);
+                        iframe.contentWindow?.focus();
+                    } catch (e) { /* console.warn(`Could not focus iframe in bringToFront for ${winElement.id}:`, e.message); */ }
+                }, 0);
             }
         }
 
@@ -146,7 +152,15 @@
                 dragOffsetX = e.clientX - activeWindow.offsetLeft; dragOffsetY = e.clientY - activeWindow.offsetTop;
                 document.addEventListener('mousemove', handleDrag); document.addEventListener('mouseup', stopDrag); document.addEventListener('mouseleave', stopDrag);
             });
-            winElement.addEventListener('mousedown', () => { if (!isDragging || activeWindow !== winElement) bringToFront(winElement); }, true);
+            winElement.addEventListener('mousedown', (e) => {
+                if (!isDragging || activeWindow !== winElement) {
+                    if (e.target.tagName !== 'IFRAME' && !winElement.contains(document.activeElement) ) {
+                        bringToFront(winElement);
+                    } else if (e.target.tagName !== 'IFRAME') {
+                         bringToFront(winElement);
+                    }
+                }
+            }, true);
         }
 
         function handleDrag(e) {
@@ -168,9 +182,19 @@
         function createWindow(appId, title, url, width, height) {
             const windowId = `window-${appId}`;
 
-            if (openWindows[windowId]) {
+            // If window exists and is visible, just bring to front (prevents re-processing if already open and front)
+            if (openWindows[windowId] && openWindows[windowId].style.display === 'block' && parseInt(openWindows[windowId].style.zIndex) === highestZIndex) {
+                console.log(`[Desktop] Window ${title} is already open and frontmost.`);
+                // Try to focus its iframe just in case
+                const iframeToFocus = openWindows[windowId].querySelector('iframe');
+                 if(iframeToFocus) { try { iframeToFocus.contentWindow?.focus(); } catch(e){} }
+                return;
+            }
+
+
+            if (openWindows[windowId]) { // Window div exists, might be hidden or not loaded
                 const existingWindow = openWindows[windowId];
-                console.log(`[Desktop] Re-opening existing window for ${title}`);
+                console.log(`[Desktop] Re-opening existing window structure for ${title}`);
                 existingWindow.style.display = 'block';
                 bringToFront(existingWindow);
 
@@ -178,16 +202,18 @@
                 if (iframe) {
                     const currentSrc = iframe.getAttribute('src');
                     if (currentSrc === 'about:blank' || currentSrc !== url) {
-                        console.log(`[Desktop] Iframe for ${title} was blank or src differs. Reloading with: ${url}`);
-                        iframe.setAttribute('src', url);
+                        console.log(`[Desktop] Iframe for ${title} needs reload. Setting src to: ${url}`);
+                        iframe.setAttribute('src', url); // Reload content
                     } else {
-                        console.log(`[Desktop] Iframe for ${title} already has correct src. Ensuring focus.`);
-                        // Focus attempt is in bringToFront
+                        console.log(`[Desktop] Iframe for ${title} already has correct src. Focus handled by bringToFront.`);
+                        // Optional: A more delayed focus attempt if bringToFront's isn't enough
+                        // setTimeout(() => { try{iframe.contentWindow?.focus();} catch(e){} }, 100);
                     }
                 }
-                return;
+                return; // Handled existing window
             }
 
+            // --- Create New Window ---
             console.log(`[Desktop] Creating new window for ${title}`);
             const win = document.createElement('div');
             win.className = 'window'; win.id = windowId;
@@ -206,7 +232,17 @@
             const iframeElement = win.querySelector('iframe');
             if (iframeElement) {
                 console.log(`[Desktop] Setting initial iframe src for new window ${title} to: ${url}`);
-                setTimeout(() => { iframeElement.setAttribute('src', url); }, 50);
+                // Load the iframe content after the window structure is in the DOM
+                setTimeout(() => {
+                    iframeElement.setAttribute('src', url);
+                    // Attempt to focus iframe after src is set
+                    setTimeout(() => {
+                        try {
+                            console.log(`[Desktop] Attempting to focus iframe on creation for ${title}`);
+                            iframeElement.contentWindow?.focus();
+                        } catch (e) { /* console.warn(`[Desktop] Focus failed on iframe creation:`, e.message); */ }
+                    }, 150); // Delay focus
+                }, 50); // Delay setting src
             }
 
             const closeButton = win.querySelector('.close-button');
@@ -216,7 +252,6 @@
                 if (iframe) {
                     console.log(`[Desktop] Close button clicked for ${title}. Current iframe src: ${iframe.getAttribute('src')}`);
                     let directCleanupSuccess = false;
-
                     try {
                         if (iframe.contentWindow && typeof iframe.contentWindow.cleanupGame === 'function') {
                             console.log(`[Desktop] Attempting to call cleanupGame for ${title} via direct access.`);
@@ -224,7 +259,7 @@
                             directCleanupSuccess = true;
                             console.log(`[Desktop] cleanupGame function successfully called for ${title} via direct access.`);
                         } else if (iframe.contentWindow) {
-                            console.warn(`[Desktop] Direct cleanup: cleanupGame function not found in ${title}, but contentWindow was accessible.`);
+                            console.warn(`[Desktop] Direct cleanup: cleanupGame function not found in ${title}.`);
                         } else {
                             console.warn(`[Desktop] Direct cleanup: iframe.contentWindow not accessible for ${title}.`);
                         }
@@ -245,7 +280,6 @@
                             console.error(`[Desktop] Error trying to post 'cleanup' message to ${title}: Name: "${pmErr.name}", Message: "${pmErr.message}"`);
                         }
                     }
-
                     console.log(`[Desktop] Setting iframe src to 'about:blank' for ${title} as final step.`);
                     iframe.setAttribute('src', 'about:blank');
                 } else {
@@ -255,21 +289,49 @@
             });
 
             bringToFront(win);
-            setTimeout(() => {
-                const iframe = win.querySelector('iframe');
-                if (iframe) {
-                    try { console.log(`[Desktop] Attempting to focus iframe on creation for ${title}`); iframe.contentWindow?.focus(); }
-                    catch (e) { /* console.warn(`[Desktop] Focus failed on iframe creation:`, e.message); */ }
-                }
-            }, 250);
         }
 
+        // --- Application Launching (with click counter and opening state diagnostic) ---
+        let dblClickCounter = {};
+        let isOpeningApp = {}; // Tracks if an app is in the process of opening
+
         document.querySelectorAll('.icon').forEach(icon => {
+            const appIdForCounter = icon.dataset.appid;
+            if (appIdForCounter) {
+                dblClickCounter[appIdForCounter] = 0;
+                isOpeningApp[appIdForCounter] = false; // Initialize opening state
+            }
+
             icon.addEventListener('dblclick', () => {
-                const appId = icon.dataset.appid, title = icon.dataset.title || 'Application', url = icon.dataset.url;
-                const width = icon.dataset.width, height = icon.dataset.height;
-                if (appId && title && url) createWindow(appId, title, url, width, height);
-                else console.error("Icon is missing data attributes (appid, title, url):", icon.id);
+                const appId = icon.dataset.appid;
+                const title = icon.dataset.title || 'Application';
+                const url = icon.dataset.url;
+                const width = icon.dataset.width;
+                const height = icon.dataset.height;
+
+                if (appId) {
+                    dblClickCounter[appId]++;
+                    console.log(`[Desktop] Icon DBLCLICK for ${title} - Click Count: ${dblClickCounter[appId]}. IsOpening: ${isOpeningApp[appId]}`);
+                }
+
+                // If this app is already in the process of opening, ignore subsequent rapid clicks
+                if (isOpeningApp[appId]) {
+                    console.log(`[Desktop] Window for ${title} is already being processed. Ignoring click.`);
+                    return;
+                }
+
+                if (appId && title && url) {
+                    isOpeningApp[appId] = true; // Set flag
+                    createWindow(appId, title, url, width, height);
+                    // Reset the flag after a short delay to allow the window to stabilize
+                    // Adjust timeout as needed, might need to be longer if iframes load slowly
+                    setTimeout(() => {
+                        isOpeningApp[appId] = false;
+                        console.log(`[Desktop] Reset isOpeningApp for ${title}.`);
+                    }, 700); // Increased delay
+                } else {
+                    console.error("Icon is missing required data attributes (appid, title, url):", icon.id);
+                }
             });
         });
     </script>
