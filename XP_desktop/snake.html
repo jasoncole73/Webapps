@@ -74,12 +74,15 @@
 
         // Store the event handler function itself so it can be removed correctly
         const snakeKeyDownHandler = (event) => {
-            // Only change intended direction if the game isn't over
-            if (gameIsOver) return;
+            if (gameIsOver) { // Don't process keys if game is over
+                event.preventDefault();
+                return;
+            }
 
             switch (event.key) {
                 case 'ArrowUp':
-                    if (direction !== 'Down') currentKeyDirection = 'Up'; // Prevent immediate reversal
+                    // Only change if not currently moving Down
+                    if (direction !== 'Down') currentKeyDirection = 'Up';
                     break;
                 case 'ArrowDown':
                     if (direction !== 'Up') currentKeyDirection = 'Down';
@@ -91,11 +94,15 @@
                     if (direction !== 'Left') currentKeyDirection = 'Right';
                     break;
             }
-            event.preventDefault(); // Prevent arrow keys from scrolling the parent page/iframe
+            // Prevent arrow keys from scrolling the parent page/iframe if the canvas is focused
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+                event.preventDefault();
+            }
         };
 
         function setupSnakeGame() {
-            cleanupGame(); // Clear any existing game state first
+            console.log("[Snake] Setting up new game...");
+            cleanupGame(); // Clear any existing game state first (stops interval, removes listener)
 
             snake = [{ x: Math.floor(cols / 2) * scale, y: Math.floor(rows / 2) * scale }];
             direction = 'Right';
@@ -105,12 +112,13 @@
             statusDiv.textContent = `Score: ${score}`;
             placeFood();
 
-            // Add event listener for keyboard input
-            // Ensure it's added to the document of this iframe, or canvas if focused
             document.addEventListener('keydown', snakeKeyDownHandler);
+            console.log("[Snake] Keydown listener added.");
             canvas.focus(); // Focus the canvas to ensure it receives key events
 
             gameLoopInterval = setInterval(gameLoop, 130); // Adjust speed (lower = faster)
+            console.log("[Snake] Game setup complete. Interval ID:", gameLoopInterval);
+            draw(); // Initial draw
         }
 
         function placeFood() {
@@ -123,7 +131,7 @@
         }
 
         function draw() {
-            ctx.fillStyle = '#c2f0c2'; // Background color from CSS
+            ctx.fillStyle = '#c2f0c2';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             ctx.fillStyle = 'red';
@@ -131,9 +139,8 @@
             ctx.strokeStyle = 'darkred';
             ctx.strokeRect(food.x, food.y, scale, scale);
 
-
             snake.forEach((segment, index) => {
-                ctx.fillStyle = (index === 0) ? 'darkgreen' : 'green'; // Head different color
+                ctx.fillStyle = (index === 0) ? 'darkgreen' : 'green';
                 ctx.fillRect(segment.x, segment.y, scale, scale);
                 ctx.strokeStyle = (index === 0) ? 'black' : 'darkgreen';
                 ctx.strokeRect(segment.x, segment.y, scale, scale);
@@ -143,22 +150,18 @@
         function moveSnake() {
             if (gameIsOver) return;
 
-            // Update actual movement direction based on last valid key press
-            // This prevents self-collision by trying to reverse into itself in the same game tick
             if (currentKeyDirection === 'Up' && direction !== 'Down') direction = 'Up';
             else if (currentKeyDirection === 'Down' && direction !== 'Up') direction = 'Down';
             else if (currentKeyDirection === 'Left' && direction !== 'Right') direction = 'Left';
             else if (currentKeyDirection === 'Right' && direction !== 'Left') direction = 'Right';
 
             const head = { ...snake[0] };
-
             switch (direction) {
                 case 'Up': head.y -= scale; break;
                 case 'Down': head.y += scale; break;
                 case 'Left': head.x -= scale; break;
                 case 'Right': head.x += scale; break;
             }
-
             snake.unshift(head);
 
             if (head.x === food.x && head.y === food.y) {
@@ -172,46 +175,62 @@
 
         function checkCollision() {
             const head = snake[0];
-            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
-                return true; // Wall collision
-            }
-            for (let i = 1; i < snake.length; i++) {
-                if (head.x === snake[i].x && head.y === snake[i].y) {
-                    return true; // Self collision
-                }
-            }
+            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) return true;
+            for (let i = 1; i < snake.length; i++) if (head.x === snake[i].x && head.y === snake[i].y) return true;
             return false;
         }
 
         function gameLoop() {
+            if (gameIsOver) { // Double check to ensure loop doesn't run if game ended between interval ticks
+                cleanupGame();
+                return;
+            }
             moveSnake();
             if (checkCollision()) {
                 gameIsOver = true;
-                cleanupGame(); // Stop interval, remove listener
                 statusDiv.textContent = `Game Over! Final Score: ${score}`;
-                return;
+                // We call cleanupGame here to stop the interval and remove listener immediately
+                // The parent iframe closing will also attempt cleanup, which is fine (idempotent).
+                cleanupGame();
+                return; // Stop further drawing or logic in this tick
             }
             draw();
         }
 
-        // --- Cleanup Function (Called by parent window or internally) ---
+        // --- Cleanup Function (Called by parent window, postMessage, or internally on game over) ---
         function cleanupGame() {
-            console.log("Cleaning up Snake game");
+            // This function needs to be idempotent (safe to call multiple times)
             if (gameLoopInterval) {
                 clearInterval(gameLoopInterval);
-                gameLoopInterval = null;
+                gameLoopInterval = null; // Important to nullify
+                console.log("[Snake] Interval cleared by cleanupGame.");
             }
-            // Important: Remove the specific event listener function
             document.removeEventListener('keydown', snakeKeyDownHandler);
+            console.log("[Snake] Keydown listener removed by cleanupGame.");
+            // gameIsOver should be set by the game logic leading to cleanup
         }
+
+        // --- Event listener for messages from parent (for cleanup) ---
+        window.addEventListener('message', (event) => {
+            // console.log(`[Snake] Message received from parent. Data: "${event.data}", Origin: "${event.origin}"`);
+            // For local 'file:///' origin is "null". For GitHub Pages, it would be your GitHub domain.
+            // A more secure check for same-origin or trusted parent:
+            // if (event.source !== window.parent) return; // Ensure message is from the direct parent
+
+            if (event.data === 'cleanup') {
+                console.log("[Snake] 'cleanup' message received from parent. Calling cleanupGame().");
+                cleanupGame();
+            }
+        });
 
         // --- Initialization ---
         newGameButton.addEventListener('click', setupSnakeGame);
         setupSnakeGame(); // Start game on load
 
-        // Ensure this iframe window attempts to grab focus for keyboard events.
-        // The parent window also attempts to focus the iframe.
+        // Try to ensure iframe gets focus, especially important for keyboard events.
+        // The parent also attempts this.
         window.focus();
+        // console.log("[Snake] Snake game script loaded and initialized.");
     </script>
 </body>
 </html>

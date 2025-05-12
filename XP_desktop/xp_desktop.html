@@ -64,10 +64,9 @@
             position: absolute; border: 1px solid #005cbf; box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.3);
             background-color: #ece9d8; display: none; /* Initially hidden */
             overflow: hidden; border-radius: 5px 5px 0 0;
-            /* Default sizes - can be overridden by data attributes */
             min-width: 200px; min-height: 150px;
             width: 400px; height: 300px;
-            top: 50px; left: 150px; /* Default position */
+            top: 50px; left: 150px;
         }
         .title-bar {
             background: linear-gradient(to bottom, #005cbf, #0053a8); color: white; padding: 3px 5px;
@@ -94,13 +93,10 @@
             width: 100%; height: 100%;
             border: none;
         }
-
     </style>
 </head>
 <body>
-
     <div id="desktop">
-        <!-- Icons for each app/game -->
         <div class="icon" id="paint-icon" data-appid="paint" data-title="Paint" data-url="paint.html" data-width="450" data-height="400"><span>Paint</span></div>
         <div class="icon" id="video-icon" data-appid="video" data-title="Video Player" data-url="video.html" data-width="500" data-height="400"><span>Video Player</span></div>
         <div class="icon" id="calc-icon" data-appid="calc" data-title="Calculator" data-url="calculator.html" data-width="220" data-height="280"><span>Calculator</span></div>
@@ -111,20 +107,16 @@
         <div class="icon" id="memory-icon" data-appid="memory" data-title="Memory Game" data-url="memory.html" data-width="450" data-height="450"><span>Memory Game</span></div>
         <div class="icon" id="snake-icon" data-appid="snake" data-title="Snake" data-url="snake.html" data-width="430" data-height="480"><span>Snake</span></div>
         <div class="icon" id="pong-icon" data-appid="pong" data-title="Pong" data-url="pong.html" data-width="630" data-height="480"><span>Pong</span></div>
-
-        <!-- Taskbar -->
         <div id="taskbar"><button id="start-button">Start</button><div id="clock"></div></div>
     </div>
 
     <script>
-        // --- Global State & Window Management ---
         let highestZIndex = 1;
         let activeWindow = null;
         let isDragging = false;
         let dragOffsetX, dragOffsetY;
         let openWindows = {};
 
-        // --- Clock ---
         function updateClock() {
             const clockElement = document.getElementById('clock');
             if (clockElement) {
@@ -135,61 +127,41 @@
         setInterval(updateClock, 1000);
         updateClock();
 
-        // --- Window Management ---
         function bringToFront(winElement) {
             if (!winElement) return;
             highestZIndex++;
             winElement.style.zIndex = highestZIndex;
             const iframe = winElement.querySelector('iframe');
             if (iframe) {
-                 try { iframe.contentWindow?.focus(); } catch (e) { /* console.warn("Could not focus iframe on bringToFront:", e); */ }
+                 try { iframe.contentWindow?.focus(); } catch (e) { /* console.warn("Could not focus iframe on bringToFront:", e.message); */ }
             }
         }
 
         function makeDraggable(winElement) {
             const titleBar = winElement.querySelector('.title-bar');
             if (!titleBar) return;
-
             titleBar.addEventListener('mousedown', (e) => {
                 if (e.target.classList.contains('window-button')) return;
-                isDragging = true;
-                activeWindow = winElement;
-                bringToFront(activeWindow);
-                dragOffsetX = e.clientX - activeWindow.offsetLeft;
-                dragOffsetY = e.clientY - activeWindow.offsetTop;
-                document.addEventListener('mousemove', handleDrag);
-                document.addEventListener('mouseup', stopDrag);
-                document.addEventListener('mouseleave', stopDrag);
+                isDragging = true; activeWindow = winElement; bringToFront(activeWindow);
+                dragOffsetX = e.clientX - activeWindow.offsetLeft; dragOffsetY = e.clientY - activeWindow.offsetTop;
+                document.addEventListener('mousemove', handleDrag); document.addEventListener('mouseup', stopDrag); document.addEventListener('mouseleave', stopDrag);
             });
-
-            winElement.addEventListener('mousedown', () => {
-                if (!isDragging || activeWindow !== winElement) {
-                    bringToFront(winElement);
-                }
-            }, true);
+            winElement.addEventListener('mousedown', () => { if (!isDragging || activeWindow !== winElement) bringToFront(winElement); }, true);
         }
 
         function handleDrag(e) {
-            if (!isDragging || !activeWindow) return;
-            e.preventDefault();
-            let newX = e.clientX - dragOffsetX;
-            let newY = e.clientY - dragOffsetY;
-            const desk = document.getElementById('desktop');
-            const task = document.getElementById('taskbar');
-            const maxW = desk.offsetWidth - activeWindow.offsetWidth;
-            const maxH = desk.offsetHeight - activeWindow.offsetHeight - task.offsetHeight;
-            newX = Math.max(0, Math.min(newX, maxW));
-            newY = Math.max(0, Math.min(newY, maxH));
-            activeWindow.style.left = newX + 'px';
-            activeWindow.style.top = newY + 'px';
+            if (!isDragging || !activeWindow) return; e.preventDefault();
+            let newX = e.clientX - dragOffsetX, newY = e.clientY - dragOffsetY;
+            const desk = document.getElementById('desktop'), task = document.getElementById('taskbar');
+            const maxW = desk.offsetWidth - activeWindow.offsetWidth, maxH = desk.offsetHeight - activeWindow.offsetHeight - task.offsetHeight;
+            newX = Math.max(0, Math.min(newX, maxW)); newY = Math.max(0, Math.min(newY, maxH));
+            activeWindow.style.left = `${newX}px`; activeWindow.style.top = `${newY}px`;
         }
 
         function stopDrag() {
             if (isDragging) {
                 isDragging = false;
-                document.removeEventListener('mousemove', handleDrag);
-                document.removeEventListener('mouseup', stopDrag);
-                document.removeEventListener('mouseleave', stopDrag);
+                document.removeEventListener('mousemove', handleDrag); document.removeEventListener('mouseup', stopDrag); document.removeEventListener('mouseleave', stopDrag);
             }
         }
 
@@ -198,53 +170,43 @@
 
             if (openWindows[windowId]) {
                 const existingWindow = openWindows[windowId];
+                console.log(`[Desktop] Re-opening existing window for ${title}`);
                 existingWindow.style.display = 'block';
                 bringToFront(existingWindow);
+
                 const iframe = existingWindow.querySelector('iframe');
                 if (iframe) {
-                     if (iframe.getAttribute('src') === 'about:blank' || iframe.getAttribute('src') !== url) {
-                         console.log(`Re-loading iframe for ${title} with src: ${url}`);
-                         iframe.setAttribute('src', url); // Reload if src is different (e.g., after closing)
-                     } else {
-                         try {
-                             console.log(`Attempting to focus existing iframe for ${title}`);
-                             iframe.contentWindow?.focus();
-                         } catch(e) {console.warn(`Focus failed on existing window for ${title}:`, e);}
-                     }
+                    const currentSrc = iframe.getAttribute('src');
+                    if (currentSrc === 'about:blank' || currentSrc !== url) {
+                        console.log(`[Desktop] Iframe for ${title} was blank or src differs. Reloading with: ${url}`);
+                        iframe.setAttribute('src', url);
+                    } else {
+                        console.log(`[Desktop] Iframe for ${title} already has correct src. Ensuring focus.`);
+                        // Focus attempt is in bringToFront
+                    }
                 }
                 return;
             }
 
+            console.log(`[Desktop] Creating new window for ${title}`);
             const win = document.createElement('div');
-            win.className = 'window';
-            win.id = windowId;
-            win.style.width = `${parseInt(width) || 400}px`;
-            win.style.height = `${parseInt(height) || 300}px`;
+            win.className = 'window'; win.id = windowId;
+            win.style.width = `${parseInt(width) || 400}px`; win.style.height = `${parseInt(height) || 300}px`;
             const initialLeft = 100 + (Object.keys(openWindows).length % 6) * 25;
             const initialTop = 50 + (Object.keys(openWindows).length % 6) * 25;
-            win.style.left = `${initialLeft}px`;
-            win.style.top = `${initialTop}px`;
-
+            win.style.left = `${initialLeft}px`; win.style.top = `${initialTop}px`;
             win.innerHTML = `
-                <div class="title-bar">
-                    <span class="title-bar-text">${title}</span>
-                    <div class="window-buttons">
-                        <button class="window-button close-button">X</button>
-                    </div>
-                </div>
-                <div class="window-content">
-                    <iframe src="about:blank" title="${title}" sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-modals allow-forms"></iframe>
-                </div>
+                <div class="title-bar"><span class="title-bar-text">${title}</span><div class="window-buttons"><button class="window-button close-button">X</button></div></div>
+                <div class="window-content"><iframe src="about:blank" title="${title}" sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-modals allow-forms"></iframe></div>
             `;
-
             document.getElementById('desktop').appendChild(win);
             openWindows[windowId] = win;
             makeDraggable(win);
 
             const iframeElement = win.querySelector('iframe');
             if (iframeElement) {
-                console.log(`Setting initial iframe src for ${title} to: ${url}`);
-                iframeElement.setAttribute('src', url);
+                console.log(`[Desktop] Setting initial iframe src for new window ${title} to: ${url}`);
+                setTimeout(() => { iframeElement.setAttribute('src', url); }, 50);
             }
 
             const closeButton = win.querySelector('.close-button');
@@ -252,26 +214,42 @@
                 e.stopPropagation();
                 const iframe = win.querySelector('iframe');
                 if (iframe) {
-                    console.log(`Close button clicked for ${title}. Current iframe src: ${iframe.getAttribute('src')}`);
-                    if (iframe.contentWindow && typeof iframe.contentWindow.cleanupGame === 'function') {
-                        try {
-                            console.log(`Attempting to call cleanupGame for ${title}`);
+                    console.log(`[Desktop] Close button clicked for ${title}. Current iframe src: ${iframe.getAttribute('src')}`);
+                    let directCleanupSuccess = false;
+
+                    try {
+                        if (iframe.contentWindow && typeof iframe.contentWindow.cleanupGame === 'function') {
+                            console.log(`[Desktop] Attempting to call cleanupGame for ${title} via direct access.`);
                             iframe.contentWindow.cleanupGame();
-                            console.log(`CleanupGame function successfully called for ${title}`);
-                        } catch (err) {
-                            console.error(`Error calling cleanupGame in ${title}:`, err.name, err.message);
-                        }
-                    } else {
-                        if (!iframe.contentWindow) {
-                            console.warn(`iframe.contentWindow not accessible for ${title} during close.`);
+                            directCleanupSuccess = true;
+                            console.log(`[Desktop] cleanupGame function successfully called for ${title} via direct access.`);
+                        } else if (iframe.contentWindow) {
+                            console.warn(`[Desktop] Direct cleanup: cleanupGame function not found in ${title}, but contentWindow was accessible.`);
                         } else {
-                            console.warn(`cleanupGame function not found or not a function in ${title}.`);
+                            console.warn(`[Desktop] Direct cleanup: iframe.contentWindow not accessible for ${title}.`);
+                        }
+                    } catch (err) {
+                        console.warn(`[Desktop] Error during direct cleanup attempt for ${title}: Name: "${err.name}", Message: "${err.message}"`);
+                    }
+
+                    if (!directCleanupSuccess) {
+                        console.log(`[Desktop] Proceeding with postMessage cleanup attempt for ${title} (direct success: ${directCleanupSuccess}).`);
+                        try {
+                            if (iframe.contentWindow) {
+                                iframe.contentWindow.postMessage('cleanup', '*');
+                                console.log(`[Desktop] 'cleanup' message posted to ${title}.`);
+                            } else {
+                                console.warn(`[Desktop] Cannot postMessage: contentWindow is null for ${title}.`);
+                            }
+                        } catch (pmErr) {
+                            console.error(`[Desktop] Error trying to post 'cleanup' message to ${title}: Name: "${pmErr.name}", Message: "${pmErr.message}"`);
                         }
                     }
-                    console.log(`Setting iframe src to 'about:blank' for ${title}`);
+
+                    console.log(`[Desktop] Setting iframe src to 'about:blank' for ${title} as final step.`);
                     iframe.setAttribute('src', 'about:blank');
                 } else {
-                    console.error(`Could not find iframe in window ${title} during close.`);
+                    console.error(`[Desktop] Could not find iframe for ${title} during close.`);
                 }
                 win.style.display = 'none';
             });
@@ -280,30 +258,18 @@
             setTimeout(() => {
                 const iframe = win.querySelector('iframe');
                 if (iframe) {
-                    try {
-                        console.log(`Attempting to focus iframe on creation for ${title}`);
-                        iframe.contentWindow?.focus();
-                    } catch (e) {
-                        console.warn(`Focus failed on iframe creation for ${title}:`, e);
-                    }
+                    try { console.log(`[Desktop] Attempting to focus iframe on creation for ${title}`); iframe.contentWindow?.focus(); }
+                    catch (e) { /* console.warn(`[Desktop] Focus failed on iframe creation:`, e.message); */ }
                 }
             }, 250);
         }
 
-        // --- Application Launching ---
         document.querySelectorAll('.icon').forEach(icon => {
             icon.addEventListener('dblclick', () => {
-                const appId = icon.dataset.appid;
-                const title = icon.dataset.title || 'Application';
-                const url = icon.dataset.url;
-                const width = icon.dataset.width;
-                const height = icon.dataset.height;
-
-                if (appId && title && url) {
-                    createWindow(appId, title, url, width, height);
-                } else {
-                    console.error("Icon is missing required data attributes (appid, title, url):", icon.id);
-                }
+                const appId = icon.dataset.appid, title = icon.dataset.title || 'Application', url = icon.dataset.url;
+                const width = icon.dataset.width, height = icon.dataset.height;
+                if (appId && title && url) createWindow(appId, title, url, width, height);
+                else console.error("Icon is missing data attributes (appid, title, url):", icon.id);
             });
         });
     </script>
