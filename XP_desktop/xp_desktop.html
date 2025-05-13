@@ -182,7 +182,7 @@
         <div class="icon" id="video-icon" data-appid="video" data-title="Video Player" data-url="video.html" data-width="500" data-height="400"><span>Video Player</span></div>
         <div class="icon" id="calc-icon" data-appid="calc" data-title="Calculator" data-url="calculator.html" data-width="450" data-height="520"><span>Calculator</span></div>
 
-        <!-- Games - Standardized to Chess Size (450x520) -->
+        <!-- Games - Standardized to 450x520 -->
         <div class="icon" id="solitaire-icon" data-appid="solitaire" data-title="Solitaire" data-url="solitaire.html" data-width="450" data-height="520"><span>Solitaire</span></div>
         <div class="icon" id="chess-icon" data-appid="chess" data-title="Chess" data-url="chess.html" data-width="450" data-height="520"><span>Chess</span></div>
         <div class="icon" id="minesweeper-icon" data-appid="minesweeper" data-title="Minesweeper" data-url="minesweeper.html" data-width="450" data-height="520"><span>Minesweeper</span></div>
@@ -209,18 +209,13 @@
     </div>
 
     <script>
-        // All JavaScript from the previous full xp_desktop.html response goes here.
-        // Ensure you use the version that includes:
-        // - The robust createWindow and closeButton logic (with try-catch and postMessage)
-        // - The appOpeningDebounce mechanism for icon clicks
-        // - The full Start Menu functionality (populateStartMenu, listeners for items, Log Off, and Shut Down)
-
+        // --- Global State & Window Management ---
         let highestZIndex = 1;
         let activeWindow = null;
         let isDragging = false;
         let dragOffsetX, dragOffsetY;
         let openWindows = {};
-        let appOpeningDebounce = {};
+        let appOpeningDebounce = {}; // Use for simple debounce per app
 
         function updateClock() {
             const clockElement = document.getElementById('clock');
@@ -235,8 +230,11 @@
         function tryFocusIframe(iframe, context) {
             if (iframe && iframe.contentWindow) {
                 try {
+                    // console.log(`[Desktop] Attempting focus via ${context} for iframe: ${iframe.title}`);
                     iframe.contentWindow.focus();
-                } catch (e) { /* console.warn(`[Desktop] Focus failed via ${context} for iframe ${iframe.title}: ${e.message}`); */ }
+                } catch (e) {
+                    // console.warn(`[Desktop] Focus failed via ${context} for iframe ${iframe.title}: ${e.message}`);
+                }
             }
         }
 
@@ -245,7 +243,7 @@
             highestZIndex++;
             winElement.style.zIndex = highestZIndex;
             const iframe = winElement.querySelector('iframe');
-            if (iframe && winElement.style.display === 'block') {
+            if (iframe && winElement.style.display === 'block') { // Only focus if visible
                 setTimeout(() => tryFocusIframe(iframe, "bringToFront"), 50);
             }
         }
@@ -288,13 +286,13 @@
 
         function createWindow(appId, title, url, width, height) {
             const windowId = `window-${appId}`;
+
             if (openWindows[windowId] && openWindows[windowId].style.display === 'block') {
                 console.log(`[Desktop] Window ${title} is already visible. Bringing to front and focusing.`);
                 bringToFront(openWindows[windowId]);
-                // Reset debounce if we're just focusing an already open and visible window
-                if (appOpeningDebounce[appId]) {
+                if (appOpeningDebounce[appId]) { // Reset debounce if we just focused an already open window
                     appOpeningDebounce[appId] = false;
-                    console.log(`[Desktop] Reset debounce for already visible window ${title}.`);
+                     console.log(`[Desktop] Reset debounce for already visible window ${title} after bringing to front.`);
                 }
                 return;
             }
@@ -302,25 +300,29 @@
                 const existingWindow = openWindows[windowId];
                 console.log(`[Desktop] Re-displaying existing window structure for ${title}`);
                 existingWindow.style.display = 'block';
-                bringToFront(existingWindow);
+                bringToFront(existingWindow); // This will also attempt to focus the iframe
+
                 const iframe = existingWindow.querySelector('iframe');
                 if (iframe) {
                     const currentSrc = iframe.getAttribute('src');
+                    // If iframe was cleared (closed properly), or if somehow URL changed (less likely).
                     if (currentSrc === 'about:blank' || currentSrc !== url) {
-                        console.log(`[Desktop] Iframe for ${title} needs reload. Setting src to: ${url}`);
+                        console.log(`[Desktop] Iframe for ${title} was blank or src differs. Reloading with: ${url}`);
                         iframe.setAttribute('src', url);
+                        // Attempt focus after src is set and iframe starts loading (for re-opened)
                         setTimeout(() => tryFocusIframe(iframe, "reopen-reload"), 250);
                     } else {
-                        console.log(`[Desktop] Iframe for ${title} already has correct src.`);
+                        console.log(`[Desktop] Iframe for ${title} already has correct src. Focus handled by bringToFront/click.`);
                     }
                 }
-                // Reset debounce after handling reopen, as it's now considered "settled"
-                setTimeout(() => { if(appOpeningDebounce[appId]) appOpeningDebounce[appId] = false; console.log(`[Desktop] Reset debounce for reopened window ${title}.`); }, 600);
+                 // Reset debounce after handling reopen, as it's now considered "settled"
+                setTimeout(() => { if(appOpeningDebounce[appId]) { appOpeningDebounce[appId] = false; console.log(`[Desktop] Reset debounce for reopened window ${title}.`); } }, 600); // Standard debounce reset time
                 return;
             }
 
+            // --- Create New Window ---
             console.log(`[Desktop] Creating new window for ${title}`);
-            // appOpeningDebounce[appId] is already set to true by the caller (icon/menu click)
+            // appOpeningDebounce[appId] is set by the caller (icon/menu click) BEFORE calling createWindow
 
             const win = document.createElement('div');
             win.className = 'window'; win.id = windowId;
@@ -328,7 +330,7 @@
             const initialLeft = 100 + (Object.keys(openWindows).length % 6) * 25;
             const initialTop = 50 + (Object.keys(openWindows).length % 6) * 25;
             win.style.left = `${initialLeft}px`; win.style.top = `${initialTop}px`;
-            win.style.display = 'block';
+            win.style.display = 'block'; // Make visible immediately
 
             win.innerHTML = `
                 <div class="title-bar"><span class="title-bar-text">${title}</span><div class="window-buttons"><button class="window-button close-button">X</button></div></div>
@@ -337,14 +339,13 @@
             document.getElementById('desktop').appendChild(win);
             openWindows[windowId] = win;
             makeDraggable(win);
-            bringToFront(win);
+            bringToFront(win); // Bring new window to front immediately
 
             const iframeElement = win.querySelector('iframe');
             if (iframeElement) {
                 console.log(`[Desktop] Setting initial iframe src for new window ${title} to: ${url}`);
                 setTimeout(() => {
                     iframeElement.setAttribute('src', url);
-                    // Focus after src is set and iframe has a chance to load
                     setTimeout(() => tryFocusIframe(iframeElement, "create-new"), 350);
                 }, 50);
             }
@@ -380,7 +381,7 @@
         }
 
         // --- Application Launching (Desktop Icons) ---
-        let dblClickCounter = {}; // For diagnosing rapid clicks
+        let dblClickCounter = {};
         document.querySelectorAll('.icon').forEach(icon => {
             const appIdForIcon = icon.dataset.appid;
             if (appIdForIcon) {
@@ -396,7 +397,7 @@
                 const height = icon.dataset.height;
 
                 if (appId) {
-                    dblClickCounter[appId]++; // Count all dblclicks for diagnosis
+                    dblClickCounter[appId]++;
                     console.log(`[Desktop] Icon DBLCLICK for ${title} - Count: ${dblClickCounter[appId]}. Debounce State: ${appOpeningDebounce[appId]}`);
                 }
 
@@ -408,9 +409,6 @@
                 if (appId && title && url) {
                     appOpeningDebounce[appId] = true; // Set debounce flag BEFORE calling createWindow
                     createWindow(appId, title, url, width, height);
-                    // Note: The timeout to reset appOpeningDebounce[appId] is now primarily handled
-                    // within the createWindow function, especially for new window creation path
-                    // and also for the re-open path for existing windows.
                 } else {
                     console.error("Icon is missing required data attributes (appid, title, url):", icon.id);
                 }
@@ -569,8 +567,8 @@
                         console.log("[Desktop] All windows reportedly closed. Attempting to simulate shutdown.");
                         setTimeout(() => {
                             document.body.innerHTML = '<div style="width:100vw;height:100vh;background:black;color:white;display:flex;align-items:center;justify-content:center;font-size:24px;position:fixed;top:0;left:0;z-index:50000;">It is now safe to turn off your computer.<br>(Please close the browser tab/window manually)</div>';
-                            // window.close(); // Is highly restricted and likely won't work.
-                        }, 1000);
+                            // window.close(); // Is highly restricted and likely won't work reliably.
+                        }, 1000); // Delay after all close promises resolve
                     }).catch(error => {
                         console.error("[Desktop] Error during window closing promises for shutdown:", error);
                         setTimeout(() => {
