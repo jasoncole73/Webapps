@@ -47,7 +47,7 @@
         #taskbar {
             position: absolute; bottom: 0; left: 0; width: 100%; height: 30px;
             background: linear-gradient(to bottom, #245edc, #3f8cf5); border-top: 1px solid #6aa2f7;
-            display: flex; align-items: center; padding: 0 5px; z-index: 10000;
+            display: flex; align-items: center; padding: 0 5px; z-index: 10000; /* Taskbar on top */
         }
         #start-button {
             background: linear-gradient(to bottom, #5bde5b, #3aa53a); border: 1px outset #4caf4c; color: white;
@@ -63,53 +63,88 @@
         /* --- Start Menu --- */
         #start-menu {
             position: absolute;
-            bottom: 30px; /* Above taskbar */
+            bottom: 30px; /* Positioned above the taskbar */
             left: 0;
-            width: 250px; /* Adjust as needed */
-            max-height: 400px; /* Adjust as needed */
-            background-color: #c6d8f0; /* XP Start Menu blueish color */
-            border: 1px outset #FFF;
-            border-top: 2px solid #FFF;
-            border-left: 2px solid #FFF;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
-            z-index: 9999; /* Below taskbar buttons, above desktop */
+            width: 280px; /* Adjusted width for two columns */
+            max-height: 450px; /* Adjust as needed, or use vh */
+            background-color: #c6d8f0; /* Light blue similar to XP */
+            border: 1px outset #FFFFFF; /* Standard XP outset border */
+            border-top: 2px solid #FFFFFF;
+            border-left: 2px solid #FFFFFF;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+            z-index: 9999; /* Below taskbar, above most windows (windows get higher z-index) */
             display: none; /* Hidden by default */
-            overflow-y: auto;
-            padding: 5px;
+            overflow-y: auto; /* Scroll if content exceeds max-height */
+            padding: 0; /* Remove padding, items will have their own */
+            color: black; /* Default text color */
+            font-size: 11px; /* Default font for menu items */
         }
+        .start-menu-header {
+            background-color: #316ac5; /* Darker blue header */
+            padding: 8px 10px;
+            display:flex;
+            align-items:center;
+            border-bottom: 1px solid #1c3e73; /* Separator */
+        }
+        .start-menu-user-icon {
+            width:36px; height:36px; background-color:#fff;
+            border: 1px solid #7f9db9;
+            border-radius:3px; margin-right:10px;
+            display:flex; align-items:center; justify-content:center; font-size:22px;
+        }
+        .start-menu-username { color:white; font-weight:bold; font-size: 13px; }
+
+        .start-menu-columns { display: flex; flex-grow: 1; /* Allow columns to fill height */}
+        .start-menu-main-column { width: 55%; padding: 5px 0; border-right: 1px solid #84a4ce; }
+        .start-menu-side-column { width: 45%; padding: 5px 0; background-color: #dde8f5; /* Lighter shade for side */ }
+
         .start-menu-item {
-            padding: 6px 10px;
+            padding: 5px 10px 5px 10px;
             cursor: pointer;
-            font-size: 12px;
+            /* font-size: 11px; Inherited from #start-menu */
             color: #000;
             display: flex;
             align-items: center;
+            white-space: nowrap;
         }
         .start-menu-item:hover {
             background-color: #316ac5; /* XP selection blue */
             color: white;
         }
-        .start-menu-item .icon-placeholder { /* For styling like desktop icons if needed */
+        .start-menu-item .icon-placeholder {
             width: 20px; height: 20px;
-            font-size: 16px;
+            font-size: 16px; line-height: 20px;
             margin-right: 8px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background-color: #eee; /* Temporary */
-            border-radius: 3px;
+            text-align: center;
         }
+        .start-menu-item:hover .icon-placeholder { color: white; /* Ensure icon contrasts on hover */ }
+
         .start-menu-separator {
             height: 1px;
-            background-color: #84a4ce;
-            margin: 5px 0;
+            background-color: #84a4ce; /* Lighter separator */
+            margin: 4px 5px;
+        }
+        .start-menu-footer {
+            background-color: #316ac5; /* Darker blue footer */
+            padding: 5px;
+            text-align:right;
+            border-top: 1px solid #1c3e73;
+            flex-shrink: 0; /* Prevent footer from shrinking */
+        }
+        .start-menu-footer button {
+            font-size:10px; padding: 2px 8px; margin-left: 5px;
+            background-color:#dfdfdf; border:1px outset #ccc;
+            cursor: pointer;
         }
 
 
         /* Windows (General Frame Styles) */
         .window {
             position: absolute; border: 1px solid #005cbf; box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.3);
-            background-color: #ece9d8; display: none; /* Initially hidden */
+            background-color: #ece9d8; display: none;
             overflow: hidden; border-radius: 5px 5px 0 0;
             min-width: 200px; min-height: 150px;
             width: 400px; height: 300px;
@@ -135,15 +170,9 @@
             position: relative;
         }
         .window-content iframe {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            border: none;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;
         }
-        /* When a window is being dragged, make its iframe ignore pointer events */
-        .window.dragging .window-content iframe {
-            pointer-events: none;
-        }
+        .window.dragging .window-content iframe { pointer-events: none; }
     </style>
 </head>
 <body>
@@ -162,99 +191,100 @@
 
         <!-- Start Menu Structure (Initially Hidden) -->
         <div id="start-menu">
-            <!-- User Profile Area (Placeholder) -->
-            <div style="background-color: #4a70a7; padding: 10px; display:flex; align-items:center; border-bottom: 1px solid #335089;">
-                <div style="width:40px; height:40px; background-color:#fff; border-radius:50%; margin-right:10px; display:flex; align-items:center; justify-content:center; font-size:24px;">👤</div>
-                <span style="color:white; font-weight:bold;">User</span>
+            <div class="start-menu-header">
+                <div class="start-menu-user-icon">👤</div>
+                <span class="start-menu-username">Windows User</span>
             </div>
-            <div style="display:flex;">
-                <div style="width: 60%; padding-right:5px; border-right: 1px solid #84a4ce;">
-                    <!-- Left Column Apps -->
+            <div class="start-menu-columns">
+                <div class="start-menu-main-column">
                     <div class="start-menu-item" data-appid="paint"><span class="icon-placeholder">🎨</span>Paint</div>
                     <div class="start-menu-item" data-appid="notepad"><span class="icon-placeholder">📝</span>Notepad</div>
+                    <div class="start-menu-item" data-appid="video"><span class="icon-placeholder">▶️</span>Video Player</div>
                     <div class="start-menu-separator"></div>
                     <div class="start-menu-item" data-appid="minesweeper"><span class="icon-placeholder">💣</span>Minesweeper</div>
                     <div class="start-menu-item" data-appid="solitaire"><span class="icon-placeholder">🃏</span>Solitaire</div>
+                    <div class="start-menu-separator"></div>
                     <div class="start-menu-item" data-appid="snake"><span class="icon-placeholder">🐍</span>Snake</div>
                     <div class="start-menu-item" data-appid="pong"><span class="icon-placeholder">||</span>Pong</div>
                     <div class="start-menu-item" data-appid="tictactoe"><span class="icon-placeholder">⭕</span>Tic Tac Toe</div>
                     <div class="start-menu-item" data-appid="memory"><span class="icon-placeholder">🧠</span>Memory Game</div>
                     <div class="start-menu-item" data-appid="chess"><span class="icon-placeholder">♚</span>Chess</div>
-
                 </div>
-                <div style="width: 40%; padding-left:5px; background-color: #b0c4de;">
-                    <!-- Right Column System-like items (Placeholders) -->
-                    <div class="start-menu-item" data-appid="video"><span class="icon-placeholder">▶️</span>Video Player</div>
+                <div class="start-menu-side-column">
                     <div class="start-menu-item" data-appid="calc"><span class="icon-placeholder">🧮</span>Calculator</div>
+                    <div class="start-menu-item"><span class="icon-placeholder">🖼️</span>My Pictures</div>
+                    <div class="start-menu-item"><span class="icon-placeholder">🎵</span>My Music</div>
+                    <div class="start-menu-item"><span class="icon-placeholder">💻</span>My Computer</div>
                     <div class="start-menu-separator"></div>
                     <div class="start-menu-item"><span class="icon-placeholder">⚙️</span>Control Panel</div>
+                    <div class="start-menu-item"><span class="icon-placeholder">🔌</span>Connect To</div>
+                    <div class="start-menu-item"><span class="icon-placeholder">🖨️</span>Printers and Faxes</div>
+                    <div class="start-menu-separator"></div>
                     <div class="start-menu-item"><span class="icon-placeholder">❔</span>Help and Support</div>
                     <div class="start-menu-item"><span class="icon-placeholder">🔍</span>Search</div>
+                    <div class="start-menu-item"><span class="icon-placeholder">🏃</span>Run...</div>
                 </div>
             </div>
-             <div style="background-color: #4a70a7; padding: 5px; text-align:right; border-top: 1px solid #335089; margin-top:auto;">
-                <button style="font-size:11px; padding: 3px 8px; background-color:#dfdfdf; border:1px outset #ccc;">Log Off</button>
-                <button style="font-size:11px; padding: 3px 8px; background-color:#dfdfdf; border:1px outset #ccc;">Turn Off</button>
+            <div class="start-menu-footer">
+                <button>Log Off</button>
+                <button style="color:red;">Turn Off Computer</button>
             </div>
         </div>
-
 
         <div id="taskbar"><button id="start-button">Start</button><div id="clock"></div></div>
     </div>
 
     <script>
-        let highestZIndex = 1;
-        let activeWindow = null;
-        let isDragging = false;
-        let dragOffsetX, dragOffsetY;
-        let openWindows = {};
-        let appOpeningDebounce = {};
+        let highestZIndex = 1; let activeWindow = null; let isDragging = false;
+        let dragOffsetX, dragOffsetY; let openWindows = {}; let appOpeningDebounce = {};
 
-        const startButton = document.getElementById('start-button');
-        const startMenu = document.getElementById('start-menu');
+        // Get DOM elements for Start Menu after DOM is loaded
+        let startButton, startMenu; // Declare globally
+        document.addEventListener('DOMContentLoaded', () => {
+             startButton = document.getElementById('start-button');
+             startMenu = document.getElementById('start-menu');
+             initializeStartMenu(); // Call initialization logic here
+        });
 
-        function updateClock() { /* ... (same as before) ... */
+
+        function updateClock() {
             const clockElement = document.getElementById('clock');
             if (clockElement) { const now = new Date(); clockElement.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
         }
         setInterval(updateClock, 1000); updateClock();
 
-        function tryFocusIframe(iframe, context) { /* ... (same as before) ... */
+        function tryFocusIframe(iframe, context) {
              if (iframe && iframe.contentWindow) { try { iframe.contentWindow.focus(); } catch (e) {} }
         }
-
-        function bringToFront(winElement) { /* ... (same as before) ... */
+        function bringToFront(winElement) {
             if (!winElement) return; highestZIndex++; winElement.style.zIndex = highestZIndex;
             const iframe = winElement.querySelector('iframe');
             if (iframe && winElement.style.display === 'block') { setTimeout(() => tryFocusIframe(iframe, "bringToFront"), 50); }
         }
-
-        function makeDraggable(winElement) { /* ... (same as before) ... */
+        function makeDraggable(winElement) {
             const titleBar = winElement.querySelector('.title-bar'); if (!titleBar) return;
             titleBar.addEventListener('mousedown', (e) => { if (e.target.classList.contains('window-button')) return; isDragging = true; activeWindow = winElement; bringToFront(activeWindow); activeWindow.classList.add('dragging'); dragOffsetX = e.clientX - activeWindow.offsetLeft; dragOffsetY = e.clientY - activeWindow.offsetTop; document.addEventListener('mousemove', handleDrag); document.addEventListener('mouseup', stopDrag); document.addEventListener('mouseleave', stopDrag); });
             winElement.addEventListener('mousedown', (e) => { if (!isDragging || activeWindow !== winElement) bringToFront(winElement); }, true);
         }
-
-        function handleDrag(e) { /* ... (same as before) ... */
+        function handleDrag(e) {
             if (!isDragging || !activeWindow) return; e.preventDefault(); let newX = e.clientX - dragOffsetX, newY = e.clientY - dragOffsetY; const desk = document.getElementById('desktop'), task = document.getElementById('taskbar'); const maxW = desk.offsetWidth - activeWindow.offsetWidth, maxH = desk.offsetHeight - activeWindow.offsetHeight - task.offsetHeight; newX = Math.max(0, Math.min(newX, maxW)); newY = Math.max(0, Math.min(newY, maxH)); activeWindow.style.left = `${newX}px`; activeWindow.style.top = `${newY}px`;
         }
-
-        function stopDrag() { /* ... (same as before) ... */
+        function stopDrag() {
             if (isDragging) { if (activeWindow) activeWindow.classList.remove('dragging'); isDragging = false; document.removeEventListener('mousemove', handleDrag); document.removeEventListener('mouseup', stopDrag); document.removeEventListener('mouseleave', stopDrag); }
         }
 
-        function createWindow(appId, title, url, width, height) { /* ... (same as before - the version that fixed the 4-click issue) ... */
+        function createWindow(appId, title, url, width, height) {
             const windowId = `window-${appId}`;
-            if (openWindows[windowId] && openWindows[windowId].style.display === 'block') { console.log(`[Desktop] Window ${title} is already visible. Bringing to front.`); bringToFront(openWindows[windowId]); appOpeningDebounce[appId] = false; return; } // Reset debounce if already open
-            if (openWindows[windowId]) { const existingWindow = openWindows[windowId]; console.log(`[Desktop] Re-displaying existing window structure for ${title}`); existingWindow.style.display = 'block'; bringToFront(existingWindow); const iframe = existingWindow.querySelector('iframe'); if (iframe) { const currentSrc = iframe.getAttribute('src'); if (currentSrc === 'about:blank' || currentSrc !== url) { iframe.setAttribute('src', url); setTimeout(() => tryFocusIframe(iframe, "reopen-reload"), 250); } } appOpeningDebounce[appId] = false; return; } // Reset debounce
+            if (openWindows[windowId] && openWindows[windowId].style.display === 'block') { console.log(`[Desktop] Window ${title} is already visible.`); bringToFront(openWindows[windowId]); appOpeningDebounce[appId] = false; return; }
+            if (openWindows[windowId]) { const existingWindow = openWindows[windowId]; console.log(`[Desktop] Re-displaying ${title}`); existingWindow.style.display = 'block'; bringToFront(existingWindow); const iframe = existingWindow.querySelector('iframe'); if (iframe) { const currentSrc = iframe.getAttribute('src'); if (currentSrc === 'about:blank' || currentSrc !== url) { iframe.setAttribute('src', url); setTimeout(() => tryFocusIframe(iframe, "reopen-reload"), 250); } } appOpeningDebounce[appId] = false; return; }
             console.log(`[Desktop] Creating new window for ${title}`);
             const win = document.createElement('div'); win.className = 'window'; win.id = windowId; win.style.width = `${parseInt(width) || 400}px`; win.style.height = `${parseInt(height) || 300}px`; const initialLeft = 100 + (Object.keys(openWindows).length % 6) * 25; const initialTop = 50 + (Object.keys(openWindows).length % 6) * 25; win.style.left = `${initialLeft}px`; win.style.top = `${initialTop}px`; win.style.display = 'block';
             win.innerHTML = `<div class="title-bar"><span class="title-bar-text">${title}</span><div class="window-buttons"><button class="window-button close-button">X</button></div></div><div class="window-content"><iframe src="about:blank" title="${title}" sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-modals allow-forms"></iframe></div>`;
             document.getElementById('desktop').appendChild(win); openWindows[windowId] = win; makeDraggable(win); bringToFront(win);
             const iframeElement = win.querySelector('iframe'); if (iframeElement) { setTimeout(() => { iframeElement.setAttribute('src', url); setTimeout(() => tryFocusIframe(iframeElement, "create-new"), 350); }, 50); }
             const closeButton = win.querySelector('.close-button');
-            closeButton.addEventListener('click', (e) => { e.stopPropagation(); const iframe = win.querySelector('iframe'); if (iframe) { let directCleanupSuccess = false; try { if (iframe.contentWindow && typeof iframe.contentWindow.cleanupGame === 'function') { iframe.contentWindow.cleanupGame(); directCleanupSuccess = true; console.log(`[Desktop] Direct cleanupGame called for ${title}.`); } else if (iframe.contentWindow) { console.warn(`[Desktop] cleanupGame not function in ${title}.`);} else { console.warn(`[Desktop] contentWindow not accessible for ${title} for direct cleanup.`);} } catch (err) { console.warn(`[Desktop] Error direct cleanup ${title}: ${err.message}`); } if (!directCleanupSuccess) { try { if (iframe.contentWindow) iframe.contentWindow.postMessage('cleanup', '*'); else console.warn(`[Desktop] Cannot postMessage, contentWindow null for ${title}.`); } catch (pmErr) { console.error(`[Desktop] Error postMessage ${title}: ${pmErr.message}`);} } iframe.setAttribute('src', 'about:blank'); } win.style.display = 'none'; });
-            setTimeout(() => { appOpeningDebounce[appId] = false; console.log(`[Desktop] Reset appOpeningDebounce for ${title}.`); }, 800); // Ensure debounce resets
+            closeButton.addEventListener('click', (e) => { e.stopPropagation(); const iframe = win.querySelector('iframe'); if (iframe) { let directCleanupSuccess = false; try { if (iframe.contentWindow && typeof iframe.contentWindow.cleanupGame === 'function') { iframe.contentWindow.cleanupGame(); directCleanupSuccess = true; console.log(`[Desktop] Direct cleanupGame called for ${title}.`); } else if (iframe.contentWindow) { console.warn(`[Desktop] cleanupGame not function in ${title}.`);} else { console.warn(`[Desktop] contentWindow not accessible for ${title}.`);} } catch (err) { console.warn(`[Desktop] Error direct cleanup ${title}: ${err.message}`); } if (!directCleanupSuccess) { try { if (iframe.contentWindow) iframe.contentWindow.postMessage('cleanup', '*'); else console.warn(`[Desktop] Cannot postMessage, contentWindow null for ${title}.`); } catch (pmErr) { console.error(`[Desktop] Error postMessage ${title}: ${pmErr.message}`);} } iframe.setAttribute('src', 'about:blank'); } win.style.display = 'none'; });
+            setTimeout(() => { appOpeningDebounce[appId] = false; console.log(`[Desktop] Reset appOpeningDebounce for ${title}.`); }, 800);
         }
 
         // --- Application Launching (Desktop Icons) ---
@@ -265,72 +295,75 @@
             icon.addEventListener('dblclick', () => {
                 const appId = icon.dataset.appid, title = icon.dataset.title || 'Application', url = icon.dataset.url;
                 const width = icon.dataset.width, height = icon.dataset.height;
-                if (appId) { dblClickCounter[appId]++; console.log(`[Desktop] Icon DBLCLICK for ${title} - Count: ${dblClickCounter[appId]}. Debounce State: ${appOpeningDebounce[appId]}`); }
-                if (appOpeningDebounce[appId]) { console.log(`[Desktop] Debouncing dblclick for ${title}.`); return; }
-                if (appId && title && url) {
-                    appOpeningDebounce[appId] = true;
-                    console.log(`[Desktop] Set appOpeningDebounce for ${title} to true (icon click).`);
-                    createWindow(appId, title, url, width, height);
-                } else { console.error("Icon is missing data attributes", icon.id); }
+                if (appId) { dblClickCounter[appId]++; console.log(`[Desktop] Icon DBLCLICK for ${title} - Count: ${dblClickCounter[appId]}. Debounce: ${appOpeningDebounce[appId]}`); }
+                if (appOpeningDebounce[appId]) { console.log(`[Desktop] Debouncing icon dblclick for ${title}.`); return; }
+                if (appId && title && url) { appOpeningDebounce[appId] = true; console.log(`[Desktop] Set appOpeningDebounce for ${title} (icon click).`); createWindow(appId, title, url, width, height); }
+                else { console.error("Icon is missing data attributes", icon.id); }
             });
         });
 
         // --- Start Menu Logic ---
-        startButton.addEventListener('click', (event) => {
-            event.stopPropagation(); // Prevent click from immediately closing menu
-            startMenu.style.display = startMenu.style.display === 'block' ? 'none' : 'block';
-            if (startMenu.style.display === 'block') {
-                console.log("[Desktop] Start Menu Opened");
-            } else {
-                console.log("[Desktop] Start Menu Closed");
-            }
-        });
+        function initializeStartMenu() {
+            if (startButton && startMenu) {
+                startButton.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    startMenu.style.display = startMenu.style.display === 'block' ? 'none' : 'block';
+                    console.log(`[Desktop] Start Menu toggled to: ${startMenu.style.display}`);
+                });
 
-        // Add listeners to items in Start Menu
-        document.querySelectorAll('#start-menu .start-menu-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const appId = item.dataset.appid;
-                const iconElement = document.getElementById(`${appId}-icon`); // Find corresponding desktop icon
-                if (iconElement) {
-                    const title = iconElement.dataset.title || 'Application';
-                    const url = iconElement.dataset.url;
-                    const width = iconElement.dataset.width;
-                    const height = iconElement.dataset.height;
+                startMenu.querySelectorAll('.start-menu-item').forEach(item => {
+                    item.addEventListener('click', (event) => { // Added event param
+                        event.stopPropagation(); // Prevent click from bubbling to document
 
-                    console.log(`[Desktop] Start Menu click for ${title}. Debounce State: ${appOpeningDebounce[appId]}`);
-                    if (appOpeningDebounce[appId]) {
-                        console.log(`[Desktop] Debouncing start menu click for ${title}.`);
-                        // If already opening, maybe just bring its window to front if it exists
-                        const winId = `window-${appId}`;
-                        if(openWindows[winId] && openWindows[winId].style.display === 'block') {
-                            bringToFront(openWindows[winId]);
+                        const appId = item.dataset.appid;
+                        if (!appId) {
+                            console.log("[Desktop] Non-app Start Menu item clicked:", item.textContent);
+                            startMenu.style.display = 'none'; return;
                         }
-                        startMenu.style.display = 'none'; // Close menu
-                        return;
-                    }
 
-                    if (appId && title && url) {
-                        appOpeningDebounce[appId] = true;
-                        console.log(`[Desktop] Set appOpeningDebounce for ${title} to true (start menu click).`);
-                        createWindow(appId, title, url, width, height);
-                    }
-                } else if (appId) {
-                    console.warn(`[Desktop] No desktop icon found for Start Menu appID: ${appId} to get data attributes.`);
-                }
-                startMenu.style.display = 'none'; // Close menu after clicking an item
-            });
-        });
+                        const iconElement = document.getElementById(`${appId}-icon`);
+                        if (iconElement) {
+                            const title = iconElement.dataset.title || 'Application';
+                            const url = iconElement.dataset.url;
+                            const width = iconElement.dataset.width;
+                            const height = iconElement.dataset.height;
 
-        // Close Start Menu if clicking outside of it
-        document.addEventListener('click', (event) => {
-            if (startMenu.style.display === 'block' && !startMenu.contains(event.target) && event.target !== startButton) {
-                startMenu.style.display = 'none';
-                console.log("[Desktop] Start Menu Closed (click outside)");
+                            console.log(`[Desktop] Start Menu click for ${title}. Debounce: ${appOpeningDebounce[appId]}`);
+                            if (appOpeningDebounce[appId]) {
+                                console.log(`[Desktop] Debouncing start menu click for ${title}.`);
+                                const winId = `window-${appId}`;
+                                if(openWindows[winId] && openWindows[winId].style.display === 'block') { bringToFront(openWindows[winId]); }
+                                startMenu.style.display = 'none'; return;
+                            }
+
+                            if (title && url) {
+                                appOpeningDebounce[appId] = true;
+                                console.log(`[Desktop] Set appOpeningDebounce for ${title} (start menu click).`);
+                                createWindow(appId, title, url, width, height);
+                            }
+                        } else { console.warn(`[Desktop] No desktop icon found for Start Menu appID: ${appId}`); }
+                        startMenu.style.display = 'none';
+                    });
+                });
+
+                document.addEventListener('click', (event) => {
+                    if (startMenu.style.display === 'block' && !startMenu.contains(event.target) && event.target !== startButton) {
+                        startMenu.style.display = 'none';
+                        console.log("[Desktop] Start Menu Closed (click outside)");
+                    }
+                });
+            } else {
+                console.error("[Desktop] Start Button or Start Menu element not found in the DOM for initialization!");
             }
-        });
+        }
+        // Call initializeStartMenu after DOM is loaded if script is in <head>
+        // If script is at end of <body>, can call directly, but DOMContentLoaded is safer.
+        // For this setup, since the script is at the end, direct call to initializeStartMenu would work,
+        // but DOMContentLoaded is more robust if script placement changes.
+        // However, the global startButton/startMenu declaration and then assignment inside DOMContentLoaded is better.
 
 
-        // --- Global message listener for iframe communication (for Notepad title updates, etc.) ---
+        // --- Global message listener for iframe communication ---
         window.addEventListener('message', (event) => {
             const data = event.data;
             if (data && data.type && data.appId) {
@@ -339,20 +372,16 @@
                 if (targetWindow && targetWindow.style.display === 'block') {
                     switch (data.type) {
                         case 'SET_WINDOW_TITLE':
-                            if (data.title) {
-                                const titleBarText = targetWindow.querySelector('.title-bar-text');
-                                if (titleBarText) { titleBarText.textContent = data.title; console.log(`[Desktop] Title updated for ${data.appId} to: ${data.title}`);}
-                            }
+                            if (data.title) { const titleBarText = targetWindow.querySelector('.title-bar-text'); if (titleBarText) { titleBarText.textContent = data.title; console.log(`[Desktop] Title updated for ${data.appId} to: ${data.title}`);}}
                             break;
                         case 'CLOSE_WINDOW':
                             const closeButton = targetWindow.querySelector('.close-button');
-                            if (closeButton) { console.log(`[Desktop] Received CLOSE_WINDOW request for ${data.appId}.`); closeButton.click(); }
+                            if (closeButton) { console.log(`[Desktop] Received CLOSE_WINDOW for ${data.appId}.`); closeButton.click(); }
                             break;
                     }
                 }
             }
         });
-
     </script>
 </body>
 </html>
