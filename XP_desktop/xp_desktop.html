@@ -48,7 +48,7 @@
         #taskbar {
             position: absolute; bottom: 0; left: 0; width: 100%; height: 30px;
             background: linear-gradient(to bottom, #245edc, #3f8cf5); border-top: 1px solid #6aa2f7;
-            display: flex; align-items: center; padding: 0 5px; z-index: 10000; /* Taskbar on top */
+            display: flex; align-items: center; padding: 0 5px; z-index: 10000;
         }
         #start-button {
             background: linear-gradient(to bottom, #5bde5b, #3aa53a); border: 1px outset #4caf4c; color: white;
@@ -56,91 +56,48 @@
             text-shadow: 1px 1px 1px #333; font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif; font-size: 14px;
         }
         #start-button:active { background: linear-gradient(to top, #5bde5b, #3aa53a); border-style: inset; }
+
+        #taskbar-apps {
+            display: flex; align-items: center; height: 100%;
+            margin-left: 5px; overflow: hidden; flex-grow: 1; /* Allow to take space */
+        }
+        .taskbar-app-button {
+            background: linear-gradient(to bottom, #5283ea, #2c62c8); border: 1px outset #799eeb;
+            color: white; padding: 0 10px; margin-right: 3px; height: 22px;
+            line-height: 20px; font-size: 11px; border-radius: 3px; cursor: pointer;
+            max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            box-shadow: 1px 1px 1px rgba(0,0,0,0.2);
+        }
+        .taskbar-app-button:hover { background: linear-gradient(to bottom, #6f9cf5, #4a7cd6); }
+        .taskbar-app-button.active-window {
+            background: linear-gradient(to top, #5283ea, #2c62c8); border-style: inset; font-weight: bold;
+        }
+
         #clock {
             margin-left: auto; background-color: #6aa2f7; border: 1px inset #3f8cf5;
-            color: white; padding: 2px 8px; font-size: 12px; border-radius: 2px;
+            color: white; padding: 2px 8px; font-size: 12px; border-radius: 2px; flex-shrink: 0;
         }
 
         /* --- Start Menu --- */
         #start-menu {
-            position: absolute;
-            bottom: 30px; /* Positioned above the taskbar */
-            left: 0;
-            width: 280px; /* Adjusted width for two columns */
-            max-height: 450px; /* Adjust as needed, or use vh */
-            background-color: #c6d8f0; /* Light blue similar to XP */
-            border: 1px outset #FFFFFF; /* Standard XP outset border */
-            border-top: 2px solid #FFFFFF;
-            border-left: 2px solid #FFFFFF;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
-            z-index: 9999; /* Below taskbar, above most windows (windows get higher z-index) */
-            display: none; /* Hidden by default */
-            overflow-y: auto; /* Scroll if content exceeds max-height */
-            padding: 0; /* Remove padding, items will have their own */
-            color: black; /* Default text color */
-            font-size: 11px; /* Default font for menu items */
+            position: absolute; bottom: 30px; left: 0; width: 280px; max-height: 450px;
+            background-color: #c6d8f0; border: 1px outset #FFFFFF; border-top: 2px solid #FFFFFF;
+            border-left: 2px solid #FFFFFF; box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+            z-index: 9999; display: none; overflow-y: auto; padding: 0; color: black; font-size: 11px;
         }
-        .start-menu-header {
-            background-color: #316ac5; /* Darker blue header */
-            padding: 8px 10px;
-            display:flex;
-            align-items:center;
-            border-bottom: 1px solid #1c3e73; /* Separator */
-        }
-        .start-menu-user-icon {
-            width:36px; height:36px; background-color:#fff;
-            border: 1px solid #7f9db9;
-            border-radius:3px; margin-right:10px;
-            display:flex; align-items:center; justify-content:center; font-size:22px;
-        }
+        .start-menu-header { background-color: #316ac5; padding: 8px 10px; display:flex; align-items:center; border-bottom: 1px solid #1c3e73; }
+        .start-menu-user-icon { width:36px; height:36px; background-color:#fff; border: 1px solid #7f9db9; border-radius:3px; margin-right:10px; display:flex; align-items:center; justify-content:center; font-size:22px; }
         .start-menu-username { color:white; font-weight:bold; font-size: 13px; }
-
-        .start-menu-columns { display: flex; flex-grow: 1; /* Allow columns to fill height */}
+        .start-menu-columns { display: flex; flex-grow: 1; }
         .start-menu-main-column { width: 55%; padding: 5px 0; border-right: 1px solid #84a4ce; }
-        .start-menu-side-column { width: 45%; padding: 5px 0; background-color: #dde8f5; /* Lighter shade for side */ }
-
-        .start-menu-item {
-            padding: 5px 10px 5px 10px;
-            cursor: pointer;
-            /* font-size: 11px; Inherited from #start-menu */
-            color: #000;
-            display: flex;
-            align-items: center;
-            white-space: nowrap;
-        }
-        .start-menu-item:hover {
-            background-color: #316ac5; /* XP selection blue */
-            color: white;
-        }
-        .start-menu-item .icon-placeholder {
-            width: 20px; height: 20px;
-            font-size: 16px; line-height: 20px;
-            margin-right: 8px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
-        .start-menu-item:hover .icon-placeholder { color: white; /* Ensure icon contrasts on hover */ }
-
-        .start-menu-separator {
-            height: 1px;
-            background-color: #84a4ce; /* Lighter separator */
-            margin: 4px 5px;
-        }
-        .start-menu-footer {
-            background-color: #316ac5; /* Darker blue footer */
-            padding: 5px;
-            text-align:right;
-            border-top: 1px solid #1c3e73;
-            flex-shrink: 0; /* Prevent footer from shrinking */
-        }
-        .start-menu-footer button {
-            font-size:10px; padding: 2px 8px; margin-left: 5px;
-            background-color:#dfdfdf; border:1px outset #ccc;
-            cursor: pointer;
-        }
-
+        .start-menu-side-column { width: 45%; padding: 5px 0; background-color: #dde8f5; }
+        .start-menu-item { padding: 5px 10px 5px 10px; cursor: pointer; color: #000; display: flex; align-items: center; white-space: nowrap; }
+        .start-menu-item:hover { background-color: #316ac5; color: white; }
+        .start-menu-item .icon-placeholder { width: 20px; height: 20px; font-size: 16px; line-height: 20px; margin-right: 8px; display: inline-flex; align-items: center; justify-content: center; text-align: center; }
+        .start-menu-item:hover .icon-placeholder { color: white; }
+        .start-menu-separator { height: 1px; background-color: #84a4ce; margin: 4px 5px; }
+        .start-menu-footer { background-color: #316ac5; padding: 5px; text-align:right; border-top: 1px solid #1c3e73; flex-shrink: 0; }
+        .start-menu-footer button { font-size:10px; padding: 2px 8px; margin-left: 5px; background-color:#dfdfdf; border:1px outset #ccc; cursor: pointer; }
 
         /* Windows (General Frame Styles) */
         .window {
@@ -177,7 +134,6 @@
     </style>
 </head>
 <body>
-    <!-- Ensure no stray comments are in the body like the one from the screenshot -->
     <div id="desktop">
         <div class="icon" id="paint-icon" data-appid="paint" data-title="Paint" data-url="paint.html" data-width="450" data-height="400"><span>Paint</span></div>
         <div class="icon" id="video-icon" data-appid="video" data-title="Video Player" data-url="video.html" data-width="500" data-height="400"><span>Video Player</span></div>
@@ -191,7 +147,6 @@
         <div class="icon" id="pong-icon" data-appid="pong" data-title="Pong" data-url="pong.html" data-width="630" data-height="480"><span>Pong</span></div>
         <div class="icon" id="notepad-icon" data-appid="notepad" data-title="Untitled - Notepad" data-url="notepad.html" data-width="600" data-height="400"><span>Notepad</span></div>
         <div class="icon" id="mycomputer-icon" data-appid="mycomputer" data-title="My Computer" data-url="my_computer.html" data-width="550" data-height="400"><span>My Computer</span></div>
-
 
         <div id="start-menu">
             <div class="start-menu-header"><div class="start-menu-user-icon">👤</div><span class="start-menu-username">Windows User</span></div>
@@ -213,7 +168,6 @@
                 <div class="start-menu-side-column">
                     <div class="start-menu-item" data-appid="calc"><span class="icon-placeholder">🧮</span>Calculator</div>
                     <div class="start-menu-item" data-appid="mycomputer"><span class="icon-placeholder">💻</span>My Computer</div>
-                    {/* REMOVED STRAY COMMENT FROM HERE */}
                     <div class="start-menu-item"><span class="icon-placeholder">🖼️</span>My Pictures</div>
                     <div class="start-menu-item"><span class="icon-placeholder">🎵</span>My Music</div>
                     <div class="start-menu-separator"></div>
@@ -244,12 +198,17 @@
     <div id="shutting-down-screen" class="system-overlay"><h2>Windows is shutting down...</h2></div>
     <div id="power-off-message" class="system-overlay"><p>It is now safe to turn off your computer.</p><p>(Refresh browser to restart)</p></div>
 
-    <div id="taskbar"><button id="start-button">Start</button><div id="clock"></div></div>
+    <div id="taskbar">
+        <button id="start-button">Start</button>
+        <div id="taskbar-apps"></div> <!-- Container for app buttons -->
+        <div id="clock"></div>
+    </div>
 
     <script>
         let highestZIndex = 1; let activeWindow = null; let isDragging = false;
         let dragOffsetX, dragOffsetY; let openWindows = {}; let appOpeningDebounce = {};
         let startButton, startMenu, loggingOffScreen, loginScreen, shuttingDownScreen, powerOffMessage, loginUserCard, logOffButton, turnOffButton;
+        let taskbarAppsContainer;
 
         document.addEventListener('DOMContentLoaded', () => {
              startButton = document.getElementById('start-button');
@@ -261,6 +220,7 @@
              loginUserCard = document.getElementById('login-user-card');
              logOffButton = document.getElementById('log-off-button');
              turnOffButton = document.getElementById('turn-off-button');
+             taskbarAppsContainer = document.getElementById('taskbar-apps');
 
              initializeStartMenu();
              initializeShutdownEvents();
@@ -269,88 +229,101 @@
 
         function updateClock() { const clockElement = document.getElementById('clock'); if (clockElement) { const now = new Date(); clockElement.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); } }
         setInterval(updateClock, 1000);
+
         function tryFocusIframe(iframe, context) { if (iframe && iframe.contentWindow) { try { iframe.contentWindow.focus(); } catch (e) {} } }
-        function bringToFront(winElement) { if (!winElement) return; highestZIndex++; winElement.style.zIndex = highestZIndex; const iframe = winElement.querySelector('iframe'); if (iframe && winElement.style.display === 'block') { setTimeout(() => tryFocusIframe(iframe, "bringToFront"), 50); } }
-        function makeDraggable(winElement) { const titleBar = winElement.querySelector('.title-bar'); if (!titleBar) return; titleBar.addEventListener('mousedown', (e) => { if (e.target.classList.contains('window-button')) return; isDragging = true; activeWindow = winElement; bringToFront(activeWindow); activeWindow.classList.add('dragging'); dragOffsetX = e.clientX - activeWindow.offsetLeft; dragOffsetY = e.clientY - activeWindow.offsetTop; document.addEventListener('mousemove', handleDrag); document.addEventListener('mouseup', stopDrag); document.addEventListener('mouseleave', stopDrag); }); winElement.addEventListener('mousedown', (e) => { if (!isDragging || activeWindow !== winElement) bringToFront(winElement); }, true); }
+
+        function updateTaskbarActiveButton(activeAppId) {
+            if (!taskbarAppsContainer) return;
+            taskbarAppsContainer.querySelectorAll('.taskbar-app-button').forEach(btn => {
+                btn.classList.toggle('active-window', btn.dataset.appid === activeAppId);
+            });
+        }
+
+        function bringToFront(winElement) {
+            if (!winElement) return;
+            highestZIndex++;
+            winElement.style.zIndex = highestZIndex;
+            activeWindow = winElement; // Update the active window reference
+            const iframe = winElement.querySelector('iframe');
+            if (iframe && winElement.style.display === 'block') {
+                setTimeout(() => tryFocusIframe(iframe, "bringToFront"), 50);
+            }
+            const appId = winElement.id.replace('window-', '');
+            updateTaskbarActiveButton(appId);
+        }
+
+        function makeDraggable(winElement) {
+            const titleBar = winElement.querySelector('.title-bar'); if (!titleBar) return;
+            titleBar.addEventListener('mousedown', (e) => { if (e.target.classList.contains('window-button')) return; isDragging = true; activeWindow = winElement; bringToFront(activeWindow); activeWindow.classList.add('dragging'); dragOffsetX = e.clientX - activeWindow.offsetLeft; dragOffsetY = e.clientY - activeWindow.offsetTop; document.addEventListener('mousemove', handleDrag); document.addEventListener('mouseup', stopDrag); document.addEventListener('mouseleave', stopDrag); });
+            winElement.addEventListener('mousedown', (e) => { if (!isDragging || activeWindow !== winElement) bringToFront(winElement); }, true);
+        }
         function handleDrag(e) { if (!isDragging || !activeWindow) return; e.preventDefault(); let newX = e.clientX - dragOffsetX, newY = e.clientY - dragOffsetY; const desk = document.getElementById('desktop'), task = document.getElementById('taskbar'); const maxW = desk.offsetWidth - activeWindow.offsetWidth, maxH = desk.offsetHeight - activeWindow.offsetHeight - task.offsetHeight; newX = Math.max(0, Math.min(newX, maxW)); newY = Math.max(0, Math.min(newY, maxH)); activeWindow.style.left = `${newX}px`; activeWindow.style.top = `${newY}px`; }
         function stopDrag() { if (isDragging) { if (activeWindow) activeWindow.classList.remove('dragging'); isDragging = false; document.removeEventListener('mousemove', handleDrag); document.removeEventListener('mouseup', stopDrag); document.removeEventListener('mouseleave', stopDrag); } }
 
         function closeAllWindows(callback) {
-            console.log("[Desktop] Closing all windows...");
-            const windowsToClose = Object.values(openWindows);
-            const totalVisibleWindows = windowsToClose.filter(win => win.style.display !== 'none').length;
-
-            if (totalVisibleWindows === 0) {
-                if (callback) callback();
-                return;
-            }
-            let closedCount = 0; // To track how many close operations have been initiated
-            windowsToClose.forEach(win => {
-                if (win.style.display !== 'none') {
-                    const closeButton = win.querySelector('.close-button');
-                    if (closeButton) {
-                        closeButton.click(); // Triggers individual close logic including setting src to about:blank
-                    } else { // Fallback if no close button
-                        const iframe = win.querySelector('iframe');
-                        if (iframe) iframe.setAttribute('src', 'about:blank');
-                        win.style.display = 'none';
-                    }
-                    closedCount++;
-                }
-            });
-            // Call callback after a delay. This delay might need adjustment.
-            // It's to give time for the iframes to potentially process cleanup and unload.
+            console.log("[Desktop] Closing all windows..."); const windowsToClose = Object.values(openWindows); const totalVisibleWindows = windowsToClose.filter(win => win.style.display !== 'none').length; if (totalVisibleWindows === 0) { if (callback) callback(); return; }
+            windowsToClose.forEach(win => { if (win.style.display !== 'none') { const closeButton = win.querySelector('.close-button'); if (closeButton) { closeButton.click(); } else { const iframe = win.querySelector('iframe'); if (iframe) iframe.setAttribute('src', 'about:blank'); win.style.display = 'none'; removeAppFromTaskbar(win.id.replace('window-','')); } } });
             if (callback) setTimeout(callback, Math.max(200, totalVisibleWindows * 100));
         }
 
+        function addAppToTaskbar(appId, title) {
+            if (!taskbarAppsContainer || document.getElementById(`taskbar-btn-${appId}`)) return;
+            const button = document.createElement('button'); button.className = 'taskbar-app-button'; button.id = `taskbar-btn-${appId}`;
+            button.textContent = title.length > 20 ? title.substring(0, 17) + "..." : title; button.dataset.appid = appId;
+            button.addEventListener('click', () => {
+                const targetWindow = openWindows[`window-${appId}`];
+                if (targetWindow) { if (targetWindow.style.display === 'none') targetWindow.style.display = 'block'; bringToFront(targetWindow); }
+                else { const iconElement = document.getElementById(`${appId}-icon`); if(iconElement) iconElement.dispatchEvent(new Event('dblclick'));}
+            });
+            taskbarAppsContainer.appendChild(button);
+        }
+
+        function removeAppFromTaskbar(appId) {
+            if (!taskbarAppsContainer) return;
+            const button = document.getElementById(`taskbar-btn-${appId}`); if (button) taskbarAppsContainer.removeChild(button);
+            if (activeWindow && activeWindow.id === `window-${appId}`) activeWindow = null; // Clear active window if it was the one closed
+            if (taskbarAppsContainer.children.length === 0) updateTaskbarActiveButton(null); // No apps open
+            else if (!activeWindow) { // If active window was closed, try to find another visible one to make active
+                const visibleWindows = Object.values(openWindows).filter(w => w.style.display === 'block');
+                if (visibleWindows.length > 0) bringToFront(visibleWindows[visibleWindows.length -1]); // Make last opened visible window active
+                else updateTaskbarActiveButton(null);
+            }
+        }
 
         function createWindow(appId, title, url, iconDataWidth, iconDataHeight) {
             const windowId = `window-${appId}`;
-            const parsedWidth = parseInt(iconDataWidth) || 400;
-            const parsedHeight = parseInt(iconDataHeight) || 300;
-            console.log(`[Desktop] createWindow for ${title}. From icon: ${iconDataWidth}x${iconDataHeight}. Parsed: ${parsedWidth}x${parsedHeight}`);
+            const parsedWidth = parseInt(iconDataWidth) || 400; const parsedHeight = parseInt(iconDataHeight) || 300;
+            console.log(`[Desktop] createWindow for ${title}. IconData: ${iconDataWidth}x${iconDataHeight}. Parsed: ${parsedWidth}x${parsedHeight}`);
+            let win = openWindows[windowId];
 
-            if (openWindows[windowId] && openWindows[windowId].style.display === 'block') {
-                console.log(`[Desktop] Window ${title} is already visible. Applying size ${parsedWidth}x${parsedHeight} & bringing to front.`);
-                openWindows[windowId].style.width = `${parsedWidth}px`;
-                openWindows[windowId].style.height = `${parsedHeight}px`;
-                bringToFront(openWindows[windowId]);
-                appOpeningDebounce[appId] = false; return;
-            }
-            if (openWindows[windowId]) {
-                const existingWindow = openWindows[windowId];
-                console.log(`[Desktop] Re-displaying ${title}. Applying size ${parsedWidth}x${parsedHeight}.`);
-                existingWindow.style.width = `${parsedWidth}px`;
-                existingWindow.style.height = `${parsedHeight}px`;
-                existingWindow.style.display = 'block';
-                bringToFront(existingWindow);
-                const iframe = existingWindow.querySelector('iframe');
+            if (win) { // Window structure exists
+                console.log(`[Desktop] Window ${title} exists. Display: ${win.style.display}`);
+                win.style.width = `${parsedWidth}px`; win.style.height = `${parsedHeight}px`;
+                win.style.display = 'block';
+                addAppToTaskbar(appId, title); // Ensure taskbar button exists/re-add if somehow removed
+                bringToFront(win); // This also updates taskbar active button and sets activeWindow
+                const iframe = win.querySelector('iframe');
                 if (iframe) {
                     const currentSrc = iframe.getAttribute('src');
                     if (currentSrc === 'about:blank' || currentSrc !== url) {
-                        iframe.setAttribute('src', url);
-                        setTimeout(() => tryFocusIframe(iframe, "reopen-reload"), 250);
+                        iframe.setAttribute('src', url); setTimeout(() => tryFocusIframe(iframe, "reopen-reload"), 250);
                     }
                 }
                 appOpeningDebounce[appId] = false; return;
             }
 
-            console.log(`[Desktop] Creating NEW window for ${title} with size ${parsedWidth}x${parsedHeight}`);
-            const win = document.createElement('div'); win.className = 'window'; win.id = windowId;
+            console.log(`[Desktop] Creating NEW window for ${title}`);
+            win = document.createElement('div'); win.className = 'window'; win.id = windowId;
             win.style.width = `${parsedWidth}px`; win.style.height = `${parsedHeight}px`;
             const initialLeft = 100 + (Object.keys(openWindows).length % 6) * 25; const initialTop = 50 + (Object.keys(openWindows).length % 6) * 25;
             win.style.left = `${initialLeft}px`; win.style.top = `${initialTop}px`; win.style.display = 'block';
             win.innerHTML = `<div class="title-bar"><span class="title-bar-text">${title}</span><div class="window-buttons"><button class="window-button close-button">X</button></div></div><div class="window-content"><iframe src="about:blank" title="${title}" sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-modals allow-forms"></iframe></div>`;
-            document.getElementById('desktop').appendChild(win); openWindows[windowId] = win; makeDraggable(win); bringToFront(win);
+            document.getElementById('desktop').appendChild(win); openWindows[windowId] = win; makeDraggable(win);
+            addAppToTaskbar(appId, title); bringToFront(win); // Sets activeWindow and updates taskbar button
             const iframeElement = win.querySelector('iframe');
-            if (iframeElement) {
-                setTimeout(() => {
-                    iframeElement.setAttribute('src', url);
-                    setTimeout(() => tryFocusIframe(iframeElement, "create-new"), 350);
-                }, 50);
-            }
+            if (iframeElement) { setTimeout(() => { iframeElement.setAttribute('src', url); setTimeout(() => tryFocusIframe(iframeElement, "create-new"), 350); }, 50); }
             const closeButton = win.querySelector('.close-button');
-            closeButton.addEventListener('click', (e) => { e.stopPropagation(); const iframe = win.querySelector('iframe'); if (iframe) { let directCleanupSuccess = false; try { if (iframe.contentWindow && typeof iframe.contentWindow.cleanupGame === 'function') { iframe.contentWindow.cleanupGame(); directCleanupSuccess = true; console.log(`[Desktop] Direct cleanupGame called for ${title}.`); } else if (iframe.contentWindow) { console.warn(`[Desktop] cleanupGame not function in ${title}.`);} else { console.warn(`[Desktop] contentWindow not accessible for ${title}.`);} } catch (err) { console.warn(`[Desktop] Error direct cleanup ${title}: ${err.message}`); } if (!directCleanupSuccess) { try { if (iframe.contentWindow) iframe.contentWindow.postMessage('cleanup', '*'); else console.warn(`[Desktop] Cannot postMessage, contentWindow null for ${title}.`); } catch (pmErr) { console.error(`[Desktop] Error postMessage ${title}: ${pmErr.message}`);} } iframe.setAttribute('src', 'about:blank'); } win.style.display = 'none'; });
+            closeButton.addEventListener('click', (e) => { e.stopPropagation(); const iframe = win.querySelector('iframe'); if (iframe) { let directCleanupSuccess = false; try { if (iframe.contentWindow && typeof iframe.contentWindow.cleanupGame === 'function') { iframe.contentWindow.cleanupGame(); directCleanupSuccess = true; console.log(`[Desktop] Direct cleanupGame called for ${title}.`); } else if (iframe.contentWindow) { console.warn(`[Desktop] cleanupGame not function in ${title}.`);} else { console.warn(`[Desktop] contentWindow not accessible for ${title}.`);} } catch (err) { console.warn(`[Desktop] Error direct cleanup ${title}: ${err.message}`); } if (!directCleanupSuccess) { try { if (iframe.contentWindow) iframe.contentWindow.postMessage('cleanup', '*'); else console.warn(`[Desktop] Cannot postMessage, contentWindow null for ${title}.`); } catch (pmErr) { console.error(`[Desktop] Error postMessage ${title}: ${pmErr.message}`);} } iframe.setAttribute('src', 'about:blank'); } win.style.display = 'none'; removeAppFromTaskbar(appId); if (activeWindow === win) { activeWindow = null; updateTaskbarActiveButton(null); }});
             setTimeout(() => { appOpeningDebounce[appId] = false; console.log(`[Desktop] Reset appOpeningDebounce for ${title}.`); }, 800);
         }
 
@@ -372,8 +345,8 @@
                 startButton.addEventListener('click', (event) => { event.stopPropagation(); startMenu.style.display = startMenu.style.display === 'block' ? 'none' : 'block'; console.log(`[Desktop] Start Menu toggled to: ${startMenu.style.display}`); });
                 startMenu.querySelectorAll('.start-menu-item').forEach(item => {
                     item.addEventListener('click', (event) => {
-                        event.stopPropagation(); const appId = item.dataset.appid; if (!appId && item.textContent.trim() !== "Log Off" && item.textContent.trim() !== "Turn Off Computer") { console.log("[Desktop] Non-app Start Menu item clicked:", item.textContent); startMenu.style.display = 'none'; return; }
-                        if (!appId) return; // Skip if no appId for non-functional items
+                        event.stopPropagation(); const appId = item.dataset.appid; if (!appId && !item.id ) { console.log("[Desktop] Non-app Start Menu item clicked:", item.textContent); startMenu.style.display = 'none'; return; } // Check for button ids too
+                        if (!appId) return;
                         const iconElement = document.getElementById(`${appId}-icon`);
                         if (iconElement) {
                             const title = iconElement.dataset.title || 'Application', url = iconElement.dataset.url;
@@ -396,7 +369,7 @@
         }
 
         window.addEventListener('message', (event) => {
-            const data = event.data; if (data && data.type && data.appId) { const windowId = `window-${data.appId}`; const targetWindow = openWindows[windowId]; if (targetWindow && targetWindow.style.display === 'block') { switch (data.type) { case 'SET_WINDOW_TITLE': if (data.title) { const titleBarText = targetWindow.querySelector('.title-bar-text'); if (titleBarText) { titleBarText.textContent = data.title; console.log(`[Desktop] Title updated for ${data.appId} to: ${data.title}`);}} break; case 'CLOSE_WINDOW': const closeButton = targetWindow.querySelector('.close-button'); if (closeButton) { console.log(`[Desktop] Received CLOSE_WINDOW for ${data.appId}.`); closeButton.click(); } break; } } }
+            const data = event.data; if (data && data.type && data.appId) { const windowId = `window-${data.appId}`; const targetWindow = openWindows[windowId]; if (targetWindow && targetWindow.style.display === 'block') { switch (data.type) { case 'SET_WINDOW_TITLE': if (data.title) { const titleBarText = targetWindow.querySelector('.title-bar-text'); if (titleBarText) { titleBarText.textContent = data.title; const taskbarBtn = document.getElementById(`taskbar-btn-${data.appId}`); if(taskbarBtn) taskbarBtn.textContent = data.title.length > 20 ? data.title.substring(0,17)+"..." : data.title; console.log(`[Desktop] Title updated for ${data.appId} to: ${data.title}`);}} break; case 'CLOSE_WINDOW': const closeButton = targetWindow.querySelector('.close-button'); if (closeButton) { console.log(`[Desktop] Received CLOSE_WINDOW for ${data.appId}.`); closeButton.click(); } break; } } }
         });
     </script>
 </body>
