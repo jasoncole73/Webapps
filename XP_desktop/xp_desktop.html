@@ -163,10 +163,11 @@
     </style>
 </head>
 <body>
+    <!-- NO STRAY COMMENTS HERE -->
     <div id="desktop">
         <div class="icon" id="paint-icon" data-appid="paint" data-title="Paint" data-url="paint.html" data-width="450" data-height="400"><span>Paint</span></div>
         <div class="icon" id="video-icon" data-appid="video" data-title="Video Player" data-url="video.html" data-width="500" data-height="400"><span>Video Player</span></div>
-        <div class="icon" id="calc-icon" data-appid="calc" data-title="Calculator" data-url="calculator.html" data-width="330" data-height="450"><span>Calculator</span></div> {/* <<< CORRECTED DIMENSIONS */}
+        <div class="icon" id="calc-icon" data-appid="calc" data-title="Calculator" data-url="calculator.html" data-width="330" data-height="450"><span>Calculator</span></div>
         <div class="icon" id="solitaire-icon" data-appid="solitaire" data-title="Solitaire" data-url="solitaire.html" data-width="600" data-height="500"><span>Solitaire</span></div>
         <div class="icon" id="chess-icon" data-appid="chess" data-title="Chess" data-url="chess.html" data-width="450" data-height="520"><span>Chess</span></div>
         <div class="icon" id="minesweeper-icon" data-appid="minesweeper" data-title="Minesweeper" data-url="minesweeper.html" data-width="300" data-height="490"><span>Minesweeper</span></div>
@@ -265,8 +266,8 @@
             console.log(`[Desktop] Creating NEW window for ${title} with size ${parsedWidth}x${parsedHeight}`);
             const win = document.createElement('div');
             win.className = 'window'; win.id = windowId;
-            win.style.width = `${parsedWidth}px`; // Apply parsed width
-            win.style.height = `${parsedHeight}px`; // Apply parsed height
+            win.style.width = `${parsedWidth}px`;
+            win.style.height = `${parsedHeight}px`;
             const initialLeft = 100 + (Object.keys(openWindows).length % 6) * 25;
             const initialTop = 50 + (Object.keys(openWindows).length % 6) * 25;
             win.style.left = `${initialLeft}px`; win.style.top = `${initialTop}px`;
