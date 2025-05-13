@@ -99,17 +99,16 @@
             box-sizing: border-box;
             overflow-y: auto; /* For vertical scroll if many items */
             overflow-x: hidden; /* Prevent horizontal scroll */
-            /* border styles are inline for XP look */
         }
-         #start-menu-header { /* Added for consistent box-sizing */
+         #start-menu-header { 
             box-sizing: border-box;
         }
-        #start-menu-apps { /* The UL containing the app list */
+        #start-menu-apps { 
             list-style: none;
             padding: 5px 0;
             margin: 0;
             background-color: white;
-            width: 100%; /* Ensure it doesn't cause overflow due to default ul padding/margin */
+            width: 100%; 
             box-sizing: border-box;
         }
         .start-menu-item {
@@ -117,10 +116,10 @@
             cursor: pointer;
             display: flex;
             align-items: center;
-            position: relative; /* For the pseudo-element border */
+            position: relative; 
             white-space: nowrap;
-            overflow: hidden; /* This item itself should hide overflow */
-            text-overflow: ellipsis; /* This might not work directly on flex item, see child span */
+            overflow: hidden; 
+            text-overflow: ellipsis; 
             width: 100%;
             box-sizing: border-box;
         }
@@ -128,8 +127,8 @@
             content: '';
             position: absolute;
             bottom: 0;
-            left: 10px; /* Indent border */
-            right: 10px; /* Indent border */
+            left: 10px; 
+            right: 10px; 
             height: 1px;
             background-color: #ccc;
         }
@@ -138,18 +137,18 @@
             color: white;
         }
         .start-menu-icon {
-            margin-right: 8px; /* Reduced margin */
+            margin-right: 8px; 
             font-size: 16px;
             width: 20px;
-            min-width: 20px; /* Prevent shrinking */
+            min-width: 20px; 
             text-align: center;
-            flex-shrink: 0; /* Prevent icon from shrinking */
+            flex-shrink: 0; 
         }
-        .start-menu-item-title { /* NEW: Span for the title text */
-            flex-grow: 1; /* Allow title to take remaining space */
+        .start-menu-item-title { 
+            flex-grow: 1; 
             overflow: hidden;
             text-overflow: ellipsis;
-            white-space: nowrap; /* Ensure it stays on one line */
+            white-space: nowrap; 
         }
         #start-menu-footer {
             border-top: 1px solid #666;
@@ -159,13 +158,12 @@
             position: absolute;
             bottom: 0;
             left: 0;
-            /* Styles for flex items are in the HTML for the div itself */
         }
         .start-menu-action-button {
             font-family: Tahoma, sans-serif;
             font-size: 11px;
-            padding: 3px 8px; /* Adjusted padding */
-            margin-left: 5px; /* Adjusted margin */
+            padding: 3px 8px; 
+            margin-left: 5px;  
             border: 1px outset #ccc;
             background-color: #d4d0c8;
             color: black;
@@ -179,19 +177,22 @@
 </head>
 <body>
     <div id="desktop">
+        <!-- Apps with potentially unique sizes -->
         <div class="icon" id="paint-icon" data-appid="paint" data-title="Paint" data-url="paint.html" data-width="450" data-height="400"><span>Paint</span></div>
         <div class="icon" id="video-icon" data-appid="video" data-title="Video Player" data-url="video.html" data-width="500" data-height="400"><span>Video Player</span></div>
         <div class="icon" id="calc-icon" data-appid="calc" data-title="Calculator" data-url="calculator.html" data-width="220" data-height="280"><span>Calculator</span></div>
-        <div class="icon" id="solitaire-icon" data-appid="solitaire" data-title="Solitaire" data-url="solitaire.html" data-width="600" data-height="500"><span>Solitaire</span></div>
+
+        <!-- Games - Standardized to Chess Size (450x520) -->
+        <div class="icon" id="solitaire-icon" data-appid="solitaire" data-title="Solitaire" data-url="solitaire.html" data-width="450" data-height="520"><span>Solitaire</span></div>
         <div class="icon" id="chess-icon" data-appid="chess" data-title="Chess" data-url="chess.html" data-width="450" data-height="520"><span>Chess</span></div>
-        <div class="icon" id="minesweeper-icon" data-appid="minesweeper" data-title="Minesweeper" data-url="minesweeper.html" data-width="300" data-height="490"><span>Minesweeper</span></div>
-        <div class="icon" id="tictactoe-icon" data-appid="tictactoe" data-title="Tic Tac Toe" data-url="tictactoe.html" data-width="300" data-height="380"><span>Tic Tac Toe</span></div>
-        <div class="icon" id="memory-icon" data-appid="memory" data-title="Memory Game" data-url="memory.html" data-width="450" data-height="450"><span>Memory Game</span></div>
-        <div class="icon" id="snake-icon" data-appid="snake" data-title="Snake" data-url="snake.html" data-width="430" data-height="480"><span>Snake</span></div>
-        <div class="icon" id="pong-icon" data-appid="pong" data-title="Pong" data-url="pong.html" data-width="630" data-height="480"><span>Pong</span></div>
+        <div class="icon" id="minesweeper-icon" data-appid="minesweeper" data-title="Minesweeper" data-url="minesweeper.html" data-width="450" data-height="520"><span>Minesweeper</span></div>
+        <div class="icon" id="tictactoe-icon" data-appid="tictactoe" data-title="Tic Tac Toe" data-url="tictactoe.html" data-width="450" data-height="520"><span>Tic Tac Toe</span></div>
+        <div class="icon" id="memory-icon" data-appid="memory" data-title="Memory Game" data-url="memory.html" data-width="450" data-height="520"><span>Memory Game</span></div>
+        <div class="icon" id="snake-icon" data-appid="snake" data-title="Snake" data-url="snake.html" data-width="450" data-height="520"><span>Snake</span></div>
+        <div class="icon" id="pong-icon" data-appid="pong" data-title="Pong" data-url="pong.html" data-width="450" data-height="520"><span>Pong</span></div>
 
         <!-- Functional Start Menu (Initially Hidden) -->
-        <div id="start-menu" style="display: none; position: absolute; bottom: 30px; left: 0; width: 220px; max-height: 400px; /* overflow-y: auto; (handled by CSS) */ background-color: #DFDFDF; border: 1px solid #005cbf; border-left: 3px solid #005cbf; border-top: 3px solid #005cbf; border-right: 1px solid #005cbf; border-bottom: none; z-index: 10001; padding: 0; box-shadow: 2px -2px 5px rgba(0,0,0,0.2); color: black;">
+        <div id="start-menu" style="display: none; position: absolute; bottom: 30px; left: 0; width: 220px; max-height: 400px; overflow-y: auto; background-color: #DFDFDF; border: 1px solid #005cbf; border-left: 3px solid #005cbf; border-top: 3px solid #005cbf; border-right: 1px solid #005cbf; border-bottom: none; z-index: 10001; padding: 0; box-shadow: 2px -2px 5px rgba(0,0,0,0.2); color: black;">
             <div id="start-menu-header" style="background: linear-gradient(to bottom, #005cbf, #0053a8); color: white; padding: 5px 10px; font-weight: bold;">
                 User
             </div>
@@ -208,6 +209,14 @@
     </div>
 
     <script>
+        // --- Global State & Window Management ---
+        // ... (This entire <script> block is identical to the one in the previous message
+        //      that starts with "You are absolutely right to push on this...")
+        // Please use that complete JavaScript block here.
+        // For brevity, I'm not repeating the ~250 lines of JavaScript if it's unchanged.
+        // Ensure you have the version with the `appOpeningDebounce` logic and the
+        // corrected Start Menu population and enhanced Shut Down button.
+
         let highestZIndex = 1;
         let activeWindow = null;
         let isDragging = false;
@@ -215,7 +224,7 @@
         let openWindows = {};
         let appOpeningDebounce = {};
 
-        function updateClock() { /* ... (same) ... */
+        function updateClock() { /* ... */
             const clockElement = document.getElementById('clock');
             if (clockElement) {
                 const now = new Date();
@@ -225,13 +234,15 @@
         setInterval(updateClock, 1000);
         updateClock();
 
-        function tryFocusIframe(iframe, context) { /* ... (same) ... */
+        function tryFocusIframe(iframe, context) { /* ... */
             if (iframe && iframe.contentWindow) {
-                try { iframe.contentWindow.focus(); } catch (e) {}
+                try {
+                    iframe.contentWindow.focus();
+                } catch (e) { /* console.warn(`[Desktop] Focus failed via ${context} for iframe ${iframe.title}: ${e.message}`); */ }
             }
         }
 
-        function bringToFront(winElement) { /* ... (same) ... */
+        function bringToFront(winElement) { /* ... */
             if (!winElement) return;
             highestZIndex++;
             winElement.style.zIndex = highestZIndex;
@@ -241,7 +252,7 @@
             }
         }
 
-        function makeDraggable(winElement) { /* ... (same) ... */
+        function makeDraggable(winElement) { /* ... */
             const titleBar = winElement.querySelector('.title-bar');
             if (!titleBar) return;
             titleBar.addEventListener('mousedown', (e) => {
@@ -261,7 +272,7 @@
             }, true);
         }
 
-        function handleDrag(e) { /* ... (same) ... */
+        function handleDrag(e) { /* ... */
             if (!isDragging || !activeWindow) return; e.preventDefault();
             let newX = e.clientX - dragOffsetX, newY = e.clientY - dragOffsetY;
             const desk = document.getElementById('desktop'), task = document.getElementById('taskbar');
@@ -270,14 +281,14 @@
             activeWindow.style.left = `${newX}px`; activeWindow.style.top = `${newY}px`;
         }
 
-        function stopDrag() { /* ... (same) ... */
+        function stopDrag() { /* ... */
             if (isDragging) {
                 isDragging = false;
                 document.removeEventListener('mousemove', handleDrag); document.removeEventListener('mouseup', stopDrag); document.removeEventListener('mouseleave', stopDrag);
             }
         }
 
-        function createWindow(appId, title, url, width, height) { /* ... (same robust version) ... */
+        function createWindow(appId, title, url, width, height) { /* ... (ensure this is the LATEST robust version from the previous response) ... */
             const windowId = `window-${appId}`;
             if (openWindows[windowId] && openWindows[windowId].style.display === 'block') {
                 console.log(`[Desktop] Window ${title} is already visible. Bringing to front and focusing.`);
@@ -300,11 +311,12 @@
                         console.log(`[Desktop] Iframe for ${title} already has correct src.`);
                     }
                 }
-                setTimeout(() => { if(appOpeningDebounce[appId]) appOpeningDebounce[appId] = false; console.log(`[Desktop] Reset debounce for reopened window ${title}.`); }, 200);
+                // Reset debounce for reopened window, as it's now considered "settled"
+                setTimeout(() => { if(appOpeningDebounce[appId]) appOpeningDebounce[appId] = false; console.log(`[Desktop] Reset debounce for reopened window ${title}.`); }, 600); // Use the debounce reset time
                 return;
             }
             console.log(`[Desktop] Creating new window for ${title}`);
-            // appOpeningDebounce[appId] = true; // Set by caller
+            // appOpeningDebounce[appId] = true; // This is set by the caller
 
             const win = document.createElement('div');
             win.className = 'window'; win.id = windowId;
@@ -358,10 +370,11 @@
                 }
                 win.style.display = 'none';
             });
+             // Reset appOpeningDebounce after a longer delay for NEW windows
             setTimeout(() => { if(appOpeningDebounce[appId]) { appOpeningDebounce[appId] = false; console.log(`[Desktop] Reset debounce for new window ${title}.`); } }, 800);
         }
 
-        // --- Application Launching (Desktop Icons) ---
+
         let dblClickCounter = {};
         document.querySelectorAll('.icon').forEach(icon => {
             const appIdForIcon = icon.dataset.appid;
@@ -393,12 +406,11 @@
             });
         });
 
-        // --- Start Menu Functionality ---
         const startButton = document.getElementById('start-button');
         const startMenu = document.getElementById('start-menu');
         const startMenuAppList = document.getElementById('start-menu-apps');
 
-        function populateStartMenu() {
+        function populateStartMenu() { /* ... (same as previous full version) ... */
             if (!startMenuAppList) {
                 console.error("[Desktop] Start Menu App List UL element not found for population.");
                 return;
@@ -441,7 +453,7 @@
                 iconSpan.textContent = appData.iconChar;
                 li.appendChild(iconSpan);
 
-                const titleSpan = document.createElement('span'); // Wrap title in span
+                const titleSpan = document.createElement('span');
                 titleSpan.className = 'start-menu-item-title';
                 titleSpan.textContent = appData.title;
                 li.appendChild(titleSpan);
@@ -451,7 +463,8 @@
             console.log(`[Desktop] Start Menu populated with ${appsForMenu.length} items.`);
         }
 
-        if (startButton && startMenu && startMenuAppList) {
+
+        if (startButton && startMenu && startMenuAppList) { /* ... (same as previous full version for Start Menu event listeners, log off, and shutdown) ... */
             startButton.addEventListener('click', (event) => {
                 event.stopPropagation();
                 const isHidden = startMenu.style.display === 'none' || startMenu.style.display === '';
@@ -510,33 +523,25 @@
                                 const closeButton = winElement.querySelector('.close-button');
                                 if (closeButton) {
                                     closeButton.click();
-                                    // Give a brief moment for cleanup and display none to potentially apply
-                                    // This timing is tricky; for true sequential, might need callbacks or more complex state
-                                    setTimeout(resolve, 150); // Slightly longer for each close to attempt processing
-                                } else {
-                                    resolve();
-                                }
-                            } else {
-                                resolve();
-                            }
+                                    setTimeout(resolve, 150);
+                                } else { resolve(); }
+                            } else { resolve(); }
                         });
                     });
-
                     startMenu.style.display = 'none';
-
                     Promise.all(closePromises).then(() => {
                         console.log("[Desktop] All windows reportedly closed. Attempting window.close().");
                         setTimeout(() => {
-                            // Try to replace current page content before attempting to close for a visual cue
-                            // document.body.innerHTML = '<div style="width:100vw;height:100vh;background:black;color:white;display:flex;align-items:center;justify-content:center;font-size:24px;position:fixed;top:0;left:0;z-index:50000;">Shutting down...</div>';
-                            alert("It is now safe to turn off your computer.\n(Please close the browser tab manually if it does not close).");
-                            // The actual window.close() is often blocked by browsers.
-                            // window.open('', '_self', ''); // Trick
-                            // window.close();
-                        }, 700); // Delay after all close promises resolve
+                            window.open('', '_self', '');
+                            window.close();
+                            setTimeout(() => {
+                                if (document.visibilityState === 'visible') {
+                                     document.body.innerHTML = '<div style="width:100vw;height:100vh;background:black;color:white;display:flex;align-items:center;justify-content:center;font-size:24px;position:fixed;top:0;left:0;z-index:50000;">It is now safe to turn off your computer.<br>(Please close the browser tab/window manually if it did not close automatically)</div>';
+                                }
+                            }, 500);
+                        }, 1000);
                     }).catch(error => {
                         console.error("[Desktop] Error during window closing promises for shutdown:", error);
-                         // Still attempt to inform user even if closing windows had an issue
                         setTimeout(() => {
                              alert("It is now safe to turn off your computer.\n(Please close the browser tab manually if it did not close automatically).");
                         }, 700);
