@@ -42,7 +42,7 @@
         #pong-icon { top: 330px; left: 30px; } #pong-icon::before { content: '||'; background-color: #add8e6; font-size: 38px; line-height: 45px; letter-spacing: 15px;}
         #numberguess-icon { top: 330px; left: 120px; } /* Adjust position as needed */
         #numberguess-icon::before { content: '#️⃣'; background-color: #f0ad4e; font-size: 38px;}
-
+        /* Removed the {* New Icon Added *} comment if it was here */
 
         /* Taskbar */
         #taskbar {
@@ -109,23 +109,18 @@
         <div class="icon" id="memory-icon" data-appid="memory" data-title="Memory Game" data-url="memory.html" data-width="450" data-height="450"><span>Memory Game</span></div>
         <div class="icon" id="snake-icon" data-appid="snake" data-title="Snake" data-url="snake.html" data-width="430" data-height="480"><span>Snake</span></div>
         <div class="icon" id="pong-icon" data-appid="pong" data-title="Pong" data-url="pong.html" data-width="630" data-height="480"><span>Pong</span></div>
-        <div class="icon" id="numberguess-icon" data-appid="numberguess" data-title="Number Guess" data-url="numberguess.html" data-width="350" data-height="250"><span>Guess Num</span></div> {/* New Icon Added */}
+        <div class="icon" id="numberguess-icon" data-appid="numberguess" data-title="Number Guess" data-url="numberguess.html" data-width="350" data-height="250"><span>Guess Num</span></div>
 
         <div id="taskbar"><button id="start-button">Start</button><div id="clock"></div></div>
     </div>
 
     <script>
-        // --- All JavaScript from previous complete xp_desktop.html goes here ---
-        // (Including updateClock, bringToFront, makeDraggable, handleDrag, stopDrag,
-        // createWindow, and the icon dblclick listener with appOpeningDebounce)
-        // This script is identical to the last full xp_desktop.html script I provided.
-
         let highestZIndex = 1;
         let activeWindow = null;
         let isDragging = false;
         let dragOffsetX, dragOffsetY;
         let openWindows = {};
-        let appOpeningDebounce = {}; // Use for simple debounce per app
+        let appOpeningDebounce = {};
 
         function updateClock() {
             const clockElement = document.getElementById('clock');
@@ -153,8 +148,8 @@
             highestZIndex++;
             winElement.style.zIndex = highestZIndex;
             const iframe = winElement.querySelector('iframe');
-            if (iframe && winElement.style.display === 'block') { // Only focus if visible
-                setTimeout(() => tryFocusIframe(iframe, "bringToFront"), 50); // Slightly longer delay
+            if (iframe && winElement.style.display === 'block') {
+                setTimeout(() => tryFocusIframe(iframe, "bringToFront"), 50);
             }
         }
 
@@ -219,7 +214,9 @@
                         console.log(`[Desktop] Iframe for ${title} already has correct src. Focus handled by bringToFront/click.`);
                     }
                 }
-                appOpeningDebounce[appId] = false; // Reset debounce as we've handled it
+                // Reset debounce when re-activating an existing window
+                // This might be too soon if the iframe needs to reload, handled by the main dblclick timeout
+                // appOpeningDebounce[appId] = false;
                 return;
             }
 
@@ -275,14 +272,21 @@
                     iframe.setAttribute('src', 'about:blank');
                 }
                 win.style.display = 'none';
-                appOpeningDebounce[appId] = false; // Reset debounce when window is closed
+                // Reset debounce when window is explicitly closed
+                if (appId) appOpeningDebounce[appId] = false;
             });
-            // Reset debounce flag after window creation process is initiated
-             setTimeout(() => {
-                appOpeningDebounce[appId] = false;
-                console.log(`[Desktop] Reset debounce for ${appId} after new window creation sequence.`);
-            }, 800); // Match the timeout in the dblclick handler
+
+            // Reset debounce flag for this app after window creation attempt is well underway
+            // This was previously in the dblclick handler, moving it here for new windows.
+            if (appId) {
+                setTimeout(() => {
+                    appOpeningDebounce[appId] = false;
+                    console.log(`[Desktop] Reset debounce for ${appId} after new window creation sequence.`);
+                }, 800); // A longer delay to ensure iframe has loaded and focus attempts made
+            }
         }
+
+        let dblClickCounter = {};
 
         document.querySelectorAll('.icon').forEach(icon => {
             const appIdForIcon = icon.dataset.appid;
@@ -290,6 +294,7 @@
                 dblClickCounter[appIdForIcon] = 0;
                 appOpeningDebounce[appIdForIcon] = false;
             }
+
             icon.addEventListener('dblclick', () => {
                 const appId = icon.dataset.appid;
                 const title = icon.dataset.title || 'Application';
@@ -298,23 +303,32 @@
                 const height = icon.dataset.height;
 
                 if (appId) {
-                    dblClickCounter[appId]++;
+                    dblClickCounter[appId]++; // This counter is just for diagnostics
                     console.log(`[Desktop] Icon DBLCLICK for ${title} - Count: ${dblClickCounter[appId]}. Debounce State: ${appOpeningDebounce[appId]}`);
                 }
 
                 if (appOpeningDebounce[appId]) {
-                    console.log(`[Desktop] Debouncing dblclick for ${title}.`);
+                    console.log(`[Desktop] Debouncing dblclick for ${title}. Click ${dblClickCounter[appId]} ignored.`);
                     return;
                 }
 
                 if (appId && title && url) {
-                    appOpeningDebounce[appId] = true;
+                    appOpeningDebounce[appId] = true; // Set debounce before calling createWindow
                     console.log(`[Desktop] Set debounce for ${appId} to true.`);
                     createWindow(appId, title, url, width, height);
-                    // The main reset of appOpeningDebounce[appId] now happens within createWindow
-                    // for new windows, or after the re-open logic completes.
-                    // For re-opening, it's implicitly reset if we return early.
-                    // For new, it's reset after a longer timeout.
+                    // The reset of appOpeningDebounce for *newly created* windows is now handled within createWindow
+                    // For *re-opened* windows, the debounce flag is effectively reset when createWindow returns early
+                    // or if we add an explicit reset there too.
+                    // If it's an existing window being re-opened, we might want to reset the debounce sooner.
+                    if (openWindows[`window-${appId}`] && openWindows[`window-${appId}`].style.display === 'block') {
+                        // If we just re-activated an existing window, reset debounce immediately.
+                         setTimeout(() => { // Slight delay to ensure current event cycle finishes
+                            appOpeningDebounce[appId] = false;
+                            console.log(`[Desktop] Reset debounce for re-opened ${appId}.`);
+                        }, 50);
+                    }
+                    // The longer timeout for resetting the debounce for *new* windows is handled inside createWindow.
+
                 } else {
                     console.error("Icon is missing required data attributes (appid, title, url):", icon.id);
                 }
