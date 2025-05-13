@@ -209,6 +209,12 @@
     </div>
 
     <script>
+        // All JavaScript from the previous full xp_desktop.html response goes here.
+        // Ensure you use the version that includes:
+        // - The robust createWindow and closeButton logic (with try-catch and postMessage)
+        // - The appOpeningDebounce mechanism for icon clicks
+        // - The full Start Menu functionality (populateStartMenu, listeners for items, Log Off, and Shut Down)
+
         let highestZIndex = 1;
         let activeWindow = null;
         let isDragging = false;
@@ -229,11 +235,8 @@
         function tryFocusIframe(iframe, context) {
             if (iframe && iframe.contentWindow) {
                 try {
-                    // console.log(`[Desktop] Attempting focus via ${context} for iframe: ${iframe.title}`);
                     iframe.contentWindow.focus();
-                } catch (e) {
-                    // console.warn(`[Desktop] Focus failed via ${context} for iframe ${iframe.title}: ${e.message}`);
-                }
+                } catch (e) { /* console.warn(`[Desktop] Focus failed via ${context} for iframe ${iframe.title}: ${e.message}`); */ }
             }
         }
 
@@ -288,10 +291,14 @@
             if (openWindows[windowId] && openWindows[windowId].style.display === 'block') {
                 console.log(`[Desktop] Window ${title} is already visible. Bringing to front and focusing.`);
                 bringToFront(openWindows[windowId]);
-                appOpeningDebounce[appId] = false; // Reset debounce as action is complete
+                // Reset debounce if we're just focusing an already open and visible window
+                if (appOpeningDebounce[appId]) {
+                    appOpeningDebounce[appId] = false;
+                    console.log(`[Desktop] Reset debounce for already visible window ${title}.`);
+                }
                 return;
             }
-            if (openWindows[windowId]) {
+            if (openWindows[windowId]) { // Window div exists but is hidden
                 const existingWindow = openWindows[windowId];
                 console.log(`[Desktop] Re-displaying existing window structure for ${title}`);
                 existingWindow.style.display = 'block';
@@ -311,8 +318,9 @@
                 setTimeout(() => { if(appOpeningDebounce[appId]) appOpeningDebounce[appId] = false; console.log(`[Desktop] Reset debounce for reopened window ${title}.`); }, 600);
                 return;
             }
+
             console.log(`[Desktop] Creating new window for ${title}`);
-            // appOpeningDebounce[appId] = true; // This is set by the caller
+            // appOpeningDebounce[appId] is already set to true by the caller (icon/menu click)
 
             const win = document.createElement('div');
             win.className = 'window'; win.id = windowId;
@@ -336,6 +344,7 @@
                 console.log(`[Desktop] Setting initial iframe src for new window ${title} to: ${url}`);
                 setTimeout(() => {
                     iframeElement.setAttribute('src', url);
+                    // Focus after src is set and iframe has a chance to load
                     setTimeout(() => tryFocusIframe(iframeElement, "create-new"), 350);
                 }, 50);
             }
@@ -366,18 +375,19 @@
                 }
                 win.style.display = 'none';
             });
-            // Reset appOpeningDebounce after a longer delay for NEW windows
+            // Reset appOpeningDebounce after a longer delay for NEW windows to ensure they are "settled"
             setTimeout(() => { if(appOpeningDebounce[appId]) { appOpeningDebounce[appId] = false; console.log(`[Desktop] Reset debounce for new window ${title}.`); } }, 800);
         }
 
         // --- Application Launching (Desktop Icons) ---
-        let dblClickCounter = {};
+        let dblClickCounter = {}; // For diagnosing rapid clicks
         document.querySelectorAll('.icon').forEach(icon => {
             const appIdForIcon = icon.dataset.appid;
             if (appIdForIcon) {
                 dblClickCounter[appIdForIcon] = 0;
-                appOpeningDebounce[appIdForIcon] = false;
+                appOpeningDebounce[appIdForIcon] = false; // Initialize debounce state
             }
+
             icon.addEventListener('dblclick', () => {
                 const appId = icon.dataset.appid;
                 const title = icon.dataset.title || 'Application';
@@ -386,18 +396,23 @@
                 const height = icon.dataset.height;
 
                 if (appId) {
-                    dblClickCounter[appId]++;
+                    dblClickCounter[appId]++; // Count all dblclicks for diagnosis
                     console.log(`[Desktop] Icon DBLCLICK for ${title} - Count: ${dblClickCounter[appId]}. Debounce State: ${appOpeningDebounce[appId]}`);
                 }
-                if (appOpeningDebounce[appId]) {
+
+                if (appOpeningDebounce[appId]) { // If already processing an open for this app, ignore.
                     console.log(`[Desktop] Debouncing dblclick for ${title}.`);
                     return;
                 }
+
                 if (appId && title && url) {
-                    appOpeningDebounce[appId] = true;
+                    appOpeningDebounce[appId] = true; // Set debounce flag BEFORE calling createWindow
                     createWindow(appId, title, url, width, height);
+                    // Note: The timeout to reset appOpeningDebounce[appId] is now primarily handled
+                    // within the createWindow function, especially for new window creation path
+                    // and also for the re-open path for existing windows.
                 } else {
-                    console.error("Icon is missing data attributes (appid, title, url):", icon.id);
+                    console.error("Icon is missing required data attributes (appid, title, url):", icon.id);
                 }
             });
         });
@@ -412,19 +427,20 @@
                 console.error("[Desktop] Start Menu App List UL element not found for population.");
                 return;
             }
-            startMenuAppList.innerHTML = '';
+            startMenuAppList.innerHTML = ''; // Clear existing items
             const icons = document.querySelectorAll('.icon');
             const appsForMenu = [];
 
             icons.forEach(iconElement => {
-                let iconChar = '📄';
+                let iconChar = '📄'; // Default icon
                 try {
                     const pseudoElementStyle = window.getComputedStyle(iconElement, '::before');
                     const pseudoContent = pseudoElementStyle.getPropertyValue('content');
                     if (pseudoContent && pseudoContent !== 'none' && pseudoContent !== 'normal') {
-                        iconChar = pseudoContent.replace(/["']/g, '');
+                        iconChar = pseudoContent.replace(/["']/g, ''); // Remove quotes
                     }
                 } catch(e) { console.warn("Could not get icon pseudo-element for Start Menu item:", iconElement.id, e); }
+
 
                 const appData = {
                     appid: iconElement.dataset.appid,
@@ -434,7 +450,9 @@
                     height: iconElement.dataset.height,
                     iconChar: iconChar
                 };
-                if (appData.appid && appData.title && appData.url) appsForMenu.push(appData);
+                if (appData.appid && appData.title && appData.url) {
+                    appsForMenu.push(appData);
+                }
             });
 
             appsForMenu.sort((a, b) => a.title.localeCompare(b.title));
@@ -442,67 +460,87 @@
             appsForMenu.forEach(appData => {
                 const li = document.createElement('li');
                 li.className = 'start-menu-item';
-                li.dataset.appid = appData.appid; li.dataset.title = appData.title;
-                li.dataset.url = appData.url; li.dataset.width = appData.width; li.dataset.height = appData.height;
+                li.dataset.appid = appData.appid;
+                li.dataset.title = appData.title;
+                li.dataset.url = appData.url;
+                li.dataset.width = appData.width;
+                li.dataset.height = appData.height;
 
                 const iconSpan = document.createElement('span');
                 iconSpan.className = 'start-menu-icon';
                 iconSpan.textContent = appData.iconChar;
                 li.appendChild(iconSpan);
 
-                const titleSpan = document.createElement('span');
+                const titleSpan = document.createElement('span'); // Wrap title in span
                 titleSpan.className = 'start-menu-item-title';
                 titleSpan.textContent = appData.title;
                 li.appendChild(titleSpan);
 
                 startMenuAppList.appendChild(li);
             });
-            // console.log(`[Desktop] Start Menu populated with ${appsForMenu.length} items.`); // Less verbose
+            // console.log(`[Desktop] Start Menu populated with ${appsForMenu.length} items.`);
         }
 
 
         if (startButton && startMenu && startMenuAppList) {
             startButton.addEventListener('click', (event) => {
                 event.stopPropagation();
+                // console.log("[Desktop] Start Button clicked.");
                 const isHidden = startMenu.style.display === 'none' || startMenu.style.display === '';
                 if (isHidden) {
-                    populateStartMenu(); startMenu.style.display = 'block';
-                    highestZIndex++; startMenu.style.zIndex = highestZIndex;
+                    populateStartMenu(); // Re-populate menu items each time it's opened
+                    startMenu.style.display = 'block';
+                    highestZIndex++; // Ensure menu is on top
+                    startMenu.style.zIndex = highestZIndex;
                 } else {
                     startMenu.style.display = 'none';
                 }
             });
 
+            // Event listeners for apps within the Start Menu (using event delegation)
             startMenuAppList.addEventListener('click', (event) => {
                 const targetItem = event.target.closest('.start-menu-item');
                 if (targetItem) {
-                    const appId = targetItem.dataset.appid, title = targetItem.dataset.title, url = targetItem.dataset.url;
-                    const width = targetItem.dataset.width, height = targetItem.dataset.height;
-                    if (appOpeningDebounce[appId]) { console.log(`[StartMenu] Debouncing launch for ${title}.`); return; }
+                    const appId = targetItem.dataset.appid;
+                    const title = targetItem.dataset.title;
+                    const url = targetItem.dataset.url;
+                    const width = targetItem.dataset.width;
+                    const height = targetItem.dataset.height;
+
+                    if (appOpeningDebounce[appId]) { // Check debounce from Start Menu clicks too
+                        console.log(`[StartMenu] Debouncing launch for ${title} from Start Menu.`);
+                        return;
+                    }
                     if (appId && title && url) {
                         console.log(`[StartMenu] Launching ${title}`);
-                        appOpeningDebounce[appId] = true;
+                        appOpeningDebounce[appId] = true; // Set debounce
                         createWindow(appId, title, url, width, height);
+                        // Debounce reset is handled within createWindow
                     }
-                    startMenu.style.display = 'none';
+                    startMenu.style.display = 'none'; // Close start menu after launching app
                 }
             });
 
+            // Close Start Menu if clicking outside
             document.getElementById('desktop').addEventListener('click', (event) => {
-                if (startMenu.style.display === 'block' && !startMenu.contains(event.target) && event.target !== startButton) {
-                    startMenu.style.display = 'none';
+                if (startMenu.style.display === 'block') { // Only if menu is visible
+                    if (!startMenu.contains(event.target) && event.target !== startButton) {
+                        // console.log("[Desktop] Clicked outside Start Menu. Closing.");
+                        startMenu.style.display = 'none';
+                    }
                 }
-            }, true);
+            }, true); // Use capture phase
 
+            // Footer Buttons
             const logOffButtonSM = document.getElementById('log-off-button-sm');
             if (logOffButtonSM) {
                 logOffButtonSM.addEventListener('click', () => {
                     console.log("[StartMenu] Log Off clicked.");
                     alert("Logging Off: All application windows will be closed.");
                     Object.values(openWindows).forEach(winElement => {
-                        if (winElement.style.display !== 'none') {
+                        if (winElement.style.display !== 'none') { // Only attempt to close visible windows
                             const closeButton = winElement.querySelector('.close-button');
-                            closeButton?.click();
+                            closeButton?.click(); // Simulate clicking the window's close button
                         }
                     });
                     startMenu.style.display = 'none';
@@ -520,31 +558,21 @@
                                 const closeButton = winElement.querySelector('.close-button');
                                 if (closeButton) {
                                     closeButton.click();
-                                    setTimeout(resolve, 150);
+                                    setTimeout(resolve, 150); // Give cleanup a moment
                                 } else { resolve(); }
                             } else { resolve(); }
                         });
                     });
                     startMenu.style.display = 'none';
+
                     Promise.all(closePromises).then(() => {
-                        console.log("[Desktop] All windows reportedly closed. Attempting window.close().");
+                        console.log("[Desktop] All windows reportedly closed. Attempting to simulate shutdown.");
                         setTimeout(() => {
-                            // Try to replace current page content before attempting to close for a visual cue
-                            document.body.innerHTML = '<div style="width:100vw;height:100vh;background:black;color:white;display:flex;align-items:center;justify-content:center;font-size:24px;position:fixed;top:0;left:0;z-index:50000;">It is now safe to turn off your computer.<br>(Attempting to close browser tab...)</div>';
-                            window.open('', '_self', ''); // This is a trick that can sometimes allow window.close()
-                            window.close();
-                            // Fallback if window.close() fails or is blocked by the browser
-                            setTimeout(() => {
-                                if (document.visibilityState === 'visible') { // Check if the page is still visible
-                                   // If still visible, the close failed. The message is already shown.
-                                   // We could add another alert here, but the body overlay is more prominent.
-                                   console.warn("[Desktop] window.close() was likely blocked by the browser.");
-                                }
-                            }, 1000); // Check visibility after a short delay
-                        }, 1000); // Delay before attempting to close the browser and showing final message
+                            document.body.innerHTML = '<div style="width:100vw;height:100vh;background:black;color:white;display:flex;align-items:center;justify-content:center;font-size:24px;position:fixed;top:0;left:0;z-index:50000;">It is now safe to turn off your computer.<br>(Please close the browser tab/window manually)</div>';
+                            // window.close(); // Is highly restricted and likely won't work.
+                        }, 1000);
                     }).catch(error => {
                         console.error("[Desktop] Error during window closing promises for shutdown:", error);
-                         // Still attempt to inform user even if closing windows had an issue
                         setTimeout(() => {
                              alert("An error occurred while closing windows.\nIt is now safe to turn off your computer.\n(Please close the browser tab manually).");
                         }, 700);
