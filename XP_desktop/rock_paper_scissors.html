@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Rock Paper Scissors</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: Tahoma, sans-serif;
+            background-color: #ece9d8; /* Match XP window background */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around; /* Distribute space */
+            height: 100%;
+            padding: 20px;
+            text-align: center;
+            overflow: hidden;
+        }
+        .choices button {
+            font-size: 40px; /* Larger emoji */
+            padding: 15px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            border: 2px outset #bbb;
+            background-color: #d4d0c8;
+            border-radius: 8px;
+            min-width: 90px; /* Ensure buttons have some width */
+        }
+        .choices button:hover {
+            background-color: #c0c0c0;
+        }
+        .choices button:active {
+            border-style: inset;
+        }
+        .results {
+            margin-top: 20px;
+            font-size: 16px;
+            min-height: 100px; /* Space for results text */
+        }
+        .results p {
+            margin: 5px 0;
+        }
+        .results strong {
+            font-size: 18px;
+        }
+        .score {
+            margin-top: 15px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        #player-choice-display, #computer-choice-display {
+            font-size: 30px; /* Larger emoji for chosen items */
+            display: inline-block;
+            min-width: 40px; /* Space for emoji */
+        }
+    </style>
+</head>
+<body>
+    <h1>Rock, Paper, Scissors</h1>
+
+    <div class="choices">
+        <button id="rock">✊</button>
+        <button id="paper">✋</button>
+        <button id="scissors">✌️</button>
+    </div>
+
+    <div class="results">
+        <p>Your choice: <span id="player-choice-display"></span></p>
+        <p>Computer's choice: <span id="computer-choice-display"></span></p>
+        <p id="result-message"><strong>Make your move!</strong></p>
+    </div>
+
+    <div class="score">
+        <p>Player: <span id="player-score">0</span> | Computer: <span id="computer-score">0</span></p>
+    </div>
+
+    <script>
+        const choices = ['rock', 'paper', 'scissors'];
+        const emojiMap = {
+            rock: '✊',
+            paper: '✋',
+            scissors: '✌️'
+        };
+
+        const rockButton = document.getElementById('rock');
+        const paperButton = document.getElementById('paper');
+        const scissorsButton = document.getElementById('scissors');
+
+        const playerChoiceDisplay = document.getElementById('player-choice-display');
+        const computerChoiceDisplay = document.getElementById('computer-choice-display');
+        const resultMessage = document.getElementById('result-message');
+        const playerScoreDisplay = document.getElementById('player-score');
+        const computerScoreDisplay = document.getElementById('computer-score');
+
+        let playerScore = 0;
+        let computerScore = 0;
+
+        function getComputerChoice() {
+            const randomIndex = Math.floor(Math.random() * choices.length);
+            return choices[randomIndex];
+        }
+
+        function determineWinner(playerChoice, computerChoice) {
+            if (playerChoice === computerChoice) {
+                return "It's a tie!";
+            }
+            if (
+                (playerChoice === 'rock' && computerChoice === 'scissors') ||
+                (playerChoice === 'scissors' && computerChoice === 'paper') ||
+                (playerChoice === 'paper' && computerChoice === 'rock')
+            ) {
+                playerScore++;
+                return "You win!";
+            } else {
+                computerScore++;
+                return "Computer wins!";
+            }
+        }
+
+        function playGame(playerChoice) {
+            const computerChoice = getComputerChoice();
+            const result = determineWinner(playerChoice, computerChoice);
+
+            playerChoiceDisplay.textContent = emojiMap[playerChoice];
+            computerChoiceDisplay.textContent = emojiMap[computerChoice];
+            resultMessage.innerHTML = `<strong>${result}</strong>`; // Use innerHTML to parse <strong>
+            playerScoreDisplay.textContent = playerScore;
+            computerScoreDisplay.textContent = computerScore;
+        }
+
+        rockButton.addEventListener('click', () => playGame('rock'));
+        paperButton.addEventListener('click', () => playGame('paper'));
+        scissorsButton.addEventListener('click', () => playGame('scissors'));
+
+        // --- Cleanup Function (Stub, as this game has no persistent loops/listeners beyond element clicks) ---
+        function cleanupGame() {
+            console.log("[RockPaperScissors] cleanupGame called (no active processes to stop).");
+            // If we had timers or global listeners, we'd clear/remove them here.
+        }
+
+        // --- Event listener for messages from parent (for cleanup) ---
+        window.addEventListener('message', (event) => {
+            // console.log(`[RockPaperScissors] Message received from parent. Data: "${event.data}", Origin: "${event.origin}"`);
+            // For local 'file:///' origin is "null". For GitHub Pages, it would be your GitHub domain.
+            // if (event.origin !== window.parent.location.origin && event.origin !== "null") return; // Optional origin check
+
+            if (event.data === 'cleanup') {
+                cleanupGame();
+            }
+        });
+
+        console.log("[RockPaperScissors] Game script loaded.");
+    </script>
+</body>
+</html>
