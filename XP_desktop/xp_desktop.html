@@ -62,22 +62,10 @@
 
         /* --- Start Menu --- */
         #start-menu {
-            position: absolute;
-            bottom: 30px; /* Positioned above the taskbar */
-            left: 0;
-            width: 280px;
-            max-height: 450px;
-            background-color: #c6d8f0;
-            border: 1px outset #FFFFFF;
-            border-top: 2px solid #FFFFFF;
-            border-left: 2px solid #FFFFFF;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
-            z-index: 9999;
-            display: none; /* Hidden by default */
-            overflow-y: auto;
-            padding: 0;
-            color: black;
-            font-size: 11px;
+            position: absolute; bottom: 30px; left: 0; width: 280px; max-height: 450px;
+            background-color: #c6d8f0; border: 1px outset #FFFFFF; border-top: 2px solid #FFFFFF;
+            border-left: 2px solid #FFFFFF; box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+            z-index: 9999; display: none; overflow-y: auto; padding: 0; color: black; font-size: 11px;
         }
         .start-menu-header { background-color: #316ac5; padding: 8px 10px; display:flex; align-items:center; border-bottom: 1px solid #1c3e73; }
         .start-menu-user-icon { width:36px; height:36px; background-color:#fff; border: 1px solid #7f9db9; border-radius:3px; margin-right:10px; display:flex; align-items:center; justify-content:center; font-size:22px; }
@@ -93,39 +81,24 @@
         .start-menu-footer { background-color: #316ac5; padding: 5px; text-align:right; border-top: 1px solid #1c3e73; flex-shrink: 0; }
         .start-menu-footer button { font-size:10px; padding: 2px 8px; margin-left: 5px; background-color:#dfdfdf; border:1px outset #ccc; cursor: pointer; }
 
-
         /* Windows (General Frame Styles) */
         .window {
             position: absolute; border: 1px solid #005cbf; box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.3);
             background-color: #ece9d8; display: none;
             overflow: hidden; border-radius: 5px 5px 0 0;
             min-width: 200px; min-height: 150px;
-            /* Default size if not specified by data attributes - these will be overridden by JS if data attributes present */
-            width: 400px; height: 300px;
+            /* Default size set by JS, CSS can provide fallback if JS fails */
+            /* width: 400px; height: 300px; */
             top: 50px; left: 150px;
         }
-        .title-bar {
-            background: linear-gradient(to bottom, #005cbf, #0053a8); color: white; padding: 3px 5px;
-            font-weight: bold; font-size: 13px; cursor: move; display: flex; align-items: center; height: 24px;
-        }
+        .title-bar { background: linear-gradient(to bottom, #005cbf, #0053a8); color: white; padding: 3px 5px; font-weight: bold; font-size: 13px; cursor: move; display: flex; align-items: center; height: 24px;}
         .title-bar-text { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 3px; }
         .window-buttons { display: flex; }
-        .window-button {
-            width: 18px; height: 18px; border: 1px outset #ccc; margin-left: 2px; cursor: pointer;
-            font-weight: bold; font-size: 10px; line-height: 16px; text-align: center; background-color: #d4d0c8;
-        }
+        .window-button { width: 18px; height: 18px; border: 1px outset #ccc; margin-left: 2px; cursor: pointer; font-weight: bold; font-size: 10px; line-height: 16px; text-align: center; background-color: #d4d0c8; }
         .close-button { background-color: #ff6347; color: white; }
-        .close-button:hover { background-color: #e55337; }
-        .window-button:active { border-style: inset; }
-        .window-content {
-            height: calc(100% - 24px);
-            background-color: #fff;
-            overflow: hidden;
-            position: relative;
-        }
-        .window-content iframe {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;
-        }
+        .close-button:hover { background-color: #e55337; } .window-button:active { border-style: inset; }
+        .window-content { height: calc(100% - 24px); background-color: #fff; overflow: hidden; position: relative; }
+        .window-content iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
         .window.dragging .window-content iframe { pointer-events: none; }
     </style>
 </head>
@@ -198,24 +171,23 @@
         function handleDrag(e) { if (!isDragging || !activeWindow) return; e.preventDefault(); let newX = e.clientX - dragOffsetX, newY = e.clientY - dragOffsetY; const desk = document.getElementById('desktop'), task = document.getElementById('taskbar'); const maxW = desk.offsetWidth - activeWindow.offsetWidth, maxH = desk.offsetHeight - activeWindow.offsetHeight - task.offsetHeight; newX = Math.max(0, Math.min(newX, maxW)); newY = Math.max(0, Math.min(newY, maxH)); activeWindow.style.left = `${newX}px`; activeWindow.style.top = `${newY}px`; }
         function stopDrag() { if (isDragging) { if (activeWindow) activeWindow.classList.remove('dragging'); isDragging = false; document.removeEventListener('mousemove', handleDrag); document.removeEventListener('mouseup', stopDrag); document.removeEventListener('mouseleave', stopDrag); } }
 
-        function createWindow(appId, title, url, dataWidth, dataHeight) { // Renamed params for clarity
+        function createWindow(appId, title, url, dataWidth, dataHeight) {
             const windowId = `window-${appId}`;
-            const parsedWidth = parseInt(dataWidth) || 400; // Use default if data attribute is missing/invalid
+            const parsedWidth = parseInt(dataWidth) || 400;
             const parsedHeight = parseInt(dataHeight) || 300;
-            console.log(`[Desktop] createWindow called for ${title}. Requested size: ${dataWidth}x${dataHeight}. Parsed: ${parsedWidth}x${parsedHeight}`);
-
+            console.log(`[Desktop] createWindow for ${title}. Requested: ${dataWidth}x${dataHeight}. Parsed: ${parsedWidth}x${parsedHeight}`);
 
             if (openWindows[windowId] && openWindows[windowId].style.display === 'block') {
                 console.log(`[Desktop] Window ${title} is already visible. Bringing to front.`);
                 bringToFront(openWindows[windowId]);
-                appOpeningDebounce[appId] = false; // Reset debounce if already open and just brought to front
-                return;
+                appOpeningDebounce[appId] = false; return;
             }
             if (openWindows[windowId]) {
                 const existingWindow = openWindows[windowId];
                 console.log(`[Desktop] Re-displaying ${title}`);
-                existingWindow.style.width = `${parsedWidth}px`; // Ensure size is re-applied if it changed
-                existingWindow.style.height = `${parsedHeight}px`;
+                existingWindow.style.setProperty('width', `${parsedWidth}px`, 'important'); // DIAGNOSTIC
+                existingWindow.style.setProperty('height', `${parsedHeight}px`, 'important'); // DIAGNOSTIC
+                console.log(`[Desktop] Forcing size on reopen for ${title}: ${parsedWidth}x${parsedHeight}`);
                 existingWindow.style.display = 'block';
                 bringToFront(existingWindow);
                 const iframe = existingWindow.querySelector('iframe');
@@ -226,15 +198,14 @@
                         setTimeout(() => tryFocusIframe(iframe, "reopen-reload"), 250);
                     }
                 }
-                appOpeningDebounce[appId] = false; // Reset debounce
-                return;
+                appOpeningDebounce[appId] = false; return;
             }
 
-            console.log(`[Desktop] Creating new window for ${title} with size ${parsedWidth}x${parsedHeight}`);
+            console.log(`[Desktop] Creating new window for ${title} with forced size ${parsedWidth}x${parsedHeight}`);
             const win = document.createElement('div');
             win.className = 'window'; win.id = windowId;
-            win.style.width = `${parsedWidth}px`; // Apply parsed width
-            win.style.height = `${parsedHeight}px`; // Apply parsed height
+            win.style.setProperty('width', `${parsedWidth}px`, 'important'); // DIAGNOSTIC
+            win.style.setProperty('height', `${parsedHeight}px`, 'important'); // DIAGNOSTIC
             const initialLeft = 100 + (Object.keys(openWindows).length % 6) * 25;
             const initialTop = 50 + (Object.keys(openWindows).length % 6) * 25;
             win.style.left = `${initialLeft}px`; win.style.top = `${initialTop}px`;
@@ -262,10 +233,10 @@
             if (appIdForIcon) { dblClickCounter[appIdForIcon] = 0; appOpeningDebounce[appIdForIcon] = false; }
             icon.addEventListener('dblclick', () => {
                 const appId = icon.dataset.appid, title = icon.dataset.title || 'Application', url = icon.dataset.url;
-                const width = icon.dataset.width, height = icon.dataset.height; // These come from the icon's data attributes
+                const width = icon.dataset.width, height = icon.dataset.height;
                 if (appId) { dblClickCounter[appId]++; console.log(`[Desktop] Icon DBLCLICK for ${title} - Count: ${dblClickCounter[appId]}. Debounce: ${appOpeningDebounce[appId]}`); }
                 if (appOpeningDebounce[appId]) { console.log(`[Desktop] Debouncing icon dblclick for ${title}.`); return; }
-                if (appId && title && url) { appOpeningDebounce[appId] = true; console.log(`[Desktop] Set appOpeningDebounce for ${title} (icon click).`); createWindow(appId, title, url, width, height); } // Pass width and height
+                if (appId && title && url) { appOpeningDebounce[appId] = true; console.log(`[Desktop] Set appOpeningDebounce for ${title} (icon click).`); createWindow(appId, title, url, width, height); }
                 else { console.error("Icon is missing data attributes", icon.id); }
             });
         });
@@ -279,10 +250,10 @@
                         const iconElement = document.getElementById(`${appId}-icon`);
                         if (iconElement) {
                             const title = iconElement.dataset.title || 'Application', url = iconElement.dataset.url;
-                            const width = iconElement.dataset.width, height = iconElement.dataset.height; // Get size from icon
+                            const width = iconElement.dataset.width, height = iconElement.dataset.height;
                             console.log(`[Desktop] Start Menu click for ${title}. Debounce: ${appOpeningDebounce[appId]}`);
                             if (appOpeningDebounce[appId]) { const winId = `window-${appId}`; if(openWindows[winId] && openWindows[winId].style.display === 'block') { bringToFront(openWindows[winId]); } startMenu.style.display = 'none'; return; }
-                            if (title && url) { appOpeningDebounce[appId] = true; console.log(`[Desktop] Set appOpeningDebounce for ${title} (start menu click).`); createWindow(appId, title, url, width, height); } // Pass width and height
+                            if (title && url) { appOpeningDebounce[appId] = true; console.log(`[Desktop] Set appOpeningDebounce for ${title} (start menu click).`); createWindow(appId, title, url, width, height); }
                         } else { console.warn(`[Desktop] No desktop icon for Start Menu appID: ${appId}`); }
                         startMenu.style.display = 'none';
                     });
