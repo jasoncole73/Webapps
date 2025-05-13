@@ -5,72 +5,143 @@
 <title>Solitaire</title>
 <style>
     * { box-sizing: border-box; }
-    body { margin: 0; height: 100vh; background-color: #006400; color: white; font-family: Tahoma, sans-serif; display: flex; flex-direction: column; overflow: hidden;}
-    .game-controls { height: 30px; padding: 5px; background-color: #ccc; border-top: 1px solid #999; text-align: center; flex-shrink: 0;}
+    body {
+        margin: 0;
+        height: 100vh; /* Full iframe height */
+        background-color: #006400; /* Solitaire green */
+        color: white;
+        font-family: Tahoma, sans-serif;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden; /* Prevent scroll on body */
+    }
+    .game-controls {
+        height: 30px; /* Fixed height for controls */
+        padding: 5px;
+        background-color: #ccc;
+        border-top: 1px solid #999; /* Corrected from border-bottom */
+        text-align: center;
+        flex-shrink: 0; /* Prevent controls from shrinking */
+    }
     .game-controls button { font-size: 11px; padding: 2px 8px; }
     .game-status { margin-left: 20px; color: #333; font-size: 11px;}
-    #solitaire-game-area { flex-grow: 1; position: relative; /* Max width to prevent horizontal scroll */ max-width: 430px; margin: 0 auto; }
 
-    /* Adjusted card and pile sizes for smaller window */
-    .solitaire-pile { position: absolute; width: 62px; height: 86px; border: 1px solid #555; background-color: rgba(255,255,255,0.1); border-radius: 3px; }
+    #solitaire-game-area-wrapper { /* New wrapper for centering game content */
+        flex-grow: 1; /* Takes up remaining vertical space */
+        display: flex;
+        justify-content: center; /* Center game-content horizontally */
+        align-items: flex-start; /* Align game-content to the top */
+        padding-top: 10px; /* Some space from top */
+        overflow: hidden; /* In case content is still too big for some reason */
+    }
+
+    #solitaire-game-content { /* Actual container for all piles */
+        position: relative; /* All piles are positioned absolutely relative to this */
+        width: 450px; /* Max width of the solitaire layout (7 piles * ~60px + spacing) - ADJUST AS NEEDED */
+                       /* Original: 7 * 62 (pile) + 6 * 5 (gap estimate) = 434 + 30 = 464 */
+                       /* New smaller cards: 7 * 62 + 6 * 5 = ~464px still. Let's try to fit this or adjust pile spacing */
+                       /* If card width is 60, pile 62: 7*62 + 6*8 (gap) = 434 + 48 = 482px - too wide for 450px window. */
+                       /* Let's aim for a pile width of 55px, card 53px. */
+                       /* (7 * 55) + (6 * 5) = 385 + 30 = 415px. This should fit. */
+        height: 450px; /* Approximate height needed, can be auto if preferred */
+        /* background-color: rgba(0,0,0,0.1); */ /* For debugging layout */
+    }
+
+
+    /* Adjusted card and pile sizes for smaller window AND centering */
+    .solitaire-pile {
+        position: absolute;
+        width: 55px; /* Reduced pile width */
+        height: 77px; /* Reduced pile height (aspect ratio ~0.7) */
+        border: 1px solid #555;
+        background-color: rgba(255,255,255,0.1);
+        border-radius: 3px;
+    }
     .solitaire-card {
-        position: absolute; width: 60px; height: 85px; border: 1px solid black; border-radius: 3px;
-        background-color: white; color: black; font-weight: bold; text-align: center; cursor: pointer;
-        display: flex; flex-direction: column; justify-content: space-between; padding: 1px; box-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-        font-size: 11px; /* Slightly smaller font for ranks */
+        position: absolute;
+        width: 53px; /* Reduced card width */
+        height: 75px; /* Reduced card height */
+        border: 1px solid black;
+        border-radius: 3px;
+        background-color: white;
+        color: black;
+        font-weight: bold;
+        text-align: center;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 1px;
+        box-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        font-size: 10px; /* Smaller font for ranks on smaller cards */
     }
     .solitaire-card.face-down { background: linear-gradient(135deg, #4a90e2, #86baf2); border: 2px double #b8d8f9; color: transparent; }
     .solitaire-card.red { color: red; } .solitaire-card.black { color: black; }
     .solitaire-card.selected { outline: 2px solid yellow; outline-offset: -1px; box-shadow: 0 0 3px 1px yellow; }
 
-    .card-rank-top, .card-rank-bottom { font-size: 14px; line-height: 1; }
-    .card-suit { font-size: 28px; line-height: 1; flex-grow: 1; display: flex; align-items: center; justify-content: center; }
+    .card-rank-top, .card-rank-bottom { font-size: 12px; line-height: 1; } /* Adjusted */
+    .card-suit { font-size: 24px; line-height: 1; flex-grow: 1; display: flex; align-items: center; justify-content: center; } /* Adjusted */
     .card-rank-bottom { transform: rotate(180deg); }
 
-    /* Adjusted pile positions */
-    #stock-pile { top: 10px; left: 10px; }
-    #waste-pile { top: 10px; left: 80px; } /* Closer */
-    #foundation-0 { top: 10px; left: 180px; } /* Start foundations further right, spaced closer */
-    #foundation-1 { top: 10px; left: 245px; }
-    #foundation-2 { top: 10px; left: 310px; }
-    #foundation-3 { top: 10px; left: 375px; }
+    /* Adjusted pile positions within #solitaire-game-content (width around 415px) */
+    /* Pile width 55, gap ~5-8px */
+    /* Total width for 7 piles: 7*55 (385) + 6*5 (30) = 415px. This fits within 430px content area. */
+    #stock-pile { top: 0px; left: 0px; }
+    #waste-pile { top: 0px; left: 63px; } /* 55 + 8 */
 
-    .tableau-pile { top: 110px; } /* Tableau piles start lower */
-    #tableau-0 { left: 10px; }
-    #tableau-1 { left: 75px; } /* Closer spacing for tableau piles */
-    #tableau-2 { left: 140px; }
-    #tableau-3 { left: 205px; }
-    #tableau-4 { left: 270px; }
-    #tableau-5 { left: 335px; }
-    #tableau-6 { left: 400px; } /* This will be tight, consider 6 tableau piles if needed */
+    #foundation-0 { top: 0px; left: 156px; } /* 63 + 55 + 8 + 8 + 8 + 14 */
+    #foundation-1 { top: 0px; left: 219px; } /* +63 */
+    #foundation-2 { top: 0px; left: 282px; } /* +63 */
+    #foundation-3 { top: 0px; left: 345px; } /* +63 */
+    /* Max foundation right edge: 345 + 55 = 400px */
+
+    .tableau-pile { top: 90px; } /* Tableau piles start lower */
+    #tableau-0 { left: 0px; }
+    #tableau-1 { left: 63px; }
+    #tableau-2 { left: 126px; }
+    #tableau-3 { left: 189px; }
+    #tableau-4 { left: 252px; }
+    #tableau-5 { left: 315px; }
+    #tableau-6 { left: 378px; }
+    /* Max tableau right edge: 378 + 55 = 433px - This might be tight. Consider reducing spacing or card size further if needed. */
+    /* Let's make the game content width slightly larger to accommodate this better */
+    /* New #solitaire-game-content width: 435px */
+
 
     .tableau-pile .solitaire-card { top: 0; left: 0; }
 </style>
 </head>
 <body>
-    <div id="solitaire-game-area">
-         <div id="stock-pile" class="solitaire-pile"></div><div id="waste-pile" class="solitaire-pile"></div>
-         <div id="foundation-0" class="solitaire-pile foundation-pile"></div><div id="foundation-1" class="solitaire-pile foundation-pile"></div>
-         <div id="foundation-2" class="solitaire-pile foundation-pile"></div><div id="foundation-3" class="solitaire-pile foundation-pile"></div>
-         <div id="tableau-0" class="solitaire-pile tableau-pile"></div><div id="tableau-1" class="solitaire-pile tableau-pile"></div>
-         <div id="tableau-2" class="solitaire-pile tableau-pile"></div><div id="tableau-3" class="solitaire-pile tableau-pile"></div>
-         <div id="tableau-4" class="solitaire-pile tableau-pile"></div><div id="tableau-5" class="solitaire-pile tableau-pile"></div>
-         <div id="tableau-6" class="solitaire-pile tableau-pile"></div>
+    <div id="solitaire-game-area-wrapper">
+        <div id="solitaire-game-content" style="width: 435px;"> <!-- Explicit width for content -->
+             <div id="stock-pile" class="solitaire-pile"></div><div id="waste-pile" class="solitaire-pile"></div>
+             <div id="foundation-0" class="solitaire-pile foundation-pile"></div><div id="foundation-1" class="solitaire-pile foundation-pile"></div>
+             <div id="foundation-2" class="solitaire-pile foundation-pile"></div><div id="foundation-3" class="solitaire-pile foundation-pile"></div>
+             <div id="tableau-0" class="solitaire-pile tableau-pile"></div><div id="tableau-1" class="solitaire-pile tableau-pile"></div>
+             <div id="tableau-2" class="solitaire-pile tableau-pile"></div><div id="tableau-3" class="solitaire-pile tableau-pile"></div>
+             <div id="tableau-4" class="solitaire-pile tableau-pile"></div><div id="tableau-5" class="solitaire-pile tableau-pile"></div>
+             <div id="tableau-6" class="solitaire-pile tableau-pile"></div>
+        </div>
     </div>
     <div id="solitaire-controls" class="game-controls">
         <button id="solitaire-new-game">New Game</button>
         <span id="solitaire-message" class="game-status"></span>
     </div>
     <script>
-        // --- Solitaire JS Logic (FROM PREVIOUS - NO CHANGES NEEDED TO LOGIC ITSELF) ---
-        // Ensure SOL_CARD_STACK_OFFSET might need slight adjustment if cards visually overlap too much or too little
-        // with new card sizes. Default is 20 for face-up, 5 for face-down.
-        const solGameArea = document.getElementById('solitaire-game-area'); const solStockPileDiv = document.getElementById('stock-pile'); const solWastePileDiv = document.getElementById('waste-pile'); const solFoundationDivs = document.querySelectorAll('.foundation-pile'); const solTableauDivs = document.querySelectorAll('.tableau-pile'); const solMessage = document.getElementById('solitaire-message');
+        // --- Solitaire JS Logic (FROM PREVIOUS - Card Stack Offsets might need adjustment) ---
+        const solGameArea = document.getElementById('solitaire-game-content'); // Target new content div
+        const solStockPileDiv = document.getElementById('stock-pile');
+        const solWastePileDiv = document.getElementById('waste-pile');
+        const solFoundationDivs = document.querySelectorAll('.foundation-pile');
+        const solTableauDivs = document.querySelectorAll('.tableau-pile');
+        const solMessage = document.getElementById('solitaire-message');
         const SOL_SUITS = ["H", "D", "C", "S"], SOL_RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
         const SOL_RANK_VALUES = { "A": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "10": 10, "J": 11, "Q": 12, "K": 13 };
         const SOL_SUIT_SYMBOLS = { "H": "♥", "D": "♦", "C": "♣", "S": "♠" };
-        const SOL_CARD_STACK_OFFSET = 18; // Adjusted for smaller cards
-        const SOL_CARD_STACK_OFFSET_DOWN = 4; // Adjusted
+
+        // Adjusted card stack offsets for smaller cards
+        const SOL_CARD_STACK_OFFSET = 15;
+        const SOL_CARD_STACK_OFFSET_DOWN = 3;
 
         let solDeck = [], solStock = [], solWaste = [], solFoundations = [[], [], [], []], solTableau = [[], [], [], [], [], [], []];
         let solSelectedCards = null;
@@ -78,23 +149,27 @@
         function solCreateDeck() { solDeck = []; for (const suit of SOL_SUITS) for (const rank of SOL_RANKS) solDeck.push({ suit, rank, faceUp: false, id: rank + suit }); }
         function solShuffleDeck() { for (let i = solDeck.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [solDeck[i], solDeck[j]] = [solDeck[j], solDeck[i]]; } }
         function solDealGame() { solCreateDeck(); solShuffleDeck(); solStock = [...solDeck]; solWaste = []; solFoundations = [[], [], [], []]; solTableau = [[], [], [], [], [], [], []]; solSelectedCards = null; solMessage.textContent = ""; for (let i = 0; i < 7; i++) { for (let j = i; j < 7; j++) { if (solStock.length > 0) { const card = solStock.pop(); if (j === i) card.faceUp = true; solTableau[j].push(card); } } } solRenderBoard(); }
-        function solRenderCard(card, parentDiv, options = {}) { const cardDiv = document.createElement('div'); cardDiv.className = 'solitaire-card'; cardDiv.dataset.cardId = card.id; cardDiv.dataset.pileType = options.pileType; cardDiv.dataset.pileIndex = options.pileIndex; cardDiv.dataset.cardIndex = options.cardIndex; if (card.faceUp) { const color = (card.suit === 'H' || card.suit === 'D') ? 'red' : 'black'; cardDiv.classList.add(color); cardDiv.innerHTML = `<div class="card-rank-top">${card.rank}</div><div class="card-suit">${SOL_SUIT_SYMBOLS[card.suit]}</div><div class="card-rank-bottom">${card.rank}</div>`; } else { cardDiv.classList.add('face-down'); } if (options.pileType === 'tableau') { const offset = card.faceUp ? options.upCardIndex * SOL_CARD_STACK_OFFSET + options.downCardCount * SOL_CARD_STACK_OFFSET_DOWN : options.cardIndex * SOL_CARD_STACK_OFFSET_DOWN; cardDiv.style.position = 'absolute'; cardDiv.style.top = `${offset}px`; cardDiv.style.left = '0px'; } else if (options.pileType === 'waste' && options.cardIndex > 0) { cardDiv.style.position = 'absolute'; cardDiv.style.left = `${(options.cardIndex % 3) * (SOL_CARD_STACK_OFFSET / 2.5)}px`; cardDiv.style.top = '0px';} else { cardDiv.style.position = 'relative'; } if (solSelectedCards && solSelectedCards.cards.some(selCard => selCard.id === card.id)) cardDiv.classList.add('selected'); cardDiv.addEventListener('click', solHandleCardClick); parentDiv.appendChild(cardDiv); }
-        function solRenderBoard() { solStockPileDiv.innerHTML = ''; solWastePileDiv.innerHTML = ''; solFoundationDivs.forEach(div => div.innerHTML = ''); solTableauDivs.forEach(div => div.innerHTML = ''); if (solStock.length > 0) { solRenderCard(solStock[solStock.length - 1], solStockPileDiv, { pileType: 'stock', pileIndex: 0, cardIndex: solStock.length - 1 }); } else { solStockPileDiv.innerHTML = '<div style="width:60px;height:85px;border:2px dashed #aaa;border-radius:3px;text-align:center;line-height:85px;font-size:20px;cursor:pointer;">⟳</div>'; solStockPileDiv.onclick = solHandleStockReset; } if (solWaste.length > 0) { const startIdx = Math.max(0, solWaste.length - 3); for (let i = startIdx; i < solWaste.length; i++) solRenderCard(solWaste[i], solWastePileDiv, { pileType: 'waste', pileIndex: 0, cardIndex: i - startIdx }); if(solWastePileDiv.lastChild) solWastePileDiv.lastChild.dataset.cardIndex = solWaste.length - 1; } solFoundations.forEach((pile, index) => { if (pile.length > 0) solRenderCard(pile[pile.length - 1], solFoundationDivs[index], { pileType: 'foundation', pileIndex: index, cardIndex: pile.length - 1 }); solFoundationDivs[index].dataset.pileType = 'foundation'; solFoundationDivs[index].dataset.pileIndex = index; solFoundationDivs[index].onclick = solHandleEmptyPileClick; }); solTableau.forEach((pile, index) => { let dc = 0, uc = 0, uci = 0; pile.forEach((card, ci) => { if (!card.faceUp) dc++; else uc++; solRenderCard(card, solTableauDivs[index], { pileType: 'tableau', pileIndex: index, cardIndex: ci, downCardCount: dc, upCardCount: uc, upCardIndex: card.faceUp ? uci++ : -1 }); }); solTableauDivs[index].dataset.pileType = 'tableau'; solTableauDivs[index].dataset.pileIndex = index; solTableauDivs[index].onclick = solHandleEmptyPileClick;}); solCheckWin(); }
+        function solRenderCard(card, parentDiv, options = {}) { const cardDiv = document.createElement('div'); cardDiv.className = 'solitaire-card'; cardDiv.dataset.cardId = card.id; cardDiv.dataset.pileType = options.pileType; cardDiv.dataset.pileIndex = options.pileIndex; cardDiv.dataset.cardIndex = options.cardIndex; if (card.faceUp) { const color = (card.suit === 'H' || card.suit === 'D') ? 'red' : 'black'; cardDiv.classList.add(color); cardDiv.innerHTML = `<div class="card-rank-top">${card.rank}</div><div class="card-suit">${SOL_SUIT_SYMBOLS[card.suit]}</div><div class="card-rank-bottom">${card.rank}</div>`; } else { cardDiv.classList.add('face-down'); } if (options.pileType === 'tableau') { const offset = card.faceUp ? options.upCardIndex * SOL_CARD_STACK_OFFSET + options.downCardCount * SOL_CARD_STACK_OFFSET_DOWN : options.cardIndex * SOL_CARD_STACK_OFFSET_DOWN; cardDiv.style.position = 'absolute'; cardDiv.style.top = `${offset}px`; cardDiv.style.left = '0px'; } else if (options.pileType === 'waste' && options.cardIndex > 0) { cardDiv.style.position = 'absolute'; cardDiv.style.left = `${(options.cardIndex % 3) * (SOL_CARD_STACK_OFFSET / 3)}px`; cardDiv.style.top = '0px';} else { cardDiv.style.position = 'relative'; } if (solSelectedCards && solSelectedCards.cards.some(selCard => selCard.id === card.id)) cardDiv.classList.add('selected'); cardDiv.addEventListener('click', solHandleCardClick); parentDiv.appendChild(cardDiv); }
+        function solRenderBoard() { solStockPileDiv.innerHTML = ''; solWastePileDiv.innerHTML = ''; solFoundationDivs.forEach(div => div.innerHTML = ''); solTableauDivs.forEach(div => div.innerHTML = ''); if (solStock.length > 0) { solRenderCard(solStock[solStock.length - 1], solStockPileDiv, { pileType: 'stock', pileIndex: 0, cardIndex: solStock.length - 1 }); } else { solStockPileDiv.innerHTML = `<div style="width:53px;height:75px;border:2px dashed #aaa;border-radius:3px;text-align:center;line-height:75px;font-size:18px;cursor:pointer;">⟳</div>`; solStockPileDiv.onclick = solHandleStockReset; } if (solWaste.length > 0) { const startIdx = Math.max(0, solWaste.length - 3); for (let i = startIdx; i < solWaste.length; i++) solRenderCard(solWaste[i], solWastePileDiv, { pileType: 'waste', pileIndex: 0, cardIndex: i - startIdx }); if(solWastePileDiv.lastChild) solWastePileDiv.lastChild.dataset.cardIndex = solWaste.length - 1; } solFoundations.forEach((pile, index) => { if (pile.length > 0) solRenderCard(pile[pile.length - 1], solFoundationDivs[index], { pileType: 'foundation', pileIndex: index, cardIndex: pile.length - 1 }); solFoundationDivs[index].dataset.pileType = 'foundation'; solFoundationDivs[index].dataset.pileIndex = index; solFoundationDivs[index].onclick = solHandleEmptyPileClick; }); solTableau.forEach((pile, index) => { let dc = 0, uc = 0, uci = 0; pile.forEach((card, ci) => { if (!card.faceUp) dc++; else uc++; solRenderCard(card, solTableauDivs[index], { pileType: 'tableau', pileIndex: index, cardIndex: ci, downCardCount: dc, upCardCount: uc, upCardIndex: card.faceUp ? uci++ : -1 }); }); solTableauDivs[index].dataset.pileType = 'tableau'; solTableauDivs[index].dataset.pileIndex = index; solTableauDivs[index].onclick = solHandleEmptyPileClick;}); solCheckWin(); }
         function solHandleCardClick(event) { event.stopPropagation(); const target = event.currentTarget; const { pileType, pileIndex, cardIndex } = target.dataset; const pIdx = parseInt(pileIndex), cIdx = parseInt(cardIndex); if (pileType === 'stock') { solDrawFromStock(); return; } let clickedPile; if (pileType === 'waste') clickedPile = solWaste; else if (pileType === 'tableau') clickedPile = solTableau[pIdx]; else if (pileType === 'foundation') clickedPile = solFoundations[pIdx]; else return; if (cIdx < 0 || cIdx >= clickedPile.length) return; const clickedCard = clickedPile[cIdx]; if (!clickedCard.faceUp) { if (pileType === 'tableau' && cIdx === clickedPile.length - 1) { clickedCard.faceUp = true; solSelectedCards = null; solRenderBoard(); } return; } if (!solSelectedCards) { let cardsToSelect = []; if (pileType === 'tableau') cardsToSelect = clickedPile.slice(cIdx); else if (pileType === 'waste' && cIdx === clickedPile.length - 1) cardsToSelect = [clickedCard]; else return; if (cardsToSelect.length > 0) { solSelectedCards = { pileType: pileType, pileIndex: pIdx, cardIndex: cIdx, cards: cardsToSelect }; solRenderBoard(); } } else { let moveSuccessful = false; const cardToMove = solSelectedCards.cards[0]; if (pileType === 'foundation' && solSelectedCards.cards.length === 1 && solCanMoveToFoundation(cardToMove, solFoundations[pIdx])) { solMoveCards(solSelectedCards, { pileType: 'foundation', pileIndex: pIdx }); moveSuccessful = true; } else if (pileType === 'tableau') { const targetPile = solTableau[pIdx]; if (targetPile.length > 0) { const targetCard = targetPile[targetPile.length - 1]; if (targetCard.faceUp && solCanMoveToTableau(cardToMove, targetCard)) { solMoveCards(solSelectedCards, { pileType: 'tableau', pileIndex: pIdx }); moveSuccessful = true; } } else { if (cardToMove.rank === 'K') { solMoveCards(solSelectedCards, { pileType: 'tableau', pileIndex: pIdx }); moveSuccessful = true; } } } solSelectedCards = null; solRenderBoard(); } }
         function solHandleEmptyPileClick(event) { event.stopPropagation(); if (!solSelectedCards) return; const target = event.currentTarget; const { pileType, pileIndex } = target.dataset; const pIdx = parseInt(pileIndex); const cardToMove = solSelectedCards.cards[0]; if (pileType === 'foundation' && solSelectedCards.cards.length === 1 && cardToMove.rank === 'A' && solCanMoveToFoundation(cardToMove, solFoundations[pIdx])) solMoveCards(solSelectedCards, { pileType: 'foundation', pileIndex: pIdx }); else if (pileType === 'tableau' && cardToMove.rank === 'K') solMoveCards(solSelectedCards, { pileType: 'tableau', pileIndex: pIdx }); solSelectedCards = null; solRenderBoard(); }
         function solDrawFromStock() { if (solStock.length > 0) { const card = solStock.pop(); card.faceUp = true; solWaste.push(card); solSelectedCards = null; solRenderBoard(); } }
         function solHandleStockReset() { if (solStock.length === 0 && solWaste.length > 0) { solStock = solWaste.reverse().map(c => { c.faceUp = false; return c; }); solWaste = []; solSelectedCards = null; solRenderBoard(); } }
-        function solIsOppositeColor(c1, c2) { const col1 = (c1.suit === 'H' || c1.suit === 'D') ? 'red' : 'black'; const col2 = (c2.suit === 'H' || c2.suit === 'D') ? 'red' : 'black'; return col1 !== col2; }
-        function solCanMoveToFoundation(card, fPile) { if (fPile.length === 0) return card.rank === 'A'; const topC = fPile[fPile.length - 1]; return card.suit === topC.suit && SOL_RANK_VALUES[card.rank] === SOL_RANK_VALUES[topC.rank] + 1; }
-        function solCanMoveToTableau(card, targetC) { return solIsOppositeColor(card, targetC) && SOL_RANK_VALUES[card.rank] === SOL_RANK_VALUES[targetC.rank] - 1; }
-        function solMoveCards(sel, dest) { const { pileType: fromT, pileIndex: fromI, cardIndex: fromCI, cards: cardsToMove } = sel; const { pileType: toT, pileIndex: toI } = dest; let srcPile; if (fromT === 'waste') srcPile = solWaste; else if (fromT === 'tableau') srcPile = solTableau[fromI]; else return; let destPile; if (toT === 'foundation') destPile = solFoundations[toI]; else if (toT === 'tableau') destPile = solTableau[toI]; else return; const removed = srcPile.splice(fromCI); destPile.push(...removed); if (fromT === 'tableau' && srcPile.length > 0 && srcPile[srcPile.length-1].faceUp === false) srcPile[srcPile.length-1].faceUp = true; }
-        function solCheckWin() { const fc = solFoundations.reduce((s, p) => s + p.length, 0); if (fc === 52) solMessage.textContent = "You Win!"; else solMessage.textContent = ""; }
+        function solIsOppositeColor(c1, c2) { const col1 = (c1.suit==='H'||c1.suit==='D')?'red':'black'; const col2 = (c2.suit==='H'||c2.suit==='D')?'red':'black'; return col1 !== col2; }
+        function solCanMoveToFoundation(card, fPile) { if(fPile.length===0) return card.rank==='A'; const topC=fPile[fPile.length-1]; return card.suit===topC.suit && SOL_RANK_VALUES[card.rank]===SOL_RANK_VALUES[topC.rank]+1; }
+        function solCanMoveToTableau(card,targetC){ return solIsOppositeColor(card,targetC) && SOL_RANK_VALUES[card.rank]===SOL_RANK_VALUES[targetC.rank]-1; }
+        function solMoveCards(sel,dest){ const {pileType:fromT,pileIndex:fromI,cardIndex:fromCI,cards:cardsToMove}=sel; const {pileType:toT,pileIndex:toI}=dest; let srcPile; if(fromT==='waste')srcPile=solWaste; else if(fromT==='tableau')srcPile=solTableau[fromI]; else return; let destPile; if(toT==='foundation')destPile=solFoundations[toI]; else if(toT==='tableau')destPile=solTableau[toI]; else return; const removed=srcPile.splice(fromCI); destPile.push(...removed); if(fromT==='tableau'&&srcPile.length>0&&srcPile[srcPile.length-1].faceUp===false)srcPile[srcPile.length-1].faceUp=true; }
+        function solCheckWin() { const fc=solFoundations.reduce((s,p)=>s+p.length,0); if(fc===52)solMessage.textContent="You Win!"; else solMessage.textContent="";}
 
         document.getElementById('solitaire-new-game').addEventListener('click', solDealGame);
-        solDealGame();
+        solDealGame(); // Start game on load
 
         function cleanupGame() { console.log("[Solitaire] cleanupGame called (no active processes to stop)."); }
-        window.addEventListener('message', (event) => { if (event.data === 'cleanup') cleanupGame(); });
+        window.addEventListener('message', (event) => {
+            console.log(`[Solitaire] Message received: ${event.data}`);
+            if (event.data === 'cleanup') cleanupGame();
+        });
+        window.focus();
     </script>
 </body>
 </html>
