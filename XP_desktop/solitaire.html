@@ -5,115 +5,116 @@
 <title>Solitaire</title>
 <style>
     * { box-sizing: border-box; }
-    body {
+    html, body { /* Ensure html and body take full iframe height */
+        height: 100%;
         margin: 0;
-        height: 100vh; /* Full iframe height */
+        overflow: hidden; /* Prevent scrollbars on the body itself */
+    }
+    body {
         background-color: #006400; /* Solitaire green */
         color: white;
         font-family: Tahoma, sans-serif;
         display: flex;
-        flex-direction: column;
-        overflow: hidden; /* Prevent scroll on body */
+        flex-direction: column; /* Stack controls and game area */
     }
     .game-controls {
-        height: 30px; /* Fixed height for controls */
+        height: 30px;
         padding: 5px;
         background-color: #ccc;
-        border-top: 1px solid #999; /* Corrected from border-bottom */
+        border-bottom: 1px solid #777; /* Changed from border-top for correct placement */
         text-align: center;
-        flex-shrink: 0; /* Prevent controls from shrinking */
+        flex-shrink: 0;
     }
     .game-controls button { font-size: 11px; padding: 2px 8px; }
     .game-status { margin-left: 20px; color: #333; font-size: 11px;}
 
-    #solitaire-game-area-wrapper { /* New wrapper for centering game content */
+    #solitaire-game-area-wrapper { /* This div will handle the centering */
         flex-grow: 1; /* Takes up remaining vertical space */
         display: flex;
         justify-content: center; /* Center game-content horizontally */
-        align-items: flex-start; /* Align game-content to the top */
-        padding-top: 10px; /* Some space from top */
-        overflow: hidden; /* In case content is still too big for some reason */
+        align-items: center;     /* Center game-content vertically (optional, adjust if needed) */
+                                 /* If you prefer top-alignment: align-items: flex-start; padding-top: 10px; */
+        width: 100%; /* Full width to allow centering of child */
+        overflow: hidden; /* Hide any accidental overflow */
     }
 
     #solitaire-game-content { /* Actual container for all piles */
         position: relative; /* All piles are positioned absolutely relative to this */
-        width: 450px; /* Max width of the solitaire layout (7 piles * ~60px + spacing) - ADJUST AS NEEDED */
-                       /* Original: 7 * 62 (pile) + 6 * 5 (gap estimate) = 434 + 30 = 464 */
-                       /* New smaller cards: 7 * 62 + 6 * 5 = ~464px still. Let's try to fit this or adjust pile spacing */
-                       /* If card width is 60, pile 62: 7*62 + 6*8 (gap) = 434 + 48 = 482px - too wide for 450px window. */
-                       /* Let's aim for a pile width of 55px, card 53px. */
-                       /* (7 * 55) + (6 * 5) = 385 + 30 = 415px. This should fit. */
-        height: 450px; /* Approximate height needed, can be auto if preferred */
-        /* background-color: rgba(0,0,0,0.1); */ /* For debugging layout */
+        width: 435px;       /* Calculated width for the game elements */
+        height: 400px;      /* Approximate height for game elements, adjust as needed */
+                                /* Or remove height to let content dictate it, if wrapper handles centering well */
+        /* background-color: rgba(0,0,0,0.1); /* For debugging layout */
     }
 
-
-    /* Adjusted card and pile sizes for smaller window AND centering */
+    /* Card and Pile sizes and positions from previous correction - these should be okay */
     .solitaire-pile {
-        position: absolute;
-        width: 55px; /* Reduced pile width */
-        height: 77px; /* Reduced pile height (aspect ratio ~0.7) */
-        border: 1px solid #555;
-        background-color: rgba(255,255,255,0.1);
-        border-radius: 3px;
+        position: absolute; width: 55px; height: 77px; border: 1px solid #555;
+        background-color: rgba(255,255,255,0.1); border-radius: 3px;
     }
     .solitaire-card {
-        position: absolute;
-        width: 53px; /* Reduced card width */
-        height: 75px; /* Reduced card height */
-        border: 1px solid black;
-        border-radius: 3px;
-        background-color: white;
-        color: black;
-        font-weight: bold;
-        text-align: center;
-        cursor: pointer;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        padding: 1px;
-        box-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-        font-size: 10px; /* Smaller font for ranks on smaller cards */
+        position: absolute; width: 53px; height: 75px; border: 1px solid black;
+        border-radius: 3px; background-color: white; color: black; font-weight: bold;
+        text-align: center; cursor: pointer; display: flex; flex-direction: column;
+        justify-content: space-between; padding: 1px; box-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        font-size: 10px;
     }
     .solitaire-card.face-down { background: linear-gradient(135deg, #4a90e2, #86baf2); border: 2px double #b8d8f9; color: transparent; }
     .solitaire-card.red { color: red; } .solitaire-card.black { color: black; }
     .solitaire-card.selected { outline: 2px solid yellow; outline-offset: -1px; box-shadow: 0 0 3px 1px yellow; }
-
-    .card-rank-top, .card-rank-bottom { font-size: 12px; line-height: 1; } /* Adjusted */
-    .card-suit { font-size: 24px; line-height: 1; flex-grow: 1; display: flex; align-items: center; justify-content: center; } /* Adjusted */
+    .card-rank-top, .card-rank-bottom { font-size: 12px; line-height: 1; }
+    .card-suit { font-size: 24px; line-height: 1; flex-grow: 1; display: flex; align-items: center; justify-content: center; }
     .card-rank-bottom { transform: rotate(180deg); }
 
-    /* Adjusted pile positions within #solitaire-game-content (width around 415px) */
-    /* Pile width 55, gap ~5-8px */
-    /* Total width for 7 piles: 7*55 (385) + 6*5 (30) = 415px. This fits within 430px content area. */
-    #stock-pile { top: 0px; left: 0px; }
-    #waste-pile { top: 0px; left: 63px; } /* 55 + 8 */
+    /* Pile positions relative to #solitaire-game-content */
+    #stock-pile { top: 10px; left: 10px; } /* Adjusted for new parent */
+    #waste-pile { top: 10px; left: 73px; } /* 10 + 55 + 8 */
 
-    #foundation-0 { top: 0px; left: 156px; } /* 63 + 55 + 8 + 8 + 8 + 14 */
-    #foundation-1 { top: 0px; left: 219px; } /* +63 */
-    #foundation-2 { top: 0px; left: 282px; } /* +63 */
-    #foundation-3 { top: 0px; left: 345px; } /* +63 */
-    /* Max foundation right edge: 345 + 55 = 400px */
+    #foundation-0 { top: 10px; left: 166px; } /* (73 + 55 + ~20 for gap) or define by fixed positions */
+    #foundation-1 { top: 10px; left: 229px; }
+    #foundation-2 { top: 10px; left: 292px; }
+    #foundation-3 { top: 10px; left: 355px; }
+    /* Max foundation right edge: 355 + 55 = 410px (within 435px content width) */
 
-    .tableau-pile { top: 90px; } /* Tableau piles start lower */
-    #tableau-0 { left: 0px; }
-    #tableau-1 { left: 63px; }
-    #tableau-2 { left: 126px; }
-    #tableau-3 { left: 189px; }
-    #tableau-4 { left: 252px; }
-    #tableau-5 { left: 315px; }
-    #tableau-6 { left: 378px; }
-    /* Max tableau right edge: 378 + 55 = 433px - This might be tight. Consider reducing spacing or card size further if needed. */
-    /* Let's make the game content width slightly larger to accommodate this better */
-    /* New #solitaire-game-content width: 435px */
+    .tableau-pile { top: 100px; } /* Tableau piles start lower */
+    #tableau-0 { left: 10px; }
+    #tableau-1 { left: 73px; }
+    #tableau-2 { left: 136px; }
+    #tableau-3 { left: 199px; }
+    #tableau-4 { left: 262px; }
+    #tableau-5 { left: 325px; }
+    #tableau-6 { left: 388px; }
+    /* Max tableau right edge: 388 + 55 = 443px. This is SLIGHTLY over 435px.
+       Let's adjust gap or card width slightly, or increase #solitaire-game-content width.
+       Let's reduce pile gap slightly for tableau. New gap 5px for tableau.
+       Tableau positions:
+       P0: 10
+       P1: 10 + 55 + 5 = 70
+       P2: 70 + 55 + 5 = 130
+       P3: 130 + 55 + 5 = 190
+       P4: 190 + 55 + 5 = 250
+       P5: 250 + 55 + 5 = 310
+       P6: 310 + 55 + 5 = 370. Right edge: 370 + 55 = 425px. This fits in 435px.
+    */
+    #tableau-1 { left: 70px; }
+    #tableau-2 { left: 130px; }
+    #tableau-3 { left: 190px; }
+    #tableau-4 { left: 250px; }
+    #tableau-5 { left: 310px; }
+    #tableau-6 { left: 370px; }
 
 
     .tableau-pile .solitaire-card { top: 0; left: 0; }
 </style>
 </head>
 <body>
+    <!-- Controls at the top -->
+    <div id="solitaire-controls" class="game-controls">
+        <button id="solitaire-new-game">New Game</button>
+        <span id="solitaire-message" class="game-status"></span>
+    </div>
+    <!-- Wrapper for centering the actual game content -->
     <div id="solitaire-game-area-wrapper">
-        <div id="solitaire-game-content" style="width: 435px;"> <!-- Explicit width for content -->
+        <div id="solitaire-game-content"> <!-- Fixed width, will be centered by wrapper -->
              <div id="stock-pile" class="solitaire-pile"></div><div id="waste-pile" class="solitaire-pile"></div>
              <div id="foundation-0" class="solitaire-pile foundation-pile"></div><div id="foundation-1" class="solitaire-pile foundation-pile"></div>
              <div id="foundation-2" class="solitaire-pile foundation-pile"></div><div id="foundation-3" class="solitaire-pile foundation-pile"></div>
@@ -123,13 +124,10 @@
              <div id="tableau-6" class="solitaire-pile tableau-pile"></div>
         </div>
     </div>
-    <div id="solitaire-controls" class="game-controls">
-        <button id="solitaire-new-game">New Game</button>
-        <span id="solitaire-message" class="game-status"></span>
-    </div>
+
     <script>
         // --- Solitaire JS Logic (FROM PREVIOUS - Card Stack Offsets might need adjustment) ---
-        const solGameArea = document.getElementById('solitaire-game-content'); // Target new content div
+        const solGameArea = document.getElementById('solitaire-game-content');
         const solStockPileDiv = document.getElementById('stock-pile');
         const solWastePileDiv = document.getElementById('waste-pile');
         const solFoundationDivs = document.querySelectorAll('.foundation-pile');
@@ -139,9 +137,8 @@
         const SOL_RANK_VALUES = { "A": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "10": 10, "J": 11, "Q": 12, "K": 13 };
         const SOL_SUIT_SYMBOLS = { "H": "♥", "D": "♦", "C": "♣", "S": "♠" };
 
-        // Adjusted card stack offsets for smaller cards
-        const SOL_CARD_STACK_OFFSET = 15;
-        const SOL_CARD_STACK_OFFSET_DOWN = 3;
+        const SOL_CARD_STACK_OFFSET = 15; // For face-up cards in tableau
+        const SOL_CARD_STACK_OFFSET_DOWN = 3; // For face-down cards in tableau
 
         let solDeck = [], solStock = [], solWaste = [], solFoundations = [[], [], [], []], solTableau = [[], [], [], [], [], [], []];
         let solSelectedCards = null;
@@ -166,7 +163,7 @@
 
         function cleanupGame() { console.log("[Solitaire] cleanupGame called (no active processes to stop)."); }
         window.addEventListener('message', (event) => {
-            console.log(`[Solitaire] Message received: ${event.data}`);
+            console.log(`[Solitaire] Message received: ${event.data}`); // Log received message
             if (event.data === 'cleanup') cleanupGame();
         });
         window.focus();
