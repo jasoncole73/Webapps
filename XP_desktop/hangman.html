@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hangman Game</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Tahoma', Arial, sans-serif;
+            background-color: #f0f0f0; /* Light gray background */
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start; /* Align content to top */
+            height: 100vh;
+            margin: 0;
+            padding: 15px;
+            overflow-y: auto; /* Allow scrolling if content overflows on small screens */
+        }
+        .hangman-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+            max-width: 380px; /* Max width for game elements */
+        }
+        #hangman-drawing {
+            font-family: 'Courier New', Courier, monospace;
+            white-space: pre; /* Preserve whitespace for ASCII art */
+            font-size: 14px;
+            line-height: 1.1;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #fff;
+            min-height: 120px; /* Space for drawing */
+            width: 150px; /* Fixed width for drawing area */
+            text-align: center;
+        }
+        #word-display {
+            font-size: 28px;
+            letter-spacing: 0.5em; /* Space out the underscores/letters */
+            margin: 10px 0;
+            text-align: center;
+            min-height: 40px; /* Ensure space even when empty */
+        }
+        #incorrect-guesses {
+            font-size: 16px;
+            color: #d9534f; /* Reddish for incorrect */
+            min-height: 20px;
+            text-align: center;
+        }
+        .input-area {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 10px;
+        }
+        #letter-input {
+            width: 50px;
+            height: 40px;
+            font-size: 20px;
+            text-align: center;
+            text-transform: uppercase;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        #guess-button, #new-game-button {
+            padding: 10px 15px;
+            font-size: 14px;
+            border: 1px outset #bbb;
+            background-color: #e7e7e7;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        #guess-button:hover, #new-game-button:hover {
+            background-color: #ddd;
+        }
+        #status-message {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 15px;
+            min-height: 25px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="hangman-container">
+        <h1>Hangman</h1>
+        <div id="hangman-drawing">
+            +---+
+            |   |
+                |
+                |
+                |
+                |
+          =========
+        </div>
+        <div id="word-display">_ _ _ _ _</div>
+        <div id="incorrect-guesses">Incorrect: </div>
+        <div class="input-area">
+            <label for="letter-input">Guess a letter:</label>
+            <input type="text" id="letter-input" maxlength="1">
+            <button id="guess-button">Guess</button>
+        </div>
+        <button id="new-game-button">New Game</button>
+        <div id="status-message"></div>
+    </div>
+
+    <script>
+        const wordList = ["JAVASCRIPT", "HTML", "DESKTOP", "WINDOWS", "SIMULATION", "BROWSER", "DEVELOPER", "HANGMAN", "INTERFACE", "APPLICATION", "PROGRAM"];
+        const maxIncorrectGuesses = 6;
+
+        const wordDisplayEl = document.getElementById('word-display');
+        const incorrectGuessesEl = document.getElementById('incorrect-guesses');
+        const hangmanDrawingEl = document.getElementById('hangman-drawing');
+        const letterInputEl = document.getElementById('letter-input');
+        const guessButton = document.getElementById('guess-button');
+        const newGameButton = document.getElementById('new-game-button');
+        const statusMessageEl = document.getElementById('status-message');
+
+        let secretWord = '';
+        let guessedWord = [];
+        let incorrectLetters = [];
+        let remainingGuesses = 0;
+        let gameActive = false;
+
+        const hangmanStages = [
+            `
+  +---+
+  |   |
+      |
+      |
+      |
+      |
+=========`, // 0 incorrect (6 guesses left)
+            `
+  +---+
+  |   |
+  O   |
+      |
+      |
+      |
+=========`, // 1 incorrect (5 guesses left)
+            `
+  +---+
+  |   |
+  O   |
+  |   |
+      |
+      |
+=========`, // 2 incorrect (4 guesses left)
+            `
+  +---+
+  |   |
+  O   |
+ /|   |
+      |
+      |
+=========`, // 3 incorrect (3 guesses left)
+            `
+  +---+
+  |   |
+  O   |
+ /|\\  |
+      |
+      |
+=========`, // 4 incorrect (2 guesses left)
+            `
+  +---+
+  |   |
+  O   |
+ /|\\  |
+ /    |
+      |
+=========`, // 5 incorrect (1 guess left)
+            `
+  +---+
+  |   |
+  O   |
+ /|\\  |
+ / \\  |
+      |
+=========`, // 6 incorrect (0 guesses left - Game Over)
+        ];
+
+
+        function startGame() {
+            gameActive = true;
+            secretWord = wordList[Math.floor(Math.random() * wordList.length)];
+            guessedWord = Array(secretWord.length).fill('_');
+            incorrectLetters = [];
+            remainingGuesses = maxIncorrectGuesses;
+
+            letterInputEl.value = '';
+            letterInputEl.disabled = false;
+            guessButton.disabled = false;
+            statusMessageEl.textContent = `Guesses left: ${remainingGuesses}`;
+            updateDisplay();
+            console.log("[Hangman] New game started. Word:", secretWord);
+        }
+
+        function updateDisplay() {
+            wordDisplayEl.textContent = guessedWord.join(' ');
+            incorrectGuessesEl.textContent = `Incorrect: ${incorrectLetters.join(', ')}`;
+            hangmanDrawingEl.textContent = hangmanStages[maxIncorrectGuesses - remainingGuesses];
+        }
+
+        function handleGuess() {
+            if (!gameActive) return;
+
+            const letter = letterInputEl.value.toUpperCase();
+            letterInputEl.value = ''; // Clear input
+            letterInputEl.focus(); // Keep focus on input
+
+            if (!letter || letter.length !== 1 || !/[A-Z]/.test(letter)) {
+                statusMessageEl.textContent = "Please enter a single letter.";
+                setTimeout(() => { if(gameActive) statusMessageEl.textContent = `Guesses left: ${remainingGuesses}`; }, 1500);
+                return;
+            }
+
+            if (guessedWord.includes(letter) || incorrectLetters.includes(letter)) {
+                statusMessageEl.textContent = "You already guessed that letter.";
+                setTimeout(() => { if(gameActive) statusMessageEl.textContent = `Guesses left: ${remainingGuesses}`; }, 1500);
+                return;
+            }
+
+            if (secretWord.includes(letter)) {
+                for (let i = 0; i < secretWord.length; i++) {
+                    if (secretWord[i] === letter) {
+                        guessedWord[i] = letter;
+                    }
+                }
+                statusMessageEl.textContent = "Good guess!";
+            } else {
+                incorrectLetters.push(letter);
+                remainingGuesses--;
+                statusMessageEl.textContent = "Incorrect guess.";
+            }
+
+            updateDisplay();
+            checkGameState();
+             // Reset status message after a delay if game is still active
+            if (gameActive) {
+                setTimeout(() => { statusMessageEl.textContent = `Guesses left: ${remainingGuesses}`; }, 1500);
+            }
+        }
+
+        function checkGameState() {
+            if (guessedWord.join('') === secretWord) {
+                statusMessageEl.textContent = "YOU WIN! 🎉";
+                endGame();
+            } else if (remainingGuesses <= 0) {
+                statusMessageEl.textContent = `GAME OVER! The word was: ${secretWord}`;
+                // Reveal the word
+                wordDisplayEl.textContent = secretWord.split('').join(' ');
+                endGame();
+            }
+        }
+
+        function endGame() {
+            gameActive = false;
+            letterInputEl.disabled = true;
+            guessButton.disabled = true;
+            console.log("[Hangman] Game ended.");
+        }
+
+        guessButton.addEventListener('click', handleGuess);
+        letterInputEl.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                handleGuess();
+            }
+        });
+        newGameButton.addEventListener('click', startGame);
+
+        // --- Cleanup Function ---
+        function cleanupGame() {
+            console.log("[Hangman] cleanupGame called (no active intervals/listeners to stop beyond iframe unload).");
+            // Hangman doesn't have intervals or global listeners that persist after iframe unload
+            // Event listeners on its own elements are cleaned up when the document is destroyed.
+        }
+
+        // --- Event listener for messages from parent ---
+        window.addEventListener('message', (event) => {
+            console.log(`[Hangman] Message received: "${event.data}" from origin "${event.origin}"`);
+            if (event.data === 'cleanup') {
+                cleanupGame();
+            }
+        });
+
+        // Initial game start
+        startGame();
+        window.focus(); // Try to focus iframe content
+        letterInputEl.focus(); // Focus the input field initially
+    </script>
+</body>
+</html>
