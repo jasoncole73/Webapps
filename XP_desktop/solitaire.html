@@ -2,30 +2,49 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<title>Solitaire</title>
 <style>
-    /* Styles specific to Solitaire game */
+    * { box-sizing: border-box; }
     body { margin: 0; height: 100vh; background-color: #006400; color: white; font-family: Tahoma, sans-serif; display: flex; flex-direction: column; overflow: hidden;}
     .game-controls { height: 30px; padding: 5px; background-color: #ccc; border-top: 1px solid #999; text-align: center; flex-shrink: 0;}
     .game-controls button { font-size: 11px; padding: 2px 8px; }
     .game-status { margin-left: 20px; color: #333; font-size: 11px;}
-    #solitaire-game-area { flex-grow: 1; position: relative; /* Area where piles are positioned */}
+    #solitaire-game-area { flex-grow: 1; position: relative; /* Max width to prevent horizontal scroll */ max-width: 430px; margin: 0 auto; }
 
-    .solitaire-pile { position: absolute; width: 72px; height: 96px; border: 1px solid #555; background-color: rgba(255, 255, 255, 0.1); border-radius: 4px; }
+    /* Adjusted card and pile sizes for smaller window */
+    .solitaire-pile { position: absolute; width: 62px; height: 86px; border: 1px solid #555; background-color: rgba(255,255,255,0.1); border-radius: 3px; }
     .solitaire-card {
-        position: absolute; width: 70px; height: 95px; border: 1px solid black; border-radius: 4px;
+        position: absolute; width: 60px; height: 85px; border: 1px solid black; border-radius: 3px;
         background-color: white; color: black; font-weight: bold; text-align: center; cursor: pointer;
-        display: flex; flex-direction: column; justify-content: space-between; padding: 2px; box-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        display: flex; flex-direction: column; justify-content: space-between; padding: 1px; box-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        font-size: 11px; /* Slightly smaller font for ranks */
     }
-    .solitaire-card.face-down { background: linear-gradient(135deg, #4a90e2, #86baf2); border: 3px double #b8d8f9; color: transparent; }
+    .solitaire-card.face-down { background: linear-gradient(135deg, #4a90e2, #86baf2); border: 2px double #b8d8f9; color: transparent; }
     .solitaire-card.red { color: red; } .solitaire-card.black { color: black; }
-    .solitaire-card.selected { outline: 2px solid yellow; outline-offset: -2px; box-shadow: 0 0 5px 2px yellow; }
-    .card-rank-top, .card-rank-bottom { font-size: 18px; line-height: 1; padding: 2px 0; }
-    .card-suit { font-size: 36px; line-height: 1; flex-grow: 1; display: flex; align-items: center; justify-content: center; }
+    .solitaire-card.selected { outline: 2px solid yellow; outline-offset: -1px; box-shadow: 0 0 3px 1px yellow; }
+
+    .card-rank-top, .card-rank-bottom { font-size: 14px; line-height: 1; }
+    .card-suit { font-size: 28px; line-height: 1; flex-grow: 1; display: flex; align-items: center; justify-content: center; }
     .card-rank-bottom { transform: rotate(180deg); }
-    #stock-pile { top: 10px; left: 10px; } #waste-pile { top: 10px; left: 90px; }
-    #foundation-0 { top: 10px; left: 250px; } #foundation-1 { top: 10px; left: 330px; } #foundation-2 { top: 10px; left: 410px; } #foundation-3 { top: 10px; left: 490px; }
-    #tableau-0 { top: 120px; left: 10px; } #tableau-1 { top: 120px; left: 90px; } #tableau-2 { top: 120px; left: 170px; } #tableau-3 { top: 120px; left: 250px; } #tableau-4 { top: 120px; left: 330px; } #tableau-5 { top: 120px; left: 410px; } #tableau-6 { top: 120px; left: 490px; }
-    .tableau-pile .solitaire-card { top: 0; left: 0; } /* Base position, JS overrides top for stacking */
+
+    /* Adjusted pile positions */
+    #stock-pile { top: 10px; left: 10px; }
+    #waste-pile { top: 10px; left: 80px; } /* Closer */
+    #foundation-0 { top: 10px; left: 180px; } /* Start foundations further right, spaced closer */
+    #foundation-1 { top: 10px; left: 245px; }
+    #foundation-2 { top: 10px; left: 310px; }
+    #foundation-3 { top: 10px; left: 375px; }
+
+    .tableau-pile { top: 110px; } /* Tableau piles start lower */
+    #tableau-0 { left: 10px; }
+    #tableau-1 { left: 75px; } /* Closer spacing for tableau piles */
+    #tableau-2 { left: 140px; }
+    #tableau-3 { left: 205px; }
+    #tableau-4 { left: 270px; }
+    #tableau-5 { left: 335px; }
+    #tableau-6 { left: 400px; } /* This will be tight, consider 6 tableau piles if needed */
+
+    .tableau-pile .solitaire-card { top: 0; left: 0; }
 </style>
 </head>
 <body>
@@ -43,20 +62,24 @@
         <span id="solitaire-message" class="game-status"></span>
     </div>
     <script>
-        // --- Solitaire JS Logic (copied from previous, with "10" card) ---
+        // --- Solitaire JS Logic (FROM PREVIOUS - NO CHANGES NEEDED TO LOGIC ITSELF) ---
+        // Ensure SOL_CARD_STACK_OFFSET might need slight adjustment if cards visually overlap too much or too little
+        // with new card sizes. Default is 20 for face-up, 5 for face-down.
         const solGameArea = document.getElementById('solitaire-game-area'); const solStockPileDiv = document.getElementById('stock-pile'); const solWastePileDiv = document.getElementById('waste-pile'); const solFoundationDivs = document.querySelectorAll('.foundation-pile'); const solTableauDivs = document.querySelectorAll('.tableau-pile'); const solMessage = document.getElementById('solitaire-message');
-        const SOL_SUITS = ["H", "D", "C", "S"], SOL_RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]; /* T changed to 10 */
-        const SOL_RANK_VALUES = { "A": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "10": 10, "J": 11, "Q": 12, "K": 13 }; /* T changed to 10 */
+        const SOL_SUITS = ["H", "D", "C", "S"], SOL_RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+        const SOL_RANK_VALUES = { "A": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "10": 10, "J": 11, "Q": 12, "K": 13 };
         const SOL_SUIT_SYMBOLS = { "H": "♥", "D": "♦", "C": "♣", "S": "♠" };
-        const SOL_CARD_STACK_OFFSET = 20, SOL_CARD_STACK_OFFSET_DOWN = 5;
+        const SOL_CARD_STACK_OFFSET = 18; // Adjusted for smaller cards
+        const SOL_CARD_STACK_OFFSET_DOWN = 4; // Adjusted
+
         let solDeck = [], solStock = [], solWaste = [], solFoundations = [[], [], [], []], solTableau = [[], [], [], [], [], [], []];
-        let solSelectedCards = null; // Removed solInitialized flag as script runs on load now
+        let solSelectedCards = null;
 
         function solCreateDeck() { solDeck = []; for (const suit of SOL_SUITS) for (const rank of SOL_RANKS) solDeck.push({ suit, rank, faceUp: false, id: rank + suit }); }
         function solShuffleDeck() { for (let i = solDeck.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [solDeck[i], solDeck[j]] = [solDeck[j], solDeck[i]]; } }
         function solDealGame() { solCreateDeck(); solShuffleDeck(); solStock = [...solDeck]; solWaste = []; solFoundations = [[], [], [], []]; solTableau = [[], [], [], [], [], [], []]; solSelectedCards = null; solMessage.textContent = ""; for (let i = 0; i < 7; i++) { for (let j = i; j < 7; j++) { if (solStock.length > 0) { const card = solStock.pop(); if (j === i) card.faceUp = true; solTableau[j].push(card); } } } solRenderBoard(); }
-        function solRenderCard(card, parentDiv, options = {}) { const cardDiv = document.createElement('div'); cardDiv.className = 'solitaire-card'; cardDiv.dataset.cardId = card.id; cardDiv.dataset.pileType = options.pileType; cardDiv.dataset.pileIndex = options.pileIndex; cardDiv.dataset.cardIndex = options.cardIndex; if (card.faceUp) { const color = (card.suit === 'H' || card.suit === 'D') ? 'red' : 'black'; cardDiv.classList.add(color); cardDiv.innerHTML = `<div class="card-rank-top">${card.rank}</div><div class="card-suit">${SOL_SUIT_SYMBOLS[card.suit]}</div><div class="card-rank-bottom">${card.rank}</div>`; } else { cardDiv.classList.add('face-down'); } if (options.pileType === 'tableau') { const offset = card.faceUp ? options.upCardIndex * SOL_CARD_STACK_OFFSET + options.downCardCount * SOL_CARD_STACK_OFFSET_DOWN : options.cardIndex * SOL_CARD_STACK_OFFSET_DOWN; cardDiv.style.position = 'absolute'; cardDiv.style.top = `${offset}px`; cardDiv.style.left = '0px'; } else if (options.pileType === 'waste' && options.cardIndex > 0) { cardDiv.style.position = 'absolute'; cardDiv.style.left = `${(options.cardIndex % 3) * (SOL_CARD_STACK_OFFSET / 2)}px`; cardDiv.style.top = '0px';} else { cardDiv.style.position = 'relative'; } if (solSelectedCards && solSelectedCards.cards.some(selCard => selCard.id === card.id)) cardDiv.classList.add('selected'); cardDiv.addEventListener('click', solHandleCardClick); parentDiv.appendChild(cardDiv); }
-        function solRenderBoard() { solStockPileDiv.innerHTML = ''; solWastePileDiv.innerHTML = ''; solFoundationDivs.forEach(div => div.innerHTML = ''); solTableauDivs.forEach(div => div.innerHTML = ''); if (solStock.length > 0) { solRenderCard(solStock[solStock.length - 1], solStockPileDiv, { pileType: 'stock', pileIndex: 0, cardIndex: solStock.length - 1 }); } else { solStockPileDiv.innerHTML = '<div style="width:70px;height:95px;border:2px dashed #aaa;border-radius:4px;text-align:center;line-height:95px;font-size:24px;cursor:pointer;">⟳</div>'; solStockPileDiv.onclick = solHandleStockReset; } if (solWaste.length > 0) { const startIdx = Math.max(0, solWaste.length - 3); for (let i = startIdx; i < solWaste.length; i++) solRenderCard(solWaste[i], solWastePileDiv, { pileType: 'waste', pileIndex: 0, cardIndex: i - startIdx }); if(solWastePileDiv.lastChild) solWastePileDiv.lastChild.dataset.cardIndex = solWaste.length - 1; } solFoundations.forEach((pile, index) => { if (pile.length > 0) solRenderCard(pile[pile.length - 1], solFoundationDivs[index], { pileType: 'foundation', pileIndex: index, cardIndex: pile.length - 1 }); solFoundationDivs[index].dataset.pileType = 'foundation'; solFoundationDivs[index].dataset.pileIndex = index; solFoundationDivs[index].onclick = solHandleEmptyPileClick; }); solTableau.forEach((pile, index) => { let dc = 0, uc = 0, uci = 0; pile.forEach((card, ci) => { if (!card.faceUp) dc++; else uc++; solRenderCard(card, solTableauDivs[index], { pileType: 'tableau', pileIndex: index, cardIndex: ci, downCardCount: dc, upCardCount: uc, upCardIndex: card.faceUp ? uci++ : -1 }); }); solTableauDivs[index].dataset.pileType = 'tableau'; solTableauDivs[index].dataset.pileIndex = index; solTableauDivs[index].onclick = solHandleEmptyPileClick;}); solCheckWin(); }
+        function solRenderCard(card, parentDiv, options = {}) { const cardDiv = document.createElement('div'); cardDiv.className = 'solitaire-card'; cardDiv.dataset.cardId = card.id; cardDiv.dataset.pileType = options.pileType; cardDiv.dataset.pileIndex = options.pileIndex; cardDiv.dataset.cardIndex = options.cardIndex; if (card.faceUp) { const color = (card.suit === 'H' || card.suit === 'D') ? 'red' : 'black'; cardDiv.classList.add(color); cardDiv.innerHTML = `<div class="card-rank-top">${card.rank}</div><div class="card-suit">${SOL_SUIT_SYMBOLS[card.suit]}</div><div class="card-rank-bottom">${card.rank}</div>`; } else { cardDiv.classList.add('face-down'); } if (options.pileType === 'tableau') { const offset = card.faceUp ? options.upCardIndex * SOL_CARD_STACK_OFFSET + options.downCardCount * SOL_CARD_STACK_OFFSET_DOWN : options.cardIndex * SOL_CARD_STACK_OFFSET_DOWN; cardDiv.style.position = 'absolute'; cardDiv.style.top = `${offset}px`; cardDiv.style.left = '0px'; } else if (options.pileType === 'waste' && options.cardIndex > 0) { cardDiv.style.position = 'absolute'; cardDiv.style.left = `${(options.cardIndex % 3) * (SOL_CARD_STACK_OFFSET / 2.5)}px`; cardDiv.style.top = '0px';} else { cardDiv.style.position = 'relative'; } if (solSelectedCards && solSelectedCards.cards.some(selCard => selCard.id === card.id)) cardDiv.classList.add('selected'); cardDiv.addEventListener('click', solHandleCardClick); parentDiv.appendChild(cardDiv); }
+        function solRenderBoard() { solStockPileDiv.innerHTML = ''; solWastePileDiv.innerHTML = ''; solFoundationDivs.forEach(div => div.innerHTML = ''); solTableauDivs.forEach(div => div.innerHTML = ''); if (solStock.length > 0) { solRenderCard(solStock[solStock.length - 1], solStockPileDiv, { pileType: 'stock', pileIndex: 0, cardIndex: solStock.length - 1 }); } else { solStockPileDiv.innerHTML = '<div style="width:60px;height:85px;border:2px dashed #aaa;border-radius:3px;text-align:center;line-height:85px;font-size:20px;cursor:pointer;">⟳</div>'; solStockPileDiv.onclick = solHandleStockReset; } if (solWaste.length > 0) { const startIdx = Math.max(0, solWaste.length - 3); for (let i = startIdx; i < solWaste.length; i++) solRenderCard(solWaste[i], solWastePileDiv, { pileType: 'waste', pileIndex: 0, cardIndex: i - startIdx }); if(solWastePileDiv.lastChild) solWastePileDiv.lastChild.dataset.cardIndex = solWaste.length - 1; } solFoundations.forEach((pile, index) => { if (pile.length > 0) solRenderCard(pile[pile.length - 1], solFoundationDivs[index], { pileType: 'foundation', pileIndex: index, cardIndex: pile.length - 1 }); solFoundationDivs[index].dataset.pileType = 'foundation'; solFoundationDivs[index].dataset.pileIndex = index; solFoundationDivs[index].onclick = solHandleEmptyPileClick; }); solTableau.forEach((pile, index) => { let dc = 0, uc = 0, uci = 0; pile.forEach((card, ci) => { if (!card.faceUp) dc++; else uc++; solRenderCard(card, solTableauDivs[index], { pileType: 'tableau', pileIndex: index, cardIndex: ci, downCardCount: dc, upCardCount: uc, upCardIndex: card.faceUp ? uci++ : -1 }); }); solTableauDivs[index].dataset.pileType = 'tableau'; solTableauDivs[index].dataset.pileIndex = index; solTableauDivs[index].onclick = solHandleEmptyPileClick;}); solCheckWin(); }
         function solHandleCardClick(event) { event.stopPropagation(); const target = event.currentTarget; const { pileType, pileIndex, cardIndex } = target.dataset; const pIdx = parseInt(pileIndex), cIdx = parseInt(cardIndex); if (pileType === 'stock') { solDrawFromStock(); return; } let clickedPile; if (pileType === 'waste') clickedPile = solWaste; else if (pileType === 'tableau') clickedPile = solTableau[pIdx]; else if (pileType === 'foundation') clickedPile = solFoundations[pIdx]; else return; if (cIdx < 0 || cIdx >= clickedPile.length) return; const clickedCard = clickedPile[cIdx]; if (!clickedCard.faceUp) { if (pileType === 'tableau' && cIdx === clickedPile.length - 1) { clickedCard.faceUp = true; solSelectedCards = null; solRenderBoard(); } return; } if (!solSelectedCards) { let cardsToSelect = []; if (pileType === 'tableau') cardsToSelect = clickedPile.slice(cIdx); else if (pileType === 'waste' && cIdx === clickedPile.length - 1) cardsToSelect = [clickedCard]; else return; if (cardsToSelect.length > 0) { solSelectedCards = { pileType: pileType, pileIndex: pIdx, cardIndex: cIdx, cards: cardsToSelect }; solRenderBoard(); } } else { let moveSuccessful = false; const cardToMove = solSelectedCards.cards[0]; if (pileType === 'foundation' && solSelectedCards.cards.length === 1 && solCanMoveToFoundation(cardToMove, solFoundations[pIdx])) { solMoveCards(solSelectedCards, { pileType: 'foundation', pileIndex: pIdx }); moveSuccessful = true; } else if (pileType === 'tableau') { const targetPile = solTableau[pIdx]; if (targetPile.length > 0) { const targetCard = targetPile[targetPile.length - 1]; if (targetCard.faceUp && solCanMoveToTableau(cardToMove, targetCard)) { solMoveCards(solSelectedCards, { pileType: 'tableau', pileIndex: pIdx }); moveSuccessful = true; } } else { if (cardToMove.rank === 'K') { solMoveCards(solSelectedCards, { pileType: 'tableau', pileIndex: pIdx }); moveSuccessful = true; } } } solSelectedCards = null; solRenderBoard(); } }
         function solHandleEmptyPileClick(event) { event.stopPropagation(); if (!solSelectedCards) return; const target = event.currentTarget; const { pileType, pileIndex } = target.dataset; const pIdx = parseInt(pileIndex); const cardToMove = solSelectedCards.cards[0]; if (pileType === 'foundation' && solSelectedCards.cards.length === 1 && cardToMove.rank === 'A' && solCanMoveToFoundation(cardToMove, solFoundations[pIdx])) solMoveCards(solSelectedCards, { pileType: 'foundation', pileIndex: pIdx }); else if (pileType === 'tableau' && cardToMove.rank === 'K') solMoveCards(solSelectedCards, { pileType: 'tableau', pileIndex: pIdx }); solSelectedCards = null; solRenderBoard(); }
         function solDrawFromStock() { if (solStock.length > 0) { const card = solStock.pop(); card.faceUp = true; solWaste.push(card); solSelectedCards = null; solRenderBoard(); } }
@@ -67,12 +90,11 @@
         function solMoveCards(sel, dest) { const { pileType: fromT, pileIndex: fromI, cardIndex: fromCI, cards: cardsToMove } = sel; const { pileType: toT, pileIndex: toI } = dest; let srcPile; if (fromT === 'waste') srcPile = solWaste; else if (fromT === 'tableau') srcPile = solTableau[fromI]; else return; let destPile; if (toT === 'foundation') destPile = solFoundations[toI]; else if (toT === 'tableau') destPile = solTableau[toI]; else return; const removed = srcPile.splice(fromCI); destPile.push(...removed); if (fromT === 'tableau' && srcPile.length > 0 && srcPile[srcPile.length-1].faceUp === false) srcPile[srcPile.length-1].faceUp = true; }
         function solCheckWin() { const fc = solFoundations.reduce((s, p) => s + p.length, 0); if (fc === 52) solMessage.textContent = "You Win!"; else solMessage.textContent = ""; }
 
-        // --- Setup ---
         document.getElementById('solitaire-new-game').addEventListener('click', solDealGame);
-        solDealGame(); // Start game on load
+        solDealGame();
 
-        // --- Cleanup Function ---
-        function cleanupGame() { console.log("Cleaning up Solitaire"); }
+        function cleanupGame() { console.log("[Solitaire] cleanupGame called (no active processes to stop)."); }
+        window.addEventListener('message', (event) => { if (event.data === 'cleanup') cleanupGame(); });
     </script>
 </body>
 </html>
