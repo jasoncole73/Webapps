@@ -180,7 +180,7 @@
         <!-- Apps with potentially unique sizes -->
         <div class="icon" id="paint-icon" data-appid="paint" data-title="Paint" data-url="paint.html" data-width="450" data-height="400"><span>Paint</span></div>
         <div class="icon" id="video-icon" data-appid="video" data-title="Video Player" data-url="video.html" data-width="500" data-height="400"><span>Video Player</span></div>
-        <div class="icon" id="calc-icon" data-appid="calc" data-title="Calculator" data-url="calculator.html" data-width="220" data-height="280"><span>Calculator</span></div>
+        <div class="icon" id="calc-icon" data-appid="calc" data-title="Calculator" data-url="calculator.html" data-width="450" data-height="520"><span>Calculator</span></div> {/* Standardized Size */}
 
         <!-- Games - Standardized to Chess Size (450x520) -->
         <div class="icon" id="solitaire-icon" data-appid="solitaire" data-title="Solitaire" data-url="solitaire.html" data-width="450" data-height="520"><span>Solitaire</span></div>
@@ -209,22 +209,14 @@
     </div>
 
     <script>
-        // --- Global State & Window Management ---
-        // ... (This entire <script> block is identical to the one in the previous message
-        //      that starts with "You are absolutely right to push on this...")
-        // Please use that complete JavaScript block here.
-        // For brevity, I'm not repeating the ~250 lines of JavaScript if it's unchanged.
-        // Ensure you have the version with the `appOpeningDebounce` logic and the
-        // corrected Start Menu population and enhanced Shut Down button.
-
         let highestZIndex = 1;
         let activeWindow = null;
         let isDragging = false;
         let dragOffsetX, dragOffsetY;
         let openWindows = {};
-        let appOpeningDebounce = {};
+        let appOpeningDebounce = {}; // Use for simple debounce per app
 
-        function updateClock() { /* ... */
+        function updateClock() {
             const clockElement = document.getElementById('clock');
             if (clockElement) {
                 const now = new Date();
@@ -234,25 +226,28 @@
         setInterval(updateClock, 1000);
         updateClock();
 
-        function tryFocusIframe(iframe, context) { /* ... */
+        function tryFocusIframe(iframe, context) {
             if (iframe && iframe.contentWindow) {
                 try {
+                    // console.log(`[Desktop] Attempting focus via ${context} for iframe: ${iframe.title}`);
                     iframe.contentWindow.focus();
-                } catch (e) { /* console.warn(`[Desktop] Focus failed via ${context} for iframe ${iframe.title}: ${e.message}`); */ }
+                } catch (e) {
+                    // console.warn(`[Desktop] Focus failed via ${context} for iframe ${iframe.title}: ${e.message}`);
+                }
             }
         }
 
-        function bringToFront(winElement) { /* ... */
+        function bringToFront(winElement) {
             if (!winElement) return;
             highestZIndex++;
             winElement.style.zIndex = highestZIndex;
             const iframe = winElement.querySelector('iframe');
-            if (iframe && winElement.style.display === 'block') {
-                setTimeout(() => tryFocusIframe(iframe, "bringToFront"), 50);
+            if (iframe && winElement.style.display === 'block') { // Only focus if visible
+                setTimeout(() => tryFocusIframe(iframe, "bringToFront"), 50); // Slightly longer delay
             }
         }
 
-        function makeDraggable(winElement) { /* ... */
+        function makeDraggable(winElement) {
             const titleBar = winElement.querySelector('.title-bar');
             if (!titleBar) return;
             titleBar.addEventListener('mousedown', (e) => {
@@ -272,7 +267,7 @@
             }, true);
         }
 
-        function handleDrag(e) { /* ... */
+        function handleDrag(e) {
             if (!isDragging || !activeWindow) return; e.preventDefault();
             let newX = e.clientX - dragOffsetX, newY = e.clientY - dragOffsetY;
             const desk = document.getElementById('desktop'), task = document.getElementById('taskbar');
@@ -281,25 +276,29 @@
             activeWindow.style.left = `${newX}px`; activeWindow.style.top = `${newY}px`;
         }
 
-        function stopDrag() { /* ... */
+        function stopDrag() {
             if (isDragging) {
                 isDragging = false;
                 document.removeEventListener('mousemove', handleDrag); document.removeEventListener('mouseup', stopDrag); document.removeEventListener('mouseleave', stopDrag);
             }
         }
 
-        function createWindow(appId, title, url, width, height) { /* ... (ensure this is the LATEST robust version from the previous response) ... */
+        function createWindow(appId, title, url, width, height) {
             const windowId = `window-${appId}`;
+
             if (openWindows[windowId] && openWindows[windowId].style.display === 'block') {
                 console.log(`[Desktop] Window ${title} is already visible. Bringing to front and focusing.`);
                 bringToFront(openWindows[windowId]);
+                appOpeningDebounce[appId] = false; // Reset debounce quickly if window was already open and visible
                 return;
             }
+
             if (openWindows[windowId]) {
                 const existingWindow = openWindows[windowId];
                 console.log(`[Desktop] Re-displaying existing window structure for ${title}`);
                 existingWindow.style.display = 'block';
                 bringToFront(existingWindow);
+
                 const iframe = existingWindow.querySelector('iframe');
                 if (iframe) {
                     const currentSrc = iframe.getAttribute('src');
@@ -308,15 +307,17 @@
                         iframe.setAttribute('src', url);
                         setTimeout(() => tryFocusIframe(iframe, "reopen-reload"), 250);
                     } else {
-                        console.log(`[Desktop] Iframe for ${title} already has correct src.`);
+                        console.log(`[Desktop] Iframe for ${title} already has correct src. Focus handled by bringToFront.`);
                     }
                 }
-                // Reset debounce for reopened window, as it's now considered "settled"
-                setTimeout(() => { if(appOpeningDebounce[appId]) appOpeningDebounce[appId] = false; console.log(`[Desktop] Reset debounce for reopened window ${title}.`); }, 600); // Use the debounce reset time
+                // Reset debounce after handling reopen, as it's now considered "settled"
+                setTimeout(() => { appOpeningDebounce[appId] = false; console.log(`[Desktop] Reset debounce for reopened window ${title}.`); }, 600);
                 return;
             }
+
+            // --- Create New Window ---
             console.log(`[Desktop] Creating new window for ${title}`);
-            // appOpeningDebounce[appId] = true; // This is set by the caller
+            // appOpeningDebounce[appId] = true; // This is set by the caller before calling createWindow
 
             const win = document.createElement('div');
             win.className = 'window'; win.id = windowId;
@@ -324,7 +325,7 @@
             const initialLeft = 100 + (Object.keys(openWindows).length % 6) * 25;
             const initialTop = 50 + (Object.keys(openWindows).length % 6) * 25;
             win.style.left = `${initialLeft}px`; win.style.top = `${initialTop}px`;
-            win.style.display = 'block';
+            win.style.display = 'block'; // Make visible immediately
 
             win.innerHTML = `
                 <div class="title-bar"><span class="title-bar-text">${title}</span><div class="window-buttons"><button class="window-button close-button">X</button></div></div>
@@ -333,7 +334,7 @@
             document.getElementById('desktop').appendChild(win);
             openWindows[windowId] = win;
             makeDraggable(win);
-            bringToFront(win);
+            bringToFront(win); // Bring new window to front immediately
 
             const iframeElement = win.querySelector('iframe');
             if (iframeElement) {
@@ -370,11 +371,11 @@
                 }
                 win.style.display = 'none';
             });
-             // Reset appOpeningDebounce after a longer delay for NEW windows
+            // Reset appOpeningDebounce after a longer delay for NEW windows
             setTimeout(() => { if(appOpeningDebounce[appId]) { appOpeningDebounce[appId] = false; console.log(`[Desktop] Reset debounce for new window ${title}.`); } }, 800);
         }
 
-
+        // --- Application Launching (Desktop Icons) ---
         let dblClickCounter = {};
         document.querySelectorAll('.icon').forEach(icon => {
             const appIdForIcon = icon.dataset.appid;
@@ -395,22 +396,24 @@
                 }
                 if (appOpeningDebounce[appId]) {
                     console.log(`[Desktop] Debouncing dblclick for ${title}.`);
-                    return;
+                    return; // Already processing an open for this app
                 }
                 if (appId && title && url) {
-                    appOpeningDebounce[appId] = true;
+                    appOpeningDebounce[appId] = true; // Set debounce flag BEFORE calling createWindow
                     createWindow(appId, title, url, width, height);
+                    // Debounce reset is now primarily handled within createWindow
                 } else {
                     console.error("Icon is missing data attributes (appid, title, url):", icon.id);
                 }
             });
         });
 
+        // --- Start Menu Functionality ---
         const startButton = document.getElementById('start-button');
         const startMenu = document.getElementById('start-menu');
         const startMenuAppList = document.getElementById('start-menu-apps');
 
-        function populateStartMenu() { /* ... (same as previous full version) ... */
+        function populateStartMenu() {
             if (!startMenuAppList) {
                 console.error("[Desktop] Start Menu App List UL element not found for population.");
                 return;
@@ -464,7 +467,7 @@
         }
 
 
-        if (startButton && startMenu && startMenuAppList) { /* ... (same as previous full version for Start Menu event listeners, log off, and shutdown) ... */
+        if (startButton && startMenu && startMenuAppList) {
             startButton.addEventListener('click', (event) => {
                 event.stopPropagation();
                 const isHidden = startMenu.style.display === 'none' || startMenu.style.display === '';
@@ -481,11 +484,16 @@
                 if (targetItem) {
                     const appId = targetItem.dataset.appid, title = targetItem.dataset.title, url = targetItem.dataset.url;
                     const width = targetItem.dataset.width, height = targetItem.dataset.height;
-                    if (appOpeningDebounce[appId]) { console.log(`[StartMenu] Debouncing launch for ${title}.`); return; }
+
+                    if (appOpeningDebounce[appId]) { // Check debounce from Start Menu clicks too
+                        console.log(`[StartMenu] Debouncing launch for ${title} from Start Menu.`);
+                        return;
+                    }
                     if (appId && title && url) {
                         console.log(`[StartMenu] Launching ${title}`);
-                        appOpeningDebounce[appId] = true;
+                        appOpeningDebounce[appId] = true; // Set debounce
                         createWindow(appId, title, url, width, height);
+                        // Debounce reset handled within createWindow for new windows
                     }
                     startMenu.style.display = 'none';
                 }
