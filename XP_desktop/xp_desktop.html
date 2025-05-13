@@ -107,11 +107,20 @@
         <div class="icon" id="memory-icon" data-appid="memory" data-title="Memory Game" data-url="memory.html" data-width="450" data-height="450"><span>Memory Game</span></div>
         <div class="icon" id="snake-icon" data-appid="snake" data-title="Snake" data-url="snake.html" data-width="430" data-height="480"><span>Snake</span></div>
         <div class="icon" id="pong-icon" data-appid="pong" data-title="Pong" data-url="pong.html" data-width="630" data-height="480"><span>Pong</span></div>
-        <div id="taskbar">
-            <button id="start-button">Start</button>
-            <!-- Active applications could be added here -->
-            <div id="clock"></div>
+
+        <!-- Simple Start Menu (Initially Hidden) -->
+        <div id="start-menu" style="display: none; position: absolute; bottom: 30px; left: 0; width: 200px; height: 300px; background-color: #f0f0f0; border: 1px solid #005cbf; border-bottom: none; z-index: 10001; padding: 10px; box-shadow: 2px -2px 5px rgba(0,0,0,0.2);">
+            <h4>My Programs</h4>
+            <ul style="list-style: none; padding-left: 10px; margin-top: 5px;">
+                <li style="padding: 3px 0;">Program 1</li>
+                <li style="padding: 3px 0;">Program 2</li>
+                <li style="padding: 3px 0;">Settings</li>
+            </ul>
+            <hr style="margin: 10px 0;">
+            <button id="log-off-button" style="width: 100%; padding: 5px; font-family: Tahoma, sans-serif; border: 1px outset #ccc; background-color: #d4d0c8;">Log Off</button>
         </div>
+
+        <div id="taskbar"><button id="start-button">Start</button><div id="clock"></div></div>
     </div>
 
     <script>
@@ -149,7 +158,7 @@
             winElement.style.zIndex = highestZIndex;
             const iframe = winElement.querySelector('iframe');
             if (iframe && winElement.style.display === 'block') { // Only focus if visible
-                setTimeout(() => tryFocusIframe(iframe, "bringToFront"), 50); // Slightly longer delay
+                setTimeout(() => tryFocusIframe(iframe, "bringToFront"), 50);
             }
         }
 
@@ -164,7 +173,11 @@
             });
             winElement.addEventListener('mousedown', (e) => {
                 if (!isDragging || activeWindow !== winElement) {
-                     bringToFront(winElement);
+                    if (e.target.tagName !== 'IFRAME' && !winElement.contains(document.activeElement) ) {
+                        bringToFront(winElement);
+                    } else if (e.target.tagName !== 'IFRAME') {
+                         bringToFront(winElement);
+                    }
                 }
             }, true);
         }
@@ -188,42 +201,33 @@
         function createWindow(appId, title, url, width, height) {
             const windowId = `window-${appId}`;
 
-            // If window exists and is already visible and frontmost, just ensure focus.
-            if (openWindows[windowId] && openWindows[windowId].style.display === 'block' && parseInt(openWindows[windowId].style.zIndex) === highestZIndex) {
-                console.log(`[Desktop] Window ${title} is already open and frontmost.`);
-                const iframeToFocus = openWindows[windowId].querySelector('iframe');
-                 if(iframeToFocus) { try { iframeToFocus.contentWindow?.focus(); } catch(e){} }
-                 // Reset debounce flag as this interaction is complete.
-                 appOpeningDebounce[appId] = false;
+            if (openWindows[windowId] && openWindows[windowId].style.display === 'block') {
+                console.log(`[Desktop] Window ${title} is already visible. Bringing to front and focusing.`);
+                bringToFront(openWindows[windowId]);
                 return;
             }
 
-
-            if (openWindows[windowId]) { // Window div exists, might be hidden or not loaded
+            if (openWindows[windowId]) {
                 const existingWindow = openWindows[windowId];
                 console.log(`[Desktop] Re-displaying existing window structure for ${title}`);
                 existingWindow.style.display = 'block';
-                bringToFront(existingWindow);      // Bring to front (this also attempts focus)
-
+                bringToFront(existingWindow);
                 const iframe = existingWindow.querySelector('iframe');
                 if (iframe) {
                     const currentSrc = iframe.getAttribute('src');
                     if (currentSrc === 'about:blank' || currentSrc !== url) {
-                        console.log(`[Desktop] Iframe for ${title} was blank or src differs. Reloading with: ${url}`);
+                        console.log(`[Desktop] Iframe for ${title} needs reload. Setting src to: ${url}`);
                         iframe.setAttribute('src', url);
                         setTimeout(() => tryFocusIframe(iframe, "reopen-reload"), 250);
                     } else {
-                        console.log(`[Desktop] Iframe for ${title} already has correct src. Focus handled by bringToFront/click.`);
+                        console.log(`[Desktop] Iframe for ${title} already has correct src.`);
                     }
                 }
-                // Reset debounce flag as this interaction is complete.
-                appOpeningDebounce[appId] = false;
-                return; // Handled existing window
+                return;
             }
 
-            // --- Create New Window ---
             console.log(`[Desktop] Creating new window for ${title}`);
-            // appOpeningDebounce[appId] is already true from the dblclick handler
+            appOpeningDebounce[appId] = true; // Set flag that we are creating this app's window
 
             const win = document.createElement('div');
             win.className = 'window'; win.id = windowId;
@@ -231,7 +235,7 @@
             const initialLeft = 100 + (Object.keys(openWindows).length % 6) * 25;
             const initialTop = 50 + (Object.keys(openWindows).length % 6) * 25;
             win.style.left = `${initialLeft}px`; win.style.top = `${initialTop}px`;
-            win.style.display = 'block'; // Make window visible immediately
+            win.style.display = 'block'; // Make visible immediately
 
             win.innerHTML = `
                 <div class="title-bar"><span class="title-bar-text">${title}</span><div class="window-buttons"><button class="window-button close-button">X</button></div></div>
@@ -240,14 +244,14 @@
             document.getElementById('desktop').appendChild(win);
             openWindows[windowId] = win;
             makeDraggable(win);
-            bringToFront(win); // Bring new window to front immediately
+            bringToFront(win);
 
             const iframeElement = win.querySelector('iframe');
             if (iframeElement) {
                 console.log(`[Desktop] Setting initial iframe src for new window ${title} to: ${url}`);
                 setTimeout(() => {
-                     iframeElement.setAttribute('src', url);
-                     setTimeout(() => tryFocusIframe(iframeElement, "create-new"), 350);
+                    iframeElement.setAttribute('src', url);
+                    setTimeout(() => tryFocusIframe(iframeElement, "create-new"), 350);
                 }, 50);
             }
 
@@ -277,23 +281,18 @@
                 }
                 win.style.display = 'none';
             });
-
-            // Reset appOpeningDebounce after creation and initial load/focus attempts
-            // This was previously in the dblclick handler, moving it here to be tied to createWindow completion.
-             setTimeout(() => {
-                appOpeningDebounce[appId] = false;
-                console.log(`[Desktop] Reset debounce for ${title} after new window creation path.`);
-            }, 800); // Same delay as before, might need adjustment
+            // Reset appOpeningDebounce after a longer delay for new windows
+            setTimeout(() => { appOpeningDebounce[appId] = false; console.log(`[Desktop] Reset debounce for new window ${title}.`); }, 800);
         }
 
         // --- Application Launching (with simplified debounce) ---
-        let dblClickCounter = {}; // Still useful for seeing raw clicks
+        let dblClickCounter = {};
 
         document.querySelectorAll('.icon').forEach(icon => {
             const appIdForIcon = icon.dataset.appid;
             if (appIdForIcon) {
                 dblClickCounter[appIdForIcon] = 0;
-                appOpeningDebounce[appIdForIcon] = false; // Initialize debounce state
+                appOpeningDebounce[appIdForIcon] = false;
             }
 
             icon.addEventListener('dblclick', () => {
@@ -309,30 +308,56 @@
                 }
 
                 if (appOpeningDebounce[appId]) {
-                    console.log(`[Desktop] Debouncing dblclick for ${title}. Ignoring click ${dblClickCounter[appId]}.`);
-                    return; // Already processing an open for this app
+                    console.log(`[Desktop] Debouncing dblclick for ${title}.`);
+                    return;
                 }
 
                 if (appId && title && url) {
-                    appOpeningDebounce[appId] = true; // Set debounce flag BEFORE calling createWindow
-                    console.log(`[Desktop] Set appOpeningDebounce for ${title} to true.`);
+                    // appOpeningDebounce is set inside createWindow for new windows now,
+                    // and reset there too. This listener just checks it.
                     createWindow(appId, title, url, width, height);
-                    // The createWindow function now handles resetting its own appOpeningDebounce state for NEW windows.
-                    // For RE-OPENED windows, the debounce is reset almost immediately if it was an existing window.
-                    // If it's a new window, the createWindow's internal setTimeout will reset it.
-                    // If it's an existing window that's just brought to front, we might need to reset it sooner.
-                    if (openWindows[`window-${appId}`] && openWindows[`window-${appId}`].style.display === 'block') {
-                         // If window was already open and just brought to front, reset debounce quickly.
-                        setTimeout(() => {
-                            appOpeningDebounce[appId] = false;
-                            console.log(`[Desktop] Reset debounce for ${title} quickly (already open).`);
-                        }, 50); // Shorter timeout for already open windows.
-                    }
                 } else {
                     console.error("Icon is missing required data attributes (appid, title, url):", icon.id);
                 }
             });
         });
+
+        // --- Start Menu Functionality ---
+        const startButton = document.getElementById('start-button');
+        const startMenu = document.getElementById('start-menu');
+
+        if (startButton && startMenu) {
+            startButton.addEventListener('click', (event) => {
+                event.stopPropagation();
+                console.log("[Desktop] Start Button clicked.");
+                const isHidden = startMenu.style.display === 'none' || startMenu.style.display === '';
+                startMenu.style.display = isHidden ? 'block' : 'none';
+                if (isHidden) { // If opening, bring it to front
+                    highestZIndex++;
+                    startMenu.style.zIndex = highestZIndex;
+                }
+            });
+
+            document.getElementById('desktop').addEventListener('click', (event) => {
+                if (startMenu.style.display === 'block') {
+                    if (!startMenu.contains(event.target) && event.target !== startButton) {
+                        console.log("[Desktop] Clicked outside Start Menu. Closing.");
+                        startMenu.style.display = 'none';
+                    }
+                }
+            }, true); // Use capture to ensure this runs before other clicks might stop propagation
+
+            const logOffButton = document.getElementById('log-off-button');
+            if (logOffButton) {
+                logOffButton.addEventListener('click', () => {
+                    alert("Log Off clicked! (Functionality not implemented)");
+                    startMenu.style.display = 'none';
+                });
+            }
+        } else {
+            console.error("Start button or Start menu element not found!");
+        }
+
     </script>
 </body>
 </html>
