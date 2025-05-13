@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Guessing Game</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Tahoma', sans-serif;
+            background-color: #ece9d8; /* XP window background */
+            color: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            margin: 0;
+            padding: 15px;
+            text-align: center;
+        }
+        h2 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #005cbf; /* XP blue */
+        }
+        p {
+            margin: 5px 0;
+        }
+        input[type="number"] {
+            width: 80px;
+            padding: 5px;
+            margin-bottom: 10px;
+            border: 1px solid #7F9DB9; /* XP input border */
+            font-family: 'Tahoma', sans-serif;
+        }
+        button {
+            padding: 5px 15px;
+            font-family: 'Tahoma', sans-serif;
+            font-size: 12px;
+            border: 1px outset #ccc;
+            background-color: #f0f0f0;
+            cursor: pointer;
+            min-width: 80px;
+        }
+        button:active {
+            border-style: inset;
+        }
+        .message {
+            margin-top: 15px;
+            font-weight: bold;
+            min-height: 1.5em; /* To prevent layout shifts */
+        }
+        .low { color: blue; }
+        .high { color: red; }
+        .correct { color: green; }
+        .error { color: orange; }
+    </style>
+</head>
+<body>
+    <h2>Number Guessing Game</h2>
+    <p>I'm thinking of a number between 1 and 100.</p>
+    <p>Can you guess it?</p>
+
+    <input type="number" id="guessField" min="1" max="100">
+    <button id="submitGuess">Guess</button>
+    <button id="newGameButton" style="display: none;">Play Again</button>
+
+    <p class="message" id="messageArea"></p>
+    <p id="attemptsArea"></p>
+
+    <script>
+        let secretNumber;
+        let attempts;
+        const maxAttempts = 10; // Or any number you prefer
+
+        const guessField = document.getElementById('guessField');
+        const submitGuessButton = document.getElementById('submitGuess');
+        const newGameButton = document.getElementById('newGameButton');
+        const messageArea = document.getElementById('messageArea');
+        const attemptsArea = document.getElementById('attemptsArea');
+
+        function startNewGame() {
+            console.log("[NumberGuess] Starting new game.");
+            secretNumber = Math.floor(Math.random() * 100) + 1;
+            attempts = 0;
+            messageArea.textContent = '';
+            messageArea.className = 'message'; // Reset class
+            attemptsArea.textContent = `Attempts left: ${maxAttempts}`;
+            guessField.value = '';
+            guessField.disabled = false;
+            submitGuessButton.style.display = 'inline-block';
+            newGameButton.style.display = 'none';
+            guessField.focus();
+        }
+
+        function checkGuess() {
+            const userGuess = parseInt(guessField.value);
+            messageArea.textContent = ''; // Clear previous message
+            messageArea.className = 'message';
+
+            if (isNaN(userGuess) || userGuess < 1 || userGuess > 100) {
+                messageArea.textContent = 'Please enter a valid number between 1 and 100.';
+                messageArea.classList.add('error');
+                guessField.value = '';
+                guessField.focus();
+                return;
+            }
+
+            attempts++;
+            const attemptsLeft = maxAttempts - attempts;
+
+            if (userGuess === secretNumber) {
+                messageArea.textContent = `Congratulations! You guessed it in ${attempts} attempts!`;
+                messageArea.classList.add('correct');
+                attemptsArea.textContent = 'You won!';
+                endGame();
+            } else if (attempts >= maxAttempts) {
+                messageArea.textContent = `Sorry, you've run out of attempts! The number was ${secretNumber}.`;
+                messageArea.classList.add('error');
+                attemptsArea.textContent = 'Game Over!';
+                endGame();
+            } else {
+                if (userGuess < secretNumber) {
+                    messageArea.textContent = 'Too low! Try a higher number.';
+                    messageArea.classList.add('low');
+                } else {
+                    messageArea.textContent = 'Too high! Try a lower number.';
+                    messageArea.classList.add('high');
+                }
+                attemptsArea.textContent = `Attempts left: ${attemptsLeft}`;
+            }
+            guessField.value = '';
+            guessField.focus();
+        }
+
+        function endGame() {
+            guessField.disabled = true;
+            submitGuessButton.style.display = 'none';
+            newGameButton.style.display = 'inline-block';
+        }
+
+        submitGuessButton.addEventListener('click', checkGuess);
+        newGameButton.addEventListener('click', startNewGame);
+        guessField.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent form submission if it were in a form
+                checkGuess();
+            }
+        });
+
+        // --- Cleanup Function (Called by parent window or postMessage) ---
+        // Not strictly necessary for this game as it has no intervals or global listeners
+        // that persist after iframe is cleared, but good for consistency.
+        function cleanupGame() {
+            console.log("[NumberGuess] cleanupGame called (no active processes to stop).");
+            // If there were any intervals or global listeners specific to this game, clear/remove them here.
+        }
+
+        // --- Event listener for messages from parent (for cleanup) ---
+        window.addEventListener('message', (event) => {
+            console.log(`[NumberGuess] Message received from parent. Data: "${event.data}", Origin: "${event.origin}"`);
+            if (event.data === 'cleanup') {
+                // You could also call startNewGame() here to reset state if preferred,
+                // but the iframe getting src='about:blank' handles most of it.
+                cleanupGame();
+            }
+        });
+
+        // Initialize game
+        startNewGame();
+        window.focus(); // Try to ensure iframe gets focus
+        guessField.focus();
+
+    </script>
+</body>
+</html>
