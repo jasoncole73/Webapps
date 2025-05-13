@@ -11,33 +11,65 @@
     }
     #minesweeper-controls {
         display: flex; justify-content: space-between; align-items: center; width: 100%;
-        padding: 5px 10px; background-color: #bbb; border-bottom: 1px solid #999;
+        padding: 8px 10px; background-color: #bbb; border-bottom: 1px solid #999;
         font-size: 14px; font-weight: bold; flex-shrink: 0;
     }
-    #mines-left, #mine-timer { background-color: #333; color: #ff0000; padding: 2px 5px; font-family: 'Courier New', monospace; border: 1px inset #777;}
-    #minesweeper-grid { display: grid; gap: 1px; background-color: #888; border: 2px outset #f0f0f0; margin: 10px; }
-    .mine-cell { width: 25px; height: 25px; background-color: #bdbdbd; border: 2px outset #e0e0e0; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; cursor: pointer; }
+    #mines-left, #mine-timer { background-color: #333; color: #ff0000; padding: 3px 6px; font-family: 'Courier New', monospace; border: 1px inset #777; font-size: 16px;}
+    #minesweeper-new-game { font-size: 24px; padding: 0 8px; height: 30px; line-height: 30px;}
+
+    #minesweeper-grid-container { /* New container for centering and padding */
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+    }
+    #minesweeper-grid {
+        display: grid; gap: 1px; background-color: #777; /* Darker border */
+        border: 3px outset #f0f0f0; /* More prominent border */
+        /* Grid columns set by JS */
+    }
+    .mine-cell {
+        width: 26px; height: 26px; /* Slightly larger cells */
+        background-color: #bdbdbd; border: 2px outset #e0e0e0;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 16px; font-weight: bold; cursor: pointer;
+    }
     .mine-cell:active { border-style: inset; background-color: #aaa;}
-    .mine-cell.revealed { background-color: #d0d0d0; border: 1px solid #999; }
-    .mine-cell.flagged::before { content: '🚩'; color: red; }
-    .mine-cell.mine-hit { background-color: red; } .mine-cell.mine-hit::before { content: '💣'; }
-    .mine-cell.num1 { color: blue; } .mine-cell.num2 { color: green; } .mine-cell.num3 { color: red; } .mine-cell.num4 { color: darkblue; } .mine-cell.num5 { color: brown; } .mine-cell.num6 { color: cyan; } .mine-cell.num7 { color: black; } .mine-cell.num8 { color: grey; }
+    .mine-cell.revealed { background-color: #d0d0d0; border: 1px solid #888; }
+    .mine-cell.flagged::before { content: '🚩'; color: red; font-size: 18px; }
+    .mine-cell.mine-hit { background-color: red; }
+    .mine-cell.mine-hit::before { content: '💣'; font-size: 18px;}
+    .mine-cell.num1 { color: blue; } .mine-cell.num2 { color: green; }
+    .mine-cell.num3 { color: red; } .mine-cell.num4 { color: darkblue; }
+    .mine-cell.num5 { color: brown; } .mine-cell.num6 { color: cyan; }
+    .mine-cell.num7 { color: black; } .mine-cell.num8 { color: grey; }
 </style>
 </head>
 <body>
     <div id="minesweeper-controls">
-        <div id="mines-left">Mines: 10</div>
-        <button id="minesweeper-new-game" style="font-size: 20px; padding: 0 5px;">🙂</button>
+        <div id="mines-left">Mines: 0</div>
+        <button id="minesweeper-new-game">🙂</button>
         <div id="mine-timer">Time: 0</div>
     </div>
-    <div id="minesweeper-grid"></div>
+    <div id="minesweeper-grid-container">
+        <div id="minesweeper-grid"></div>
+    </div>
 
     <script>
         const mineGridDiv = document.getElementById('minesweeper-grid');
         const minesLeftDiv = document.getElementById('mines-left');
         const mineTimerDiv = document.getElementById('mine-timer');
         const mineNewGameButton = document.getElementById('minesweeper-new-game');
-        let mineRows = 16, mineCols = 10, mineCount = 20;
+
+        // Adjusted grid size and mine count for 450x520 window (approx 430x470 content area)
+        // Cell size: 26px + 1px gap = 27px.
+        // Width: 10 cols * 27px = 270px (fits well within 430px)
+        // Height: 12 rows * 27px = 324px (fits well within 470px usable content height)
+        let mineRows = 12;
+        let mineCols = 10;
+        let mineCount = 15; // Adjusted mine count
+
         let mineBoard = [], minesRemaining, mineTime, mineTimerInterval = null, mineGameOver, minesFirstClick;
 
         function setupMineBoard() {
@@ -49,7 +81,11 @@
             minesLeftDiv.textContent = `Mines: ${minesRemaining}`;
             mineTimerDiv.textContent = `Time: ${mineTime}`;
             mineGridDiv.innerHTML = '';
-            mineGridDiv.style.gridTemplateColumns = `repeat(${mineCols}, 25px)`;
+            // Cell size (26px) + gap (1px) = 27px per cell for calculation
+            mineGridDiv.style.gridTemplateColumns = `repeat(${mineCols}, 26px)`;
+            // mineGridDiv.style.width = `${mineCols * 27 -1}px`; // Optional: set explicit width
+            // mineGridDiv.style.height = `${mineRows * 27 -1}px`; // Optional: set explicit height
+
             for (let r = 0; r < mineRows; r++) {
                 mineBoard[r] = [];
                 for (let c = 0; c < mineCols; c++) {
@@ -61,21 +97,22 @@
                     mineGridDiv.appendChild(cell);
                 }
             }
-            renderMineBoard(); // Initial render of empty board
+            renderMineBoard();
             console.log("[Minesweeper] Board setup complete.");
         }
-        function placeMines(cr, cc) { let mtp = mineCount, attempts = 0; while (mtp > 0 && attempts < (mineRows*mineCols*2)) { const r = Math.floor(Math.random()*mineRows),c = Math.floor(Math.random()*mineCols); if (!mineBoard[r][c].isMine && (r!==cr||c!==cc) && (Math.abs(r-cr)>1||Math.abs(c-cc)>1)) { mineBoard[r][c].isMine = true; mtp--; } attempts++;} if(mtp>0) console.warn("[Minesweeper] Could not place all mines"); for (let r=0;r<mineRows;r++) for (let c=0;c<mineCols;c++) { if (mineBoard[r]?.[c]?.isMine) continue; let count=0; for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ if(dr===0&&dc===0) continue; const nr=r+dr,nc=c+dc; if(nr>=0&&nr<mineRows&&nc>=0&&nc<mineCols&&mineBoard[nr][nc]?.isMine) count++;} if(mineBoard[r]?.[c]) mineBoard[r][c].adjacentMines=count;}}
+        function placeMines(cr, cc) { let mtp = mineCount, attempts = 0; while (mtp > 0 && attempts < (mineRows*mineCols*3)) { const r = Math.floor(Math.random()*mineRows),c = Math.floor(Math.random()*mineCols); if (!mineBoard[r][c].isMine && (r!==cr||c!==cc) && (Math.abs(r-cr)>1||Math.abs(c-cc)>1)) { mineBoard[r][c].isMine = true; mtp--; } attempts++;} if(mtp>0) console.warn("[Minesweeper] Could not place all mines"); for (let r=0;r<mineRows;r++) for (let c=0;c<mineCols;c++) { if (mineBoard[r]?.[c]?.isMine) continue; let count=0; for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ if(dr===0&&dc===0) continue; const nr=r+dr,nc=c+dc; if(nr>=0&&nr<mineRows&&nc>=0&&nc<mineCols&&mineBoard[nr][nc]?.isMine) count++;} if(mineBoard[r]?.[c]) mineBoard[r][c].adjacentMines=count;}}
         function handleMineCellClick(event) { if(mineGameOver) return; const r=parseInt(event.currentTarget.dataset.row),c=parseInt(event.currentTarget.dataset.col); if(isNaN(r)||isNaN(c)) return; const cd=mineBoard[r]?.[c]; if(!cd||cd.isRevealed||cd.isFlagged) return; if(minesFirstClick){ placeMines(r,c); minesFirstClick=false; if(mineTimerInterval) clearInterval(mineTimerInterval); mineTimerInterval=setInterval(()=>{mineTime++; mineTimerDiv.textContent=`Time: ${mineTime}`;},1000); console.log("[Minesweeper] Timer started. ID:", mineTimerInterval);} revealMineCell(r,c); checkMineWinCondition(); }
         function handleMineCellRightClick(event) { event.preventDefault(); if(mineGameOver||minesFirstClick) return; const r=parseInt(event.currentTarget.dataset.row),c=parseInt(event.currentTarget.dataset.col); if(isNaN(r)||isNaN(c)) return; const cd=mineBoard[r]?.[c]; if(!cd||cd.isRevealed) return; cd.isFlagged=!cd.isFlagged; if(cd.isFlagged) minesRemaining--; else minesRemaining++; minesLeftDiv.textContent=`Mines: ${minesRemaining}`; renderMineBoard(); }
-        function revealMineCell(r,c){ if(r<0||r>=mineRows||c<0||c>=mineCols) return; const cd=mineBoard[r]?.[c]; if(!cd||cd.isRevealed||cd.isFlagged) return; cd.isRevealed=true; if(cd.isMine){ mineGameOver=true; mineNewGameButton.textContent='😵'; if(mineTimerInterval) clearInterval(mineTimerInterval); mineTimerInterval=null; console.log("[Minesweeper] Game Over - Hit mine. Timer cleared."); revealAllMines(); renderMineBoard(); return; } const cellDiv = mineGridDiv.querySelector(`.mine-cell[data-row='${r}'][data-col='${c}']`); if(cellDiv) updateCellDiv(cellDiv,cd); if(cd.adjacentMines===0){for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){if(dr===0&&dc===0)continue; revealMineCell(r+dr,c+dc);}}}
+        function revealMineCell(r,c){ if(r<0||r>=mineRows||c<0||c>=mineCols) return; const cd=mineBoard[r]?.[c]; if(!cd||cd.isRevealed||cd.isFlagged) return; cd.isRevealed=true; if(cd.isMine){ mineGameOver=true; mineNewGameButton.textContent='😵'; if(mineTimerInterval) {clearInterval(mineTimerInterval); mineTimerInterval=null;} console.log("[Minesweeper] Game Over - Hit mine. Timer cleared."); revealAllMines(); renderMineBoard(); return; } const cellDiv = mineGridDiv.querySelector(`.mine-cell[data-row='${r}'][data-col='${c}']`); if(cellDiv) updateCellDiv(cellDiv,cd); if(cd.adjacentMines===0){for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){if(dr===0&&dc===0)continue; revealMineCell(r+dr,c+dc);}}}
         function updateCellDiv(cellDiv,cellData){ cellDiv.className='mine-cell'; if(cellData.isFlagged&&!cellData.isRevealed){cellDiv.classList.add('flagged'); cellDiv.textContent='';} else if(cellData.isRevealed){ cellDiv.classList.add('revealed'); cellDiv.textContent=''; if(cellData.isMine){cellDiv.classList.add('mine-hit');} else if(cellData.adjacentMines>0){cellDiv.textContent=cellData.adjacentMines; cellDiv.classList.add(`num${cellData.adjacentMines}`);}} else {cellDiv.textContent='';}}
         function revealAllMines(){for(let r=0;r<mineRows;r++)for(let c=0;c<mineCols;c++)if(mineBoard[r]?.[c]?.isMine)mineBoard[r][c].isRevealed=true;}
         function renderMineBoard(){const cells=mineGridDiv.children; for(let i=0;i<cells.length;i++){const r=Math.floor(i/mineCols),c=i%mineCols; if(mineBoard[r]?.[c])updateCellDiv(cells[i],mineBoard[r][c]);}}
-        function checkMineWinCondition(){if(mineGameOver)return; let rc=0,tsc=mineRows*mineCols-mineCount; for(let r=0;r<mineRows;r++)for(let c=0;c<mineCols;c++)if(mineBoard[r]?.[c]?.isRevealed&&!mineBoard[r][c].isMine)rc++; if(rc===tsc){mineGameOver=true; mineNewGameButton.textContent='😎'; if(mineTimerInterval)clearInterval(mineTimerInterval); mineTimerInterval=null; console.log("[Minesweeper] Game Won! Timer cleared."); minesRemaining=0; minesLeftDiv.textContent=`Mines: ${minesRemaining}`; for(let r=0;r<mineRows;r++)for(let c=0;c<mineCols;c++)if(mineBoard[r]?.[c]?.isMine&&!mineBoard[r][c].isFlagged)mineBoard[r][c].isFlagged=true; renderMineBoard();}}
+        function checkMineWinCondition(){if(mineGameOver)return; let rc=0,tsc=mineRows*mineCols-mineCount; for(let r=0;r<mineRows;r++)for(let c=0;c<mineCols;c++)if(mineBoard[r]?.[c]?.isRevealed&&!mineBoard[r][c].isMine)rc++; if(rc===tsc){mineGameOver=true; mineNewGameButton.textContent='😎'; if(mineTimerInterval){clearInterval(mineTimerInterval); mineTimerInterval=null;} console.log("[Minesweeper] Game Won! Timer cleared."); minesRemaining=0; minesLeftDiv.textContent=`Mines: ${minesRemaining}`; for(let r=0;r<mineRows;r++)for(let c=0;c<mineCols;c++)if(mineBoard[r]?.[c]?.isMine&&!mineBoard[r][c].isFlagged)mineBoard[r][c].isFlagged=true; renderMineBoard();}}
 
         // --- Cleanup Function ---
         function cleanupGame() {
             console.log(`[Minesweeper] cleanupGame called. Current timer ID: ${mineTimerInterval}`);
+            mineGameOver = true; // Mark game as over to stop any further interactions
             if (mineTimerInterval) {
                 clearInterval(mineTimerInterval);
                 mineTimerInterval = null;
@@ -83,7 +120,6 @@
             } else {
                  console.log("[Minesweeper] No active timer to clear in cleanupGame.");
             }
-            mineGameOver = true; // Ensure game state reflects it's over
         }
 
         // --- Event listener for messages from parent (for cleanup) ---
@@ -97,6 +133,7 @@
         // --- Initialization ---
         mineNewGameButton.addEventListener('click', setupMineBoard);
         setupMineBoard();
+        window.focus(); // Try to ensure iframe gets focus
     </script>
 </body>
 </html>
