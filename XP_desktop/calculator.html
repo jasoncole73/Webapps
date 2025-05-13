@@ -5,81 +5,83 @@
 <title>Calculator Content</title>
 <style>
     * { box-sizing: border-box; }
-    html, body { /* Ensure html and body take full iframe height */
+    html, body {
         height: 100%;
         margin: 0;
-        overflow: hidden; /* Prevent scrollbars on the body itself */
+        overflow: hidden;
     }
     body {
-        padding: 15px;
-        background-color: #ece9d8;
+        padding: 10px; /* Overall padding inside the iframe */
+        background-color: #d4d0c8; /* Calculator body color fills iframe padding area */
         font-family: Tahoma, sans-serif;
-        display: flex; /* Use flex on body to make calc-body fill */
-        flex-direction: column; /* Children stack vertically */
-    }
-    #calc-body {
-        width: 100%; /* Take full width of padded body */
-        height: 100%; /* Take full height of padded body */
-        border: 1px solid #666;
-        box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
-        background-color: #d4d0c8;
-        padding: 15px;
         display: flex;
-        flex-direction: column; /* Stack display and buttons vertically */
+        flex-direction: column; /* Allow #calc-body to be the main flex container */
+    }
+    #calc-body { /* This will be the main container filling the body */
+        width: 100%;
+        height: 100%;
+        border: 1px solid #666; /* Optional: border for the calc area */
+        box-shadow: inset 1px 1px 3px rgba(0,0,0,0.2), inset -1px -1px 3px rgba(255,255,255,0.7);
+        background-color: #d4d0c8;
+        padding: 10px;
+        display: flex;
+        flex-direction: column; /* Stack display and buttons */
         border-radius: 3px;
     }
     #calc-display {
         width: 100%;
         margin-bottom: 10px;
-        padding: 10px 8px;
+        padding: 10px;
         text-align: right;
-        font-size: 32px;
-        background-color: #E0F0E0;
-        border: 2px inset #777;
+        font-size: 48px; /* MUCH LARGER display font */
+        background-color: #E0F0E0; /* Classic green */
+        border: 2px inset #555;
         box-sizing: border-box;
-        flex-shrink: 0; /* Prevent display from shrinking */
-        height: 60px;
+        height: 80px; /* Taller display */
+        line-height: 60px; /* Center text vertically in display */
+        flex-shrink: 0;
         font-family: 'Lucida Console', Monaco, monospace;
         border-radius: 3px;
-        color: #222;
+        color: #1A471A; /* Darker green text */
+        overflow: hidden; /* Prevent text from overflowing display box */
     }
      .calc-buttons {
          display: grid;
          grid-template-columns: repeat(4, 1fr); /* 4 columns */
          grid-template-rows: repeat(5, 1fr);    /* 5 rows for buttons */
-         gap: 8px;
-         flex-grow: 1; /* This is crucial: button grid takes all remaining vertical space */
-         width: 100%;  /* Ensure grid takes full width */
+         gap: 6px; /* Slightly larger gap for bigger buttons */
+         flex-grow: 1; /* Button grid takes all remaining vertical space */
+         width: 100%;
       }
      .calc-buttons button {
-         font-size: 20px;
+         font-size: 28px; /* MUCH LARGER button font */
          cursor: pointer;
          background-color: #f0f0f0;
-         border: 1px outset #bbb;
-         /* Height is implicitly 1fr from grid-template-rows */
+         border: 2px outset #fafafa; /* More 3D looking buttons */
+         /* Height is 1fr from grid-template-rows, buttons will be tall */
          display: flex;
          align-items: center;
          justify-content: center;
          font-weight: bold;
-         border-radius: 3px;
+         border-radius: 4px;
          color: #333;
-         transition: background-color 0.1s;
-         padding: 0; /* Remove padding if using flex to center, or adjust */
-         margin: 0;  /* Remove margin */
-         min-height: 40px; /* Ensure a minimum button height */
+         transition: background-color 0.05s;
+         padding: 5px; /* Add some padding inside buttons */
+         min-height: 50px; /* Minimum height for buttons */
       }
      .calc-buttons button:active {
          border-style: inset;
-         background-color: #d0d0d0;
+         background-color: #d8d8d8;
+         transform: translateY(1px); /* Slight press effect */
      }
-     .calc-op { background-color: #d4e8f7; }
-     .calc-eq { background-color: #f7e4d4; } /* Will be styled by grid-column below */
-     .calc-c { background-color: #f7d4d4; }
-     .calc-zero { grid-column: span 2; }
-     /* Ensure equals button spans all columns if it's the last item in a row */
-     .calc-buttons button.calc-eq[style*="grid-column: span 4"] { /* More specific selector */
-        grid-column: span 4;
-     }
+     .calc-op { background-color: #c8dcf0; } /* Lighter blue for operators */
+     .calc-op:hover { background-color: #b0c9e0; }
+     .calc-eq { background-color: #f0d6c4; } /* Lighter Orange-ish for equals */
+     .calc-eq:hover { background-color: #e0c0b0; }
+     .calc-c { background-color: #f0c8c8; } /* Lighter Red-ish for clear */
+     .calc-c:hover { background-color: #e0b0b0; }
+     .calc-zero { grid-column: span 2; } /* Make zero button wider */
+     .calc-equals-full { grid-column: span 4; } /* Make equals button full width */
 
 </style>
 </head>
@@ -87,29 +89,34 @@
      <div id="calc-body">
          <input type="text" id="calc-display" readonly value="0">
          <div class="calc-buttons">
-             <button onclick="calcClear()" class="calc-c">C</button>
-             <button style="visibility: hidden;"></button> <!-- Placeholder for layout -->
-             <button style="visibility: hidden;"></button> <!-- Placeholder for layout -->
+            <!-- Row 1 -->
+             <button onclick="calcClear()" class="calc-c" style="grid-column: span 2;">C</button>
+             <button style="visibility: hidden;"></button> <!-- Placeholder if needed, or remove -->
              <button onclick="handleOperator('/')" class="calc-op">/</button>
+             <button onclick="handleOperator('*')" class="calc-op">*</button>
 
+            <!-- Row 2 -->
              <button onclick="calcInput('7')">7</button>
              <button onclick="calcInput('8')">8</button>
              <button onclick="calcInput('9')">9</button>
-             <button onclick="handleOperator('*')" class="calc-op">*</button>
+             <button onclick="handleOperator('-')" class="calc-op">-</button>
 
+            <!-- Row 3 -->
              <button onclick="calcInput('4')">4</button>
              <button onclick="calcInput('5')">5</button>
              <button onclick="calcInput('6')">6</button>
-             <button onclick="handleOperator('-')" class="calc-op">-</button>
+             <button onclick="handleOperator('+')" class="calc-op">+</button>
 
+            <!-- Row 4 -->
              <button onclick="calcInput('1')">1</button>
              <button onclick="calcInput('2')">2</button>
              <button onclick="calcInput('3')">3</button>
-             <button onclick="handleOperator('+')" class="calc-op">+</button>
+             <button onclick="calcEquals()" class="calc-eq" style="grid-row: span 2;">=</button>  <!-- Equals spanning two rows -->
 
+            <!-- Row 5 -->
              <button onclick="calcInput('0')" class="calc-zero">0</button> <!-- Spans 2 columns -->
              <button onclick="calcInput('.')">.</button>
-             <button onclick="calcEquals()" class="calc-eq" style="grid-column: span 4;">=</button> <!-- Spans 4 columns -->
+             <!-- The equals button above now takes up this space too -->
          </div>
     </div>
 
@@ -130,21 +137,18 @@
             }
             if (value === '.') { if (!currentCalcInput.includes('.')) currentCalcInput += '.'; }
             else if (currentCalcInput === '0' && value !== '.') { currentCalcInput = value; }
-            else { if (currentCalcInput.length < 15) currentCalcInput += value; }
+            else { if (currentCalcInput.length < 12) currentCalcInput += value; } // Adjusted length for larger font
             updateDisplay();
         }
 
         function handleOperator(nextOperator) {
-            // If an operator is pressed right after another, update the operator
-            if (shouldResetDisplay && previousInput !== null) {
+            if (shouldResetDisplay && previousInput !== null) { // If an operator was just pressed, allow changing it
                 operator = nextOperator;
                 console.log(`Operator changed to: ${operator}`);
                 return;
             }
-            // If there's a pending operation and a new number has been entered (or it's the first op)
             if (operator && previousInput !== null && !shouldResetDisplay) {
-                 calcEquals(); // Calculate the previous operation first
-                 // After equals, currentCalcInput holds the result, which becomes previousInput for the new op
+                 calcEquals();
             }
             previousInput = currentCalcInput;
             operator = nextOperator;
@@ -153,23 +157,20 @@
         }
 
         function calcEquals() {
-            if (!operator || previousInput === null) { // Don't calculate if no operator or first operand
+            if (!operator || previousInput === null) {
                 console.log("Equals pressed with no valid operation pending.");
                 return;
             }
-            if (shouldResetDisplay && currentCalcInput === previousInput) {
-                 // This handles pressing equals repeatedly after an operation like "2 + 3 = =" -> "2 + 3 = 5" then "5 + 3 = 8"
-                 // For this to work, currentCalcInput needs to become the second operand for the repeat.
-                 // However, our current `shouldResetDisplay` logic after an operator makes this tricky.
-                 // For now, repeated equals after an operation will just show the same result or do nothing
-                 // if currentCalcInput wasn't changed. Let's simplify: only calculate if a new number was likely entered.
-                 // The shouldResetDisplay being true after an operator means a new number wasn't fully input for the current op yet.
-                 if(operator && previousInput === currentCalcInput) { // e.g. 5 + = (treat as 5+5) - this is complex with current state
-                    // For now, if shouldResetDisplay is true, it means an operator was just pressed and no new second operand
-                    // or equals was just pressed.
-                    console.log("Equals pressed without new second operand after operator or repeated equals.");
-                    return;
-                 }
+            // If shouldResetDisplay is true here, it means an operator was just pressed,
+            // and no new second operand was entered.
+            if (shouldResetDisplay && currentCalcInput === previousInput && operator) {
+                 // This handles cases like 5 * = (becomes 5 * 5)
+                 // currentCalcInput is already the first operand again.
+                 // For this to work as "repeat last operation with current display as operand"
+                 // we need a consistent way to know what the second operand for repeat should be.
+                 // Standard calculators often use the last entered number or the result itself.
+                 // Let's assume the 'currentCalcInput' is the second operand for repeat if no new number was typed.
+                 console.log("Equals pressed after operator, using current display as second operand for repeat.");
             }
 
 
@@ -202,34 +203,21 @@
                     return;
             }
 
-            currentCalcInput = String(parseFloat(result.toPrecision(12))).slice(0, 15);
-            // After equals, the result becomes the new starting point if an operator is pressed next.
-            // Operator and previousInput are cleared for a new independent calculation unless an op is pressed.
-            // shouldResetDisplay = true; // This is important: next digit clears result.
-            // previousInput = currentCalcInput; // Result becomes new first operand for potential chaining IF an operator is pressed next
-            previousInput = null; // For standard calculator: calculation ends.
-            operator = null;
-            shouldResetDisplay = true;
+            currentCalcInput = String(parseFloat(result.toPrecision(12))).slice(0, 12); // Adjusted length
+            // For standard behavior, after '=', the result is shown and next op starts fresh.
+            // If an operator is pressed next, currentCalcInput (the result) becomes previousInput.
+            previousInput = currentCalcInput; // Store result for potential chaining if next input is an operator
+            operator = null; // Ready for a new operator or a new number.
+            shouldResetDisplay = true; // Next number input will clear the result.
 
             updateDisplay();
             console.log(`Equals result: ${currentCalcInput}`);
         }
 
-        // Initial setup
-        calcClear();
+        calcClear(); // Initialize
 
-        // --- Cleanup Function (Stub) ---
-        function cleanupGame() {
-            console.log("[Calculator] cleanupGame called (no active processes to stop).");
-        }
-
-        // --- Event listener for messages from parent (for cleanup) ---
-        window.addEventListener('message', (event) => {
-            console.log(`[Calculator] Message received from parent. Data: "${event.data}", Origin: "${event.origin}"`);
-            if (event.data === 'cleanup') {
-                cleanupGame();
-            }
-        });
+        function cleanupGame() { console.log("[Calculator] cleanupGame called."); }
+        window.addEventListener('message', (event) => { if (event.data === 'cleanup') cleanupGame(); });
         window.focus();
      </script>
 </body>
