@@ -9,55 +9,40 @@
      body {
         margin: 0;
         font-family: Tahoma, sans-serif;
-        background-color: #ece9d8; /* Match XP window background for consistency */
+        background-color: #ece9d8;
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: flex-start; /* Align content to top */
-        height: 100%; /* Full iframe height */
-        overflow: hidden; /* Prevent scrollbars on body */
+        justify-content: flex-start;
+        height: 100%;
         padding-top: 5px;
+        overflow: hidden;
     }
-     .game-controls {
-        padding: 5px;
-        text-align: center;
-        width: 100%;
-        flex-shrink: 0;
-    }
-     .game-status {
-        font-weight: bold;
-        margin: 5px 0;
-        min-height: 1.2em;
-        font-size: 14px;
-        color: #333; /* Color for status text */
-    }
+     .game-controls { padding: 5px; text-align: center; width: 100%; flex-shrink: 0;}
+     .game-status { font-weight: bold; margin: 5px 0; min-height: 1.2em; font-size: 14px; color: #333;}
      #pong-canvas {
         border: 2px solid #333;
         background-color: #000; /* Black background */
         margin-top: 5px;
-        display: block; /* Remove extra space under canvas */
-        cursor: none; /* Hide cursor over canvas during play */
+        display: block;
+        /* cursor: none; -- We will manage this with JS now */
     }
 </style>
 </head>
 <body>
     <div class="game-controls">
         <div id="pong-status" class="game-status">Player: 0 | AI: 0</div>
-        <!-- You can add a "New Game" button here if desired for manual restarts -->
-        <!-- <button id="pong-new-game-button">New Game</button> -->
     </div>
     <canvas id="pong-canvas" width="600" height="400" tabindex="0"></canvas>
-    <!-- tabindex="0" makes the canvas focusable. -->
 
     <script>
         const canvas = document.getElementById('pong-canvas');
         const ctx = canvas.getContext('2d');
         const statusDiv = document.getElementById('pong-status');
-        // const newGameButton = document.getElementById('pong-new-game-button');
 
         const paddleHeight = 80;
         const paddleWidth = 10;
-        const ballRadius = 7; // Slightly smaller ball
+        const ballRadius = 7;
 
         let playerY;
         let aiY;
@@ -65,188 +50,133 @@
         let ballSpeedX, ballSpeedY;
         let playerScore, aiScore;
         let gameLoopInterval = null;
-        let gameIsActive = false; // To control game loop and input
+        let gameIsActive = false;
 
-        // Store mouse move handler for adding/removing correctly
         const pongMouseMoveHandler = (event) => {
             if (!gameIsActive) return;
-            const rect = canvas.getBoundingClientRect(); // Get canvas position relative to viewport
-            let mouseY = event.clientY - rect.top;    // Calculate mouse Y relative to canvas top
-            playerY = mouseY - paddleHeight / 2;      // Center paddle on mouse
+            const rect = canvas.getBoundingClientRect();
+            let mouseY = event.clientY - rect.top;
+            playerY = mouseY - paddleHeight / 2;
+            if (playerY < 0) playerY = 0;
+            if (playerY > canvas.height - paddleHeight) playerY = canvas.height - paddleHeight;
+        };
 
-            // Keep player paddle within canvas bounds
-            if (playerY < 0) {
-                playerY = 0;
-            } else if (playerY > canvas.height - paddleHeight) {
-                playerY = canvas.height - paddleHeight;
+        // Handler for mouse entering the canvas
+        const pongMouseEnterHandler = () => {
+            if (gameIsActive) {
+                canvas.style.cursor = 'none'; // Hide cursor when mouse is over game
+                // console.log("[Pong] Mouse entered canvas, cursor hidden.");
             }
         };
 
-        function resetBall(winner) { // winner can be 'player' or 'ai'
+        // Handler for mouse leaving the canvas
+        const pongMouseLeaveHandler = () => {
+            canvas.style.cursor = 'default'; // Restore default cursor when mouse leaves
+            // console.log("[Pong] Mouse left canvas, cursor restored.");
+        };
+
+
+        function resetBall(winner) {
             ballX = canvas.width / 2;
             ballY = canvas.height / 2;
-            let direction = 1;
-            if (winner === 'player') { // If player scored, AI serves (ball goes towards player)
-                direction = -1;
-            } else if (winner === 'ai') { // If AI scored, player serves (ball goes towards AI)
-                direction = 1;
-            } else { // Initial serve or if no winner specified (e.g. new game)
-                direction = (Math.random() < 0.5) ? 1 : -1;
-            }
-
-            ballSpeedX = 5 * direction; // Speed and direction
-            ballSpeedY = (Math.random() < 0.5 ? 2.5 : -2.5) + (Math.random() * 2 - 1); // Add some Y variation
+            let direction = (winner === 'player') ? -1 : 1;
+            if (winner === undefined) direction = (Math.random() < 0.5) ? 1 : -1;
+            ballSpeedX = 5 * direction;
+            ballSpeedY = (Math.random() < 0.5 ? 2.5 : -2.5) + (Math.random() * 2 - 1);
         }
 
         function setupPongGame() {
             console.log("[Pong] setupPongGame called.");
-            cleanupGame(); // Clear any existing game state first
+            cleanupGame();
 
-            playerScore = 0;
-            aiScore = 0;
+            playerScore = 0; aiScore = 0;
             playerY = (canvas.height - paddleHeight) / 2;
             aiY = (canvas.height - paddleHeight) / 2;
             updatePongStatus();
-            resetBall(); // Initial ball position and speed
+            resetBall();
 
-            // Add event listener for mouse movement to control the player's paddle
-            // Adding to 'canvas' ensures it only tracks when mouse is over the game area
-            // and canvas has focus.
+            // Add event listeners specifically to the canvas
             canvas.addEventListener('mousemove', pongMouseMoveHandler);
-            console.log("[Pong] Mousemove listener added to canvas.");
+            canvas.addEventListener('mouseenter', pongMouseEnterHandler);
+            canvas.addEventListener('mouseleave', pongMouseLeaveHandler);
+            console.log("[Pong] Mouse listeners added to canvas.");
 
-            // Attempt to focus the canvas so it can receive events (if applicable, mouse doesn't strictly need it like keys)
-            // The parent iframe also attempts to focus.
-            canvas.focus();
+            canvas.focus(); // Important for initial state if any key events were used
 
-            gameIsActive = true; // Start the game logic
-            gameLoopInterval = setInterval(gameLoop, 1000 / 60); // ~60 FPS
+            gameIsActive = true;
+            canvas.style.cursor = 'none'; // Hide cursor immediately if game starts
+            gameLoopInterval = setInterval(gameLoop, 1000 / 60);
             console.log("[Pong] Game setup complete. Interval ID:", gameLoopInterval);
-            drawGame(); // Initial draw
+            drawGame();
         }
 
         function drawRect(x, y, w, h, color) { ctx.fillStyle = color; ctx.fillRect(x, y, w, h); }
         function drawCircle(x, y, r, color) { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2, false); ctx.fill(); }
-        function drawNet() { for (let i = 10; i < canvas.height - 10; i += 30) drawRect(canvas.width/2 - 1, i, 2, 20, 'grey'); } // Dashed net
+        function drawNet() { for (let i = 10; i < canvas.height - 10; i += 30) drawRect(canvas.width/2 - 1, i, 2, 20, 'grey'); }
 
-        function movePaddles() {
+        function movePaddles() { /* ... (same as before) ... */
             if (!gameIsActive) return;
-            // AI Paddle Movement (simple predictive)
             const aiCenter = aiY + paddleHeight / 2;
-            const aiSpeed = 4; // AI paddle speed
-            if (ballSpeedX > 0) { // Only move AI if ball is coming towards it
-                if (aiCenter < ballY - paddleHeight * 0.35) { // AI tries to center on ball Y
-                    aiY += aiSpeed;
-                } else if (aiCenter > ballY + paddleHeight * 0.35) {
-                    aiY -= aiSpeed;
-                }
+            const aiSpeed = 4.5;
+            if (ballSpeedX > 0) {
+                if (aiCenter < ballY - paddleHeight * 0.35) aiY += aiSpeed;
+                else if (aiCenter > ballY + paddleHeight * 0.35) aiY -= aiSpeed;
             }
-            // Keep AI paddle within bounds
             if (aiY < 0) aiY = 0;
             if (aiY > canvas.height - paddleHeight) aiY = canvas.height - paddleHeight;
         }
-
-        function moveBall() {
+        function moveBall() { /* ... (same as before) ... */
             if (!gameIsActive) return;
-            ballX += ballSpeedX;
-            ballY += ballSpeedY;
-
-            // Wall collision (top/bottom)
-            if (ballY - ballRadius < 0 && ballSpeedY < 0) { // Hit top wall
-                ballSpeedY = -ballSpeedY;
-                ballY = ballRadius; // Prevent sticking
-            } else if (ballY + ballRadius > canvas.height && ballSpeedY > 0) { // Hit bottom wall
-                ballSpeedY = -ballSpeedY;
-                ballY = canvas.height - ballRadius; // Prevent sticking
+            ballX += ballSpeedX; ballY += ballSpeedY;
+            if (ballY - ballRadius < 0 && ballSpeedY < 0) { ballSpeedY = -ballSpeedY; ballY = ballRadius; }
+            else if (ballY + ballRadius > canvas.height && ballSpeedY > 0) { ballSpeedY = -ballSpeedY; ballY = canvas.height - ballRadius; }
+            if (ballX - ballRadius < paddleWidth && ballX - ballRadius > 0 && ballY + ballRadius > playerY && ballY - ballRadius < playerY + paddleHeight && ballSpeedX < 0) {
+                ballSpeedX = -ballSpeedX * 1.05; let deltaY = ballY - (playerY + paddleHeight / 2); ballSpeedY = deltaY * 0.30; ballX = paddleWidth + ballRadius;
             }
-
-            // Player paddle collision (left paddle)
-            if (ballX - ballRadius < paddleWidth &&          // Ball's left edge is at or behind player paddle's right edge
-                ballX - ballRadius > 0 &&                    // Ball's left edge hasn't passed through the paddle completely
-                ballY + ballRadius > playerY &&              // Ball's bottom is below player paddle's top
-                ballY - ballRadius < playerY + paddleHeight && // Ball's top is above player paddle's bottom
-                ballSpeedX < 0) {                            // Ball is moving towards player
-                    ballSpeedX = -ballSpeedX * 1.05; // Reverse direction and slightly increase speed
-                    let deltaY = ballY - (playerY + paddleHeight / 2);
-                    ballSpeedY = deltaY * 0.30; // Adjust angle based on hit position
-                    ballX = paddleWidth + ballRadius; // Prevent sticking
+            if (ballX + ballRadius > canvas.width - paddleWidth && ballX + ballRadius < canvas.width && ballY + ballRadius > aiY && ballY - ballRadius < aiY + paddleHeight && ballSpeedX > 0) {
+                ballSpeedX = -ballSpeedX * 1.05; let deltaY = ballY - (aiY + paddleHeight / 2); ballSpeedY = deltaY * 0.30; ballX = canvas.width - paddleWidth - ballRadius;
             }
-
-            // AI paddle collision (right paddle)
-            if (ballX + ballRadius > canvas.width - paddleWidth && // Ball's right edge is at or past AI paddle's left edge
-                ballX + ballRadius < canvas.width &&                 // Ball's right edge hasn't passed through AI paddle
-                ballY + ballRadius > aiY &&                      // Ball's bottom is below AI paddle's top
-                ballY - ballRadius < aiY + paddleHeight &&         // Ball's top is above AI paddle's bottom
-                ballSpeedX > 0) {                                // Ball is moving towards AI
-                    ballSpeedX = -ballSpeedX * 1.05;
-                    let deltaY = ballY - (aiY + paddleHeight / 2);
-                    ballSpeedY = deltaY * 0.30;
-                    ballX = canvas.width - paddleWidth - ballRadius; // Prevent sticking
-            }
-
-            // Scoring
-            if (ballX + ballRadius < 0) { // Ball passed left edge (AI scores)
-                aiScore++;
-                updatePongStatus();
-                resetBall('ai'); // AI serves next
-            } else if (ballX - ballRadius > canvas.width) { // Ball passed right edge (Player scores)
-                playerScore++;
-                updatePongStatus();
-                resetBall('player'); // Player serves next
-            }
+            if (ballX + ballRadius < 0) { aiScore++; updatePongStatus(); resetBall('ai'); }
+            else if (ballX - ballRadius > canvas.width) { playerScore++; updatePongStatus(); resetBall('player'); }
         }
-
         function updatePongStatus() { statusDiv.textContent = `Player: ${playerScore} | AI: ${aiScore}`; }
-
-        function drawGame() {
-            drawRect(0, 0, canvas.width, canvas.height, 'black'); // Clear screen
-            drawNet();
-            drawRect(0, playerY, paddleWidth, paddleHeight, 'white'); // Player paddle
-            drawRect(canvas.width - paddleWidth, aiY, paddleWidth, paddleHeight, 'white'); // AI paddle
-            drawCircle(ballX, ballY, ballRadius, 'white'); // Ball
+        function drawGame() { /* ... (same as before) ... */
+            drawRect(0, 0, canvas.width, canvas.height, 'black'); drawNet();
+            drawRect(0, playerY, paddleWidth, paddleHeight, 'white');
+            drawRect(canvas.width - paddleWidth, aiY, paddleWidth, paddleHeight, 'white');
+            drawCircle(ballX, ballY, ballRadius, 'white');
         }
 
         function gameLoop() {
-            if (!gameIsActive) {
-                cleanupGame(); // Ensure cleanup if loop runs when inactive
-                return;
-            }
-            movePaddles();
-            moveBall();
-            drawGame();
+            if (!gameIsActive) { cleanupGame(); return; }
+            movePaddles(); moveBall(); drawGame();
         }
 
-        // --- Cleanup Function ---
         function cleanupGame() {
-            console.log(`[Pong] cleanupGame called. Current interval ID: ${gameLoopInterval}. Game active: ${gameIsActive}`);
+            console.log(`[Pong] cleanupGame called. Interval ID: ${gameLoopInterval}. Active: ${gameIsActive}`);
             gameIsActive = false;
             if (gameLoopInterval) {
                 clearInterval(gameLoopInterval);
                 gameLoopInterval = null;
-                console.log("[Pong] Interval cleared by cleanupGame.");
+                console.log("[Pong] Interval cleared.");
             }
-            // Remove the listener specifically from the canvas
             canvas.removeEventListener('mousemove', pongMouseMoveHandler);
-            console.log("[Pong] Mousemove listener removed by cleanupGame.");
+            canvas.removeEventListener('mouseenter', pongMouseEnterHandler);
+            canvas.removeEventListener('mouseleave', pongMouseLeaveHandler);
+            canvas.style.cursor = 'default'; // Explicitly restore cursor on cleanup
+            console.log("[Pong] Mouse listeners removed, cursor restored.");
         }
 
-        // --- Event listener for messages from parent (for cleanup) ---
         window.addEventListener('message', (event) => {
-            console.log(`[Pong] Message received from parent. Data: "${event.data}", Origin: "${event.origin}"`);
+            console.log(`[Pong] Message received: "${event.data}" from origin "${event.origin}"`);
             if (event.data === 'cleanup') {
                 cleanupGame();
             }
         });
 
-        // --- Initialization ---
-        // if (newGameButton) newGameButton.addEventListener('click', setupPongGame); // If you add a button
-        setupPongGame(); // Start game on load
-
-        // The parent xp_desktop.html also attempts to focus the iframe.
-        // Focusing the window/canvas helps ensure it's receptive to events.
-        window.focus();
-        canvas.focus(); // Explicitly focus canvas
-
+        setupPongGame();
+        window.focus(); // Try to ensure iframe gets focus for its content
+        // console.log("[Pong] Script loaded and initialized.");
     </script>
 </body>
 </html>
