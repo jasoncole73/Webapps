@@ -62,24 +62,84 @@
 
         /* --- Start Menu --- */
         #start-menu {
-            position: absolute; bottom: 30px; left: 0; width: 280px; max-height: 450px;
-            background-color: #c6d8f0; border: 1px outset #FFFFFF; border-top: 2px solid #FFFFFF;
-            border-left: 2px solid #FFFFFF; box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
-            z-index: 9999; display: none; overflow-y: auto; padding: 0; color: black; font-size: 11px;
+            position: absolute;
+            bottom: 30px; /* Positioned above the taskbar */
+            left: 0;
+            width: 280px; /* Adjusted width for two columns */
+            max-height: 450px; /* Adjust as needed, or use vh */
+            background-color: #c6d8f0; /* Light blue similar to XP */
+            border: 1px outset #FFFFFF; /* Standard XP outset border */
+            border-top: 2px solid #FFFFFF;
+            border-left: 2px solid #FFFFFF;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+            z-index: 9999; /* Below taskbar, above most windows (windows get higher z-index) */
+            display: none; /* Hidden by default */
+            overflow-y: auto; /* Scroll if content exceeds max-height */
+            padding: 0; /* Remove padding, items will have their own */
+            color: black; /* Default text color */
+            font-size: 11px; /* Default font for menu items */
         }
-        .start-menu-header { background-color: #316ac5; padding: 8px 10px; display:flex; align-items:center; border-bottom: 1px solid #1c3e73; }
-        .start-menu-user-icon { width:36px; height:36px; background-color:#fff; border: 1px solid #7f9db9; border-radius:3px; margin-right:10px; display:flex; align-items:center; justify-content:center; font-size:22px; }
+        .start-menu-header {
+            background-color: #316ac5; /* Darker blue header */
+            padding: 8px 10px;
+            display:flex;
+            align-items:center;
+            border-bottom: 1px solid #1c3e73; /* Separator */
+        }
+        .start-menu-user-icon {
+            width:36px; height:36px; background-color:#fff;
+            border: 1px solid #7f9db9;
+            border-radius:3px; margin-right:10px;
+            display:flex; align-items:center; justify-content:center; font-size:22px;
+        }
         .start-menu-username { color:white; font-weight:bold; font-size: 13px; }
-        .start-menu-columns { display: flex; flex-grow: 1; }
+
+        .start-menu-columns { display: flex; flex-grow: 1; /* Allow columns to fill height */}
         .start-menu-main-column { width: 55%; padding: 5px 0; border-right: 1px solid #84a4ce; }
-        .start-menu-side-column { width: 45%; padding: 5px 0; background-color: #dde8f5; }
-        .start-menu-item { padding: 5px 10px 5px 10px; cursor: pointer; color: #000; display: flex; align-items: center; white-space: nowrap; }
-        .start-menu-item:hover { background-color: #316ac5; color: white; }
-        .start-menu-item .icon-placeholder { width: 20px; height: 20px; font-size: 16px; line-height: 20px; margin-right: 8px; display: inline-flex; align-items: center; justify-content: center; text-align: center; }
-        .start-menu-item:hover .icon-placeholder { color: white; }
-        .start-menu-separator { height: 1px; background-color: #84a4ce; margin: 4px 5px; }
-        .start-menu-footer { background-color: #316ac5; padding: 5px; text-align:right; border-top: 1px solid #1c3e73; flex-shrink: 0; }
-        .start-menu-footer button { font-size:10px; padding: 2px 8px; margin-left: 5px; background-color:#dfdfdf; border:1px outset #ccc; cursor: pointer; }
+        .start-menu-side-column { width: 45%; padding: 5px 0; background-color: #dde8f5; /* Lighter shade for side */ }
+
+        .start-menu-item {
+            padding: 5px 10px 5px 10px;
+            cursor: pointer;
+            /* font-size: 11px; Inherited from #start-menu */
+            color: #000;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+        .start-menu-item:hover {
+            background-color: #316ac5; /* XP selection blue */
+            color: white;
+        }
+        .start-menu-item .icon-placeholder {
+            width: 20px; height: 20px;
+            font-size: 16px; line-height: 20px;
+            margin-right: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .start-menu-item:hover .icon-placeholder { color: white; /* Ensure icon contrasts on hover */ }
+
+        .start-menu-separator {
+            height: 1px;
+            background-color: #84a4ce; /* Lighter separator */
+            margin: 4px 5px;
+        }
+        .start-menu-footer {
+            background-color: #316ac5; /* Darker blue footer */
+            padding: 5px;
+            text-align:right;
+            border-top: 1px solid #1c3e73;
+            flex-shrink: 0; /* Prevent footer from shrinking */
+        }
+        .start-menu-footer button {
+            font-size:10px; padding: 2px 8px; margin-left: 5px;
+            background-color:#dfdfdf; border:1px outset #ccc;
+            cursor: pointer;
+        }
+
 
         /* Windows (General Frame Styles) */
         .window {
@@ -88,7 +148,7 @@
             overflow: hidden; border-radius: 5px 5px 0 0;
             min-width: 200px; min-height: 150px;
             /* Default size set by JS, CSS can provide fallback if JS fails */
-            /* width: 400px; height: 300px; */
+            /* width: 400px; height: 300px; */ /* Let JS handle defaults via || operator */
             top: 50px; left: 150px;
         }
         .title-bar { background: linear-gradient(to bottom, #005cbf, #0053a8); color: white; padding: 3px 5px; font-weight: bold; font-size: 13px; cursor: move; display: flex; align-items: center; height: 24px;}
@@ -106,7 +166,7 @@
     <div id="desktop">
         <div class="icon" id="paint-icon" data-appid="paint" data-title="Paint" data-url="paint.html" data-width="450" data-height="400"><span>Paint</span></div>
         <div class="icon" id="video-icon" data-appid="video" data-title="Video Player" data-url="video.html" data-width="500" data-height="400"><span>Video Player</span></div>
-        <div class="icon" id="calc-icon" data-appid="calc" data-title="Calculator" data-url="calculator.html" data-width="220" data-height="280"><span>Calculator</span></div>
+        <div class="icon" id="calc-icon" data-appid="calc" data-title="Calculator" data-url="calculator.html" data-width="330" data-height="450"><span>Calculator</span></div> {/* <<< CORRECTED DIMENSIONS */}
         <div class="icon" id="solitaire-icon" data-appid="solitaire" data-title="Solitaire" data-url="solitaire.html" data-width="600" data-height="500"><span>Solitaire</span></div>
         <div class="icon" id="chess-icon" data-appid="chess" data-title="Chess" data-url="chess.html" data-width="450" data-height="520"><span>Chess</span></div>
         <div class="icon" id="minesweeper-icon" data-appid="minesweeper" data-title="Minesweeper" data-url="minesweeper.html" data-width="300" data-height="490"><span>Minesweeper</span></div>
@@ -171,23 +231,24 @@
         function handleDrag(e) { if (!isDragging || !activeWindow) return; e.preventDefault(); let newX = e.clientX - dragOffsetX, newY = e.clientY - dragOffsetY; const desk = document.getElementById('desktop'), task = document.getElementById('taskbar'); const maxW = desk.offsetWidth - activeWindow.offsetWidth, maxH = desk.offsetHeight - activeWindow.offsetHeight - task.offsetHeight; newX = Math.max(0, Math.min(newX, maxW)); newY = Math.max(0, Math.min(newY, maxH)); activeWindow.style.left = `${newX}px`; activeWindow.style.top = `${newY}px`; }
         function stopDrag() { if (isDragging) { if (activeWindow) activeWindow.classList.remove('dragging'); isDragging = false; document.removeEventListener('mousemove', handleDrag); document.removeEventListener('mouseup', stopDrag); document.removeEventListener('mouseleave', stopDrag); } }
 
-        function createWindow(appId, title, url, dataWidth, dataHeight) {
+        function createWindow(appId, title, url, iconDataWidth, iconDataHeight) {
             const windowId = `window-${appId}`;
-            const parsedWidth = parseInt(dataWidth) || 400;
-            const parsedHeight = parseInt(dataHeight) || 300;
-            console.log(`[Desktop] createWindow for ${title}. Requested: ${dataWidth}x${dataHeight}. Parsed: ${parsedWidth}x${parsedHeight}`);
+            const parsedWidth = parseInt(iconDataWidth) || 400;
+            const parsedHeight = parseInt(iconDataHeight) || 300;
+            console.log(`[Desktop] createWindow for ${title}. From icon: ${iconDataWidth}x${iconDataHeight}. Parsed to use: ${parsedWidth}x${parsedHeight}`);
 
             if (openWindows[windowId] && openWindows[windowId].style.display === 'block') {
-                console.log(`[Desktop] Window ${title} is already visible. Bringing to front.`);
+                console.log(`[Desktop] Window ${title} is already visible. Applying size ${parsedWidth}x${parsedHeight} & bringing to front.`);
+                openWindows[windowId].style.width = `${parsedWidth}px`;
+                openWindows[windowId].style.height = `${parsedHeight}px`;
                 bringToFront(openWindows[windowId]);
                 appOpeningDebounce[appId] = false; return;
             }
             if (openWindows[windowId]) {
                 const existingWindow = openWindows[windowId];
-                console.log(`[Desktop] Re-displaying ${title}`);
-                existingWindow.style.setProperty('width', `${parsedWidth}px`, 'important'); // DIAGNOSTIC
-                existingWindow.style.setProperty('height', `${parsedHeight}px`, 'important'); // DIAGNOSTIC
-                console.log(`[Desktop] Forcing size on reopen for ${title}: ${parsedWidth}x${parsedHeight}`);
+                console.log(`[Desktop] Re-displaying ${title}. Applying size ${parsedWidth}x${parsedHeight}.`);
+                existingWindow.style.width = `${parsedWidth}px`;
+                existingWindow.style.height = `${parsedHeight}px`;
                 existingWindow.style.display = 'block';
                 bringToFront(existingWindow);
                 const iframe = existingWindow.querySelector('iframe');
@@ -201,11 +262,11 @@
                 appOpeningDebounce[appId] = false; return;
             }
 
-            console.log(`[Desktop] Creating new window for ${title} with forced size ${parsedWidth}x${parsedHeight}`);
+            console.log(`[Desktop] Creating NEW window for ${title} with size ${parsedWidth}x${parsedHeight}`);
             const win = document.createElement('div');
             win.className = 'window'; win.id = windowId;
-            win.style.setProperty('width', `${parsedWidth}px`, 'important'); // DIAGNOSTIC
-            win.style.setProperty('height', `${parsedHeight}px`, 'important'); // DIAGNOSTIC
+            win.style.width = `${parsedWidth}px`; // Apply parsed width
+            win.style.height = `${parsedHeight}px`; // Apply parsed height
             const initialLeft = 100 + (Object.keys(openWindows).length % 6) * 25;
             const initialTop = 50 + (Object.keys(openWindows).length % 6) * 25;
             win.style.left = `${initialLeft}px`; win.style.top = `${initialTop}px`;
@@ -233,10 +294,10 @@
             if (appIdForIcon) { dblClickCounter[appIdForIcon] = 0; appOpeningDebounce[appIdForIcon] = false; }
             icon.addEventListener('dblclick', () => {
                 const appId = icon.dataset.appid, title = icon.dataset.title || 'Application', url = icon.dataset.url;
-                const width = icon.dataset.width, height = icon.dataset.height;
+                const iconWidth = icon.dataset.width; const iconHeight = icon.dataset.height;
                 if (appId) { dblClickCounter[appId]++; console.log(`[Desktop] Icon DBLCLICK for ${title} - Count: ${dblClickCounter[appId]}. Debounce: ${appOpeningDebounce[appId]}`); }
                 if (appOpeningDebounce[appId]) { console.log(`[Desktop] Debouncing icon dblclick for ${title}.`); return; }
-                if (appId && title && url) { appOpeningDebounce[appId] = true; console.log(`[Desktop] Set appOpeningDebounce for ${title} (icon click).`); createWindow(appId, title, url, width, height); }
+                if (appId && title && url) { appOpeningDebounce[appId] = true; console.log(`[Desktop] Set appOpeningDebounce for ${title} (icon click).`); createWindow(appId, title, url, iconWidth, iconHeight); }
                 else { console.error("Icon is missing data attributes", icon.id); }
             });
         });
@@ -250,10 +311,10 @@
                         const iconElement = document.getElementById(`${appId}-icon`);
                         if (iconElement) {
                             const title = iconElement.dataset.title || 'Application', url = iconElement.dataset.url;
-                            const width = iconElement.dataset.width, height = iconElement.dataset.height;
+                            const iconWidth = iconElement.dataset.width, iconHeight = iconElement.dataset.height;
                             console.log(`[Desktop] Start Menu click for ${title}. Debounce: ${appOpeningDebounce[appId]}`);
                             if (appOpeningDebounce[appId]) { const winId = `window-${appId}`; if(openWindows[winId] && openWindows[winId].style.display === 'block') { bringToFront(openWindows[winId]); } startMenu.style.display = 'none'; return; }
-                            if (title && url) { appOpeningDebounce[appId] = true; console.log(`[Desktop] Set appOpeningDebounce for ${title} (start menu click).`); createWindow(appId, title, url, width, height); }
+                            if (title && url) { appOpeningDebounce[appId] = true; console.log(`[Desktop] Set appOpeningDebounce for ${title} (start menu click).`); createWindow(appId, title, url, iconWidth, iconHeight); }
                         } else { console.warn(`[Desktop] No desktop icon for Start Menu appID: ${appId}`); }
                         startMenu.style.display = 'none';
                     });
