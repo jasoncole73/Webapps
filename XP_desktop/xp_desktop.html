@@ -42,7 +42,7 @@
         #pong-icon { top: 330px; left: 30px; } #pong-icon::before { content: '||'; background-color: #add8e6; font-size: 38px; line-height: 45px; letter-spacing: 15px;}
         #numberguess-icon { top: 330px; left: 120px; } /* Adjust position as needed */
         #numberguess-icon::before { content: '#️⃣'; background-color: #f0ad4e; font-size: 38px;}
-        /* Removed the {* New Icon Added *} comment if it was here */
+        /* The incorrect comment {* New Icon Added *} has been removed from this section */
 
         /* Taskbar */
         #taskbar {
@@ -115,12 +115,24 @@
     </div>
 
     <script>
+        // --- All JavaScript from the previous complete xp_desktop.html goes here ---
+        // This includes:
+        // - Global variables (highestZIndex, activeWindow, etc.)
+        // - updateClock()
+        // - tryFocusIframe()
+        // - bringToFront()
+        // - makeDraggable()
+        // - handleDrag()
+        // - stopDrag()
+        // - createWindow() (the version with robust close logic and appOpeningDebounce handling)
+        // - The icon dblclick listener with dblClickCounter and appOpeningDebounce
+
         let highestZIndex = 1;
         let activeWindow = null;
         let isDragging = false;
         let dragOffsetX, dragOffsetY;
         let openWindows = {};
-        let appOpeningDebounce = {};
+        let appOpeningDebounce = {}; // Use for simple debounce per app
 
         function updateClock() {
             const clockElement = document.getElementById('clock');
@@ -148,8 +160,8 @@
             highestZIndex++;
             winElement.style.zIndex = highestZIndex;
             const iframe = winElement.querySelector('iframe');
-            if (iframe && winElement.style.display === 'block') {
-                setTimeout(() => tryFocusIframe(iframe, "bringToFront"), 50);
+            if (iframe && winElement.style.display === 'block') { // Only focus if visible
+                setTimeout(() => tryFocusIframe(iframe, "bringToFront"), 50); // Slightly longer delay
             }
         }
 
@@ -195,6 +207,8 @@
             if (openWindows[windowId] && openWindows[windowId].style.display === 'block') {
                 console.log(`[Desktop] Window ${title} is already visible. Bringing to front and focusing.`);
                 bringToFront(openWindows[windowId]);
+                // Reset debounce here as well if we are just bringing an already fully open window to front
+                if (appId) appOpeningDebounce[appId] = false;
                 return;
             }
 
@@ -214,9 +228,13 @@
                         console.log(`[Desktop] Iframe for ${title} already has correct src. Focus handled by bringToFront/click.`);
                     }
                 }
-                // Reset debounce when re-activating an existing window
-                // This might be too soon if the iframe needs to reload, handled by the main dblclick timeout
-                // appOpeningDebounce[appId] = false;
+                 // Reset debounce after handling the re-open logic for an existing (but hidden) window
+                if (appId) {
+                    setTimeout(() => {
+                        appOpeningDebounce[appId] = false;
+                        console.log(`[Desktop] Reset debounce for re-opened (hidden) ${appId}.`);
+                    }, 600); // Use the same delay as the dblclick handler's reset
+                }
                 return;
             }
 
@@ -243,9 +261,25 @@
                 console.log(`[Desktop] Setting initial iframe src for new window ${title} to: ${url}`);
                 setTimeout(() => {
                     iframeElement.setAttribute('src', url);
-                    setTimeout(() => tryFocusIframe(iframeElement, "create-new"), 350);
+                    setTimeout(() => {
+                        tryFocusIframe(iframeElement, "create-new");
+                        // Reset debounce after new window iframe has loaded and focus attempted
+                        if (appId) {
+                            appOpeningDebounce[appId] = false;
+                            console.log(`[Desktop] Reset debounce for NEWLY CREATED ${appId}.`);
+                        }
+                    }, 350); // Delay for focus and debounce reset
                 }, 50);
+            } else {
+                 // If iframe isn't created, still reset debounce for this app after a safety delay
+                if (appId) {
+                    setTimeout(() => {
+                        appOpeningDebounce[appId] = false;
+                        console.log(`[Desktop] Reset debounce for ${appId} (iframe not found, new window path).`);
+                    }, 800);
+                }
             }
+
 
             const closeButton = win.querySelector('.close-button');
             closeButton.addEventListener('click', (e) => {
@@ -272,18 +306,8 @@
                     iframe.setAttribute('src', 'about:blank');
                 }
                 win.style.display = 'none';
-                // Reset debounce when window is explicitly closed
-                if (appId) appOpeningDebounce[appId] = false;
+                if (appId) appOpeningDebounce[appId] = false; // Also reset debounce on close
             });
-
-            // Reset debounce flag for this app after window creation attempt is well underway
-            // This was previously in the dblclick handler, moving it here for new windows.
-            if (appId) {
-                setTimeout(() => {
-                    appOpeningDebounce[appId] = false;
-                    console.log(`[Desktop] Reset debounce for ${appId} after new window creation sequence.`);
-                }, 800); // A longer delay to ensure iframe has loaded and focus attempts made
-            }
         }
 
         let dblClickCounter = {};
@@ -303,7 +327,7 @@
                 const height = icon.dataset.height;
 
                 if (appId) {
-                    dblClickCounter[appId]++; // This counter is just for diagnostics
+                    dblClickCounter[appId]++;
                     console.log(`[Desktop] Icon DBLCLICK for ${title} - Count: ${dblClickCounter[appId]}. Debounce State: ${appOpeningDebounce[appId]}`);
                 }
 
@@ -313,22 +337,11 @@
                 }
 
                 if (appId && title && url) {
-                    appOpeningDebounce[appId] = true; // Set debounce before calling createWindow
+                    appOpeningDebounce[appId] = true;
                     console.log(`[Desktop] Set debounce for ${appId} to true.`);
                     createWindow(appId, title, url, width, height);
-                    // The reset of appOpeningDebounce for *newly created* windows is now handled within createWindow
-                    // For *re-opened* windows, the debounce flag is effectively reset when createWindow returns early
-                    // or if we add an explicit reset there too.
-                    // If it's an existing window being re-opened, we might want to reset the debounce sooner.
-                    if (openWindows[`window-${appId}`] && openWindows[`window-${appId}`].style.display === 'block') {
-                        // If we just re-activated an existing window, reset debounce immediately.
-                         setTimeout(() => { // Slight delay to ensure current event cycle finishes
-                            appOpeningDebounce[appId] = false;
-                            console.log(`[Desktop] Reset debounce for re-opened ${appId}.`);
-                        }, 50);
-                    }
-                    // The longer timeout for resetting the debounce for *new* windows is handled inside createWindow.
-
+                    // The primary reset of appOpeningDebounce is now handled within createWindow
+                    // after the new window creation sequence has progressed or when a window is closed/reopened.
                 } else {
                     console.error("Icon is missing required data attributes (appid, title, url):", icon.id);
                 }
