@@ -2,30 +2,73 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<title>Paint Application</title>
 <style>
     /* Styles specific to Paint app */
+    * { box-sizing: border-box; }
     body { margin: 0; display: flex; flex-direction: column; height: 100vh; background-color: #ece9d8; font-family: Tahoma, sans-serif; overflow: hidden;}
-    .paint-controls { display: flex; align-items: center; flex-wrap: wrap; padding: 3px; background-color: #ece9d8; border-bottom: 1px solid #bbb; flex-shrink: 0; /* Prevent controls from shrinking */}
-    .paint-controls button { font-size: 11px; padding: 2px 5px; margin: 2px; }
-    .color-palette { display: flex; margin-left: 10px; }
-    .color-box { width: 18px; height: 18px; border: 1px solid #888; margin: 0 2px; cursor: pointer; }
-    .color-box.selected { border: 2px solid black; }
+    .paint-controls {
+        display: flex; align-items: center; flex-wrap: wrap; padding: 3px 5px;
+        background-color: #ece9d8; border-bottom: 1px solid #bbb; flex-shrink: 0;
+    }
+    .paint-controls button, .paint-controls select {
+        font-size: 11px; padding: 2px 5px; margin: 2px; font-family: Tahoma, sans-serif;
+        border: 1px outset #ccc; background-color: #f0f0f0;
+    }
+    .paint-controls button.active { border-style: inset; background-color: #ddd; }
+
+    .control-group { display: flex; align-items: center; margin-right: 10px; border-left: 1px solid #ccc; padding-left: 8px; margin-left: 8px;}
+    .control-group:first-child { border-left: none; margin-left: 0; padding-left: 0; }
+    .control-group label { font-size: 11px; margin-right: 4px;}
+
+    .color-palette { display: flex; margin-left: 5px; }
+    .color-box { width: 18px; height: 18px; border: 1px solid #888; margin: 0 1px; cursor: pointer; }
+    .color-box.selected { border: 2px solid black; outline: 1px solid white; } /* More visible selection */
     #selected-color-display { margin-left: 5px; font-size: 11px; display: flex; align-items: center; }
     #selected-color-display span { display: inline-block; width: 16px; height: 16px; border: 1px solid #555; margin-right: 4px; vertical-align: middle; }
-    #paint-canvas { border: 1px solid #888; cursor: crosshair; display: block; background-color: white; margin: 5px; /* Canvas takes remaining space */}
+    #paint-canvas { border: 1px solid #888; cursor: crosshair; display: block; background-color: white; margin: 5px; }
 </style>
 </head>
 <body>
     <div class="paint-controls">
          <button id="clear-canvas-button">Clear</button>
-         <div class="color-palette">
-             <div class="color-box selected" style="background-color: black;" data-color="black"></div> <div class="color-box" style="background-color: gray;" data-color="gray"></div>
-             <div class="color-box" style="background-color: red;" data-color="red"></div> <div class="color-box" style="background-color: orange;" data-color="orange"></div>
-             <div class="color-box" style="background-color: yellow;" data-color="yellow"></div> <div class="color-box" style="background-color: lime;" data-color="lime"></div>
-             <div class="color-box" style="background-color: blue;" data-color="blue"></div> <div class="color-box" style="background-color: purple;" data-color="purple"></div>
-             <div class="color-box" style="background-color: white;" data-color="white"></div>
+
+         <div class="control-group">
+             <button id="tool-brush" class="active">Brush</button>
+             <button id="tool-eraser">Eraser</button>
          </div>
-         <div id="selected-color-display">Color: <span style="background-color: black;"></span></div>
+
+         <div class="control-group">
+            <label for="brush-size">Size:</label>
+            <select id="brush-size">
+                <option value="2">Small</option>
+                <option value="5" selected>Medium</option>
+                <option value="10">Large</option>
+                <option value="20">X-Large</option>
+            </select>
+         </div>
+
+         <div class="control-group">
+            <div id="selected-color-display">Color: <span style="background-color: black;"></span></div>
+            <div class="color-palette">
+                 <div class="color-box selected" style="background-color: black;" data-color="black"></div>
+                 <div class="color-box" style="background-color: gray;" data-color="gray"></div>
+                 <div class="color-box" style="background-color: darkred;" data-color="darkred"></div>
+                 <div class="color-box" style="background-color: red;" data-color="red"></div>
+                 <div class="color-box" style="background-color: orange;" data-color="orange"></div>
+                 <div class="color-box" style="background-color: yellow;" data-color="yellow"></div>
+                 <div class="color-box" style="background-color: green;" data-color="green"></div>
+                 <div class="color-box" style="background-color: lime;" data-color="lime"></div>
+                 <div class="color-box" style="background-color: teal;" data-color="teal"></div>
+                 <div class="color-box" style="background-color: cyan;" data-color="cyan"></div>
+                 <div class="color-box" style="background-color: darkblue;" data-color="darkblue"></div>
+                 <div class="color-box" style="background-color: blue;" data-color="blue"></div>
+                 <div class="color-box" style="background-color: purple;" data-color="purple"></div>
+                 <div class="color-box" style="background-color: magenta;" data-color="magenta"></div>
+                 <div class="color-box" style="background-color: brown;" data-color="brown"></div>
+                 <div class="color-box" style="background-color: white;" data-color="white"></div>
+             </div>
+         </div>
      </div>
      <canvas id="paint-canvas"></canvas>
 
@@ -33,25 +76,33 @@
         const paintCanvas = document.getElementById('paint-canvas');
         const paintCtx = paintCanvas.getContext('2d');
         const controlsDiv = document.querySelector('.paint-controls');
+
         let isDrawingPaint = false, lastPaintX, lastPaintY;
         let currentPaintColor = 'black';
+        let currentBrushSize = 5;
+        let currentTool = 'brush'; // 'brush' or 'eraser'
+        const eraserColor = 'white'; // Eraser draws with background color
 
         function resizeCanvas() {
-            // Resize canvas based on available space within the iframe's body
             const controlsHeight = controlsDiv.offsetHeight;
-            // Use parent window's dimensions minus controls and margins
-            paintCanvas.width = document.body.clientWidth - 10; // Account for margin
-            paintCanvas.height = document.body.clientHeight - controlsHeight - 10; // Account for controls and margin
-            // Re-apply drawing settings after resize
-             paintCtx.lineWidth = 2;
-             paintCtx.lineJoin = 'round';
-             paintCtx.lineCap = 'round';
-             setPaintColor(currentPaintColor);
+            paintCanvas.width = document.body.clientWidth - 10;
+            paintCanvas.height = document.body.clientHeight - controlsHeight - 10;
+            applyBrushSettings();
+        }
+
+        function applyBrushSettings() {
+            paintCtx.lineWidth = currentBrushSize;
+            paintCtx.lineJoin = 'round';
+            paintCtx.lineCap = 'round';
+            paintCtx.strokeStyle = (currentTool === 'eraser') ? eraserColor : currentPaintColor;
+            paintCanvas.style.cursor = (currentTool === 'eraser') ? 'cell' : 'crosshair'; // Change cursor for eraser
         }
 
         function setPaintColor(color) {
              currentPaintColor = color;
-             paintCtx.strokeStyle = currentPaintColor;
+             if (currentTool === 'brush') { // Only change strokeStyle if brush is active
+                 paintCtx.strokeStyle = currentPaintColor;
+             }
              const colorDisplay = document.getElementById('selected-color-display');
              if(colorDisplay) colorDisplay.querySelector('span').style.backgroundColor = color;
              document.querySelectorAll('.color-box').forEach(box => {
@@ -59,20 +110,81 @@
              });
         }
 
-        paintCanvas.addEventListener('mousedown', (e) => { isDrawingPaint = true; [lastPaintX, lastPaintY] = [e.offsetX, e.offsetY]; });
-        paintCanvas.addEventListener('mousemove', (e) => { if (!isDrawingPaint) return; paintCtx.beginPath(); paintCtx.moveTo(lastPaintX, lastPaintY); paintCtx.lineTo(e.offsetX, e.offsetY); paintCtx.stroke(); [lastPaintX, lastPaintY] = [e.offsetX, e.offsetY]; });
-        paintCanvas.addEventListener('mouseup', () => isDrawingPaint = false);
-        paintCanvas.addEventListener('mouseout', () => isDrawingPaint = false);
+        // --- Tool Selection ---
+        const brushToolButton = document.getElementById('tool-brush');
+        const eraserToolButton = document.getElementById('tool-eraser');
+
+        function setActiveTool(toolName) {
+            currentTool = toolName;
+            brushToolButton.classList.toggle('active', toolName === 'brush');
+            eraserToolButton.classList.toggle('active', toolName === 'eraser');
+            applyBrushSettings(); // Re-apply settings as strokeStyle or cursor might change
+        }
+
+        brushToolButton.addEventListener('click', () => setActiveTool('brush'));
+        eraserToolButton.addEventListener('click', () => setActiveTool('eraser'));
+
+        // --- Brush Size ---
+        const brushSizeSelect = document.getElementById('brush-size');
+        brushSizeSelect.addEventListener('change', (e) => {
+            currentBrushSize = parseInt(e.target.value);
+            applyBrushSettings();
+        });
+
+        // --- Drawing Events ---
+        paintCanvas.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return; // Only respond to left mouse button
+            isDrawingPaint = true;
+            // Ensure settings are fresh before starting path
+            applyBrushSettings();
+            // For smoother lines, beginPath and moveTo here
+            paintCtx.beginPath();
+            paintCtx.moveTo(e.offsetX, e.offsetY);
+            [lastPaintX, lastPaintY] = [e.offsetX, e.offsetY]; // Still useful for lineTo
+        });
+
+        paintCanvas.addEventListener('mousemove', (e) => {
+            if (!isDrawingPaint) return;
+            // Instead of beginPath/moveTo on every mousemove, just lineTo and stroke
+            paintCtx.lineTo(e.offsetX, e.offsetY);
+            paintCtx.stroke();
+            // To make it draw "dots" if mouse moves too fast without dragging,
+            // you could add a beginPath/arc/fill here, but lineTo is standard.
+            [lastPaintX, lastPaintY] = [e.offsetX, e.offsetY]; // Update last position
+        });
+
+        function stopDrawing() {
+            if (isDrawingPaint) {
+                paintCtx.closePath(); // Close the current path
+                isDrawingPaint = false;
+            }
+        }
+        paintCanvas.addEventListener('mouseup', stopDrawing);
+        paintCanvas.addEventListener('mouseout', stopDrawing); // Stop if mouse leaves canvas while drawing
+
+        // --- Other Controls ---
         document.getElementById('clear-canvas-button').addEventListener('click', () => paintCtx.clearRect(0, 0, paintCanvas.width, paintCanvas.height));
-        document.querySelector('.color-palette').addEventListener('click', (e) => { if (e.target.classList.contains('color-box')) setPaintColor(e.target.dataset.color); });
+        document.querySelector('.color-palette').addEventListener('click', (e) => {
+            if (e.target.classList.contains('color-box')) {
+                setPaintColor(e.target.dataset.color);
+                // If brush is not active, switch to it when a color is picked (common UX)
+                if (currentTool !== 'brush') {
+                    setActiveTool('brush');
+                }
+            }
+        });
 
-        // Initial setup and resize listener
+        // --- Initial setup ---
         window.addEventListener('resize', resizeCanvas);
-        resizeCanvas(); // Call initially
-        setPaintColor('black');
+        resizeCanvas(); // Call initially to set canvas size and brush settings
+        setPaintColor('black'); // Set initial color
+        setActiveTool('brush'); // Set initial tool
+        currentBrushSize = parseInt(brushSizeSelect.value); // Set initial brush size from select
+        applyBrushSettings();
 
-        // Optional cleanup function (if needed in future)
-        function cleanupGame() { console.log("Cleaning up Paint"); }
+
+        function cleanupGame() { console.log("[Paint] cleanupGame called."); }
+        window.addEventListener('message', (event) => { if (event.data === 'cleanup') cleanupGame(); });
      </script>
 </body>
 </html>
