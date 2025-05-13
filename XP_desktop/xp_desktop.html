@@ -41,7 +41,7 @@
         #snake-icon { top: 230px; left: 210px; } #snake-icon::before { content: '🐍'; background-color: #90ee90; font-size: 38px;}
         #pong-icon { top: 330px; left: 30px; } #pong-icon::before { content: '||'; background-color: #add8e6; font-size: 38px; line-height: 45px; letter-spacing: 15px;}
         #notepad-icon { top: 330px; left: 120px; } #notepad-icon::before { content: '📝'; background-color: #f0f0f0; font-size: 38px;}
-        #mycomputer-icon { top: 30px; left: 300px; } /* Corrected ID here */ #mycomputer-icon::before { content: '💻'; background-color: #e0e0e0; font-size: 38px; }
+        #mycomputer-icon { top: 30px; left: 300px; } #mycomputer-icon::before { content: '💻'; background-color: #e0e0e0; font-size: 38px; }
 
 
         /* Taskbar */
@@ -177,6 +177,7 @@
     </style>
 </head>
 <body>
+    <!-- Ensure no stray comments are in the body like the one from the screenshot -->
     <div id="desktop">
         <div class="icon" id="paint-icon" data-appid="paint" data-title="Paint" data-url="paint.html" data-width="450" data-height="400"><span>Paint</span></div>
         <div class="icon" id="video-icon" data-appid="video" data-title="Video Player" data-url="video.html" data-width="500" data-height="400"><span>Video Player</span></div>
@@ -212,6 +213,7 @@
                 <div class="start-menu-side-column">
                     <div class="start-menu-item" data-appid="calc"><span class="icon-placeholder">🧮</span>Calculator</div>
                     <div class="start-menu-item" data-appid="mycomputer"><span class="icon-placeholder">💻</span>My Computer</div>
+                    {/* REMOVED STRAY COMMENT FROM HERE */}
                     <div class="start-menu-item"><span class="icon-placeholder">🖼️</span>My Pictures</div>
                     <div class="start-menu-item"><span class="icon-placeholder">🎵</span>My Music</div>
                     <div class="start-menu-separator"></div>
@@ -282,24 +284,23 @@
                 if (callback) callback();
                 return;
             }
-            let closedCount = 0;
+            let closedCount = 0; // To track how many close operations have been initiated
             windowsToClose.forEach(win => {
                 if (win.style.display !== 'none') {
                     const closeButton = win.querySelector('.close-button');
                     if (closeButton) {
-                        closeButton.click(); // Triggers individual close logic
-                    } else {
+                        closeButton.click(); // Triggers individual close logic including setting src to about:blank
+                    } else { // Fallback if no close button
                         const iframe = win.querySelector('iframe');
                         if (iframe) iframe.setAttribute('src', 'about:blank');
                         win.style.display = 'none';
                     }
-                    closedCount++; // Increment after processing a visible window
+                    closedCount++;
                 }
             });
-            // Wait for all *visible* windows to have their close process initiated.
-            // The actual closing might be asynchronous due to postMessage.
-            // A fixed delay is a pragmatic approach here.
-            if (callback) setTimeout(callback, Math.max(150, totalVisibleWindows * 50));
+            // Call callback after a delay. This delay might need adjustment.
+            // It's to give time for the iframes to potentially process cleanup and unload.
+            if (callback) setTimeout(callback, Math.max(200, totalVisibleWindows * 100));
         }
 
 
