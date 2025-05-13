@@ -116,7 +116,7 @@
         let isDragging = false;
         let dragOffsetX, dragOffsetY;
         let openWindows = {};
-        let appOpeningState = {}; // To prevent rapid re-entrant calls
+        let appOpeningDebounce = {}; // Use for simple debounce per app
 
         function updateClock() {
             const clockElement = document.getElementById('clock');
@@ -128,18 +128,24 @@
         setInterval(updateClock, 1000);
         updateClock();
 
+        function tryFocusIframe(iframe, context) {
+            if (iframe && iframe.contentWindow) {
+                try {
+                    // console.log(`[Desktop] Attempting focus via ${context} for iframe: ${iframe.title}`);
+                    iframe.contentWindow.focus();
+                } catch (e) {
+                    // console.warn(`[Desktop] Focus failed via ${context} for iframe ${iframe.title}: ${e.message}`);
+                }
+            }
+        }
+
         function bringToFront(winElement) {
             if (!winElement) return;
             highestZIndex++;
             winElement.style.zIndex = highestZIndex;
             const iframe = winElement.querySelector('iframe');
-            if (iframe) {
-                setTimeout(() => { // Defer focus slightly
-                    try {
-                        // console.log(`[Desktop] Attempting focus in bringToFront for ${winElement.id}`);
-                        iframe.contentWindow?.focus();
-                    } catch (e) { /* console.warn(`Could not focus iframe in bringToFront for ${winElement.id}:`, e.message); */ }
-                }, 0);
+            if (iframe && winElement.style.display === 'block') {
+                setTimeout(() => tryFocusIframe(iframe, "bringToFront"), 50);
             }
         }
 
@@ -154,11 +160,7 @@
             });
             winElement.addEventListener('mousedown', (e) => {
                 if (!isDragging || activeWindow !== winElement) {
-                    if (e.target.tagName !== 'IFRAME' && !winElement.contains(document.activeElement) ) {
-                        bringToFront(winElement);
-                    } else if (e.target.tagName !== 'IFRAME') {
-                         bringToFront(winElement);
-                    }
+                     bringToFront(winElement); // Always bring to front on any click if not dragging current window
                 }
             }, true);
         }
@@ -182,19 +184,9 @@
         function createWindow(appId, title, url, width, height) {
             const windowId = `window-${appId}`;
 
-            // If window exists and is visible, just bring to front (prevents re-processing if already open and front)
-            if (openWindows[windowId] && openWindows[windowId].style.display === 'block' && parseInt(openWindows[windowId].style.zIndex) === highestZIndex) {
-                console.log(`[Desktop] Window ${title} is already open and frontmost.`);
-                // Try to focus its iframe just in case
-                const iframeToFocus = openWindows[windowId].querySelector('iframe');
-                 if(iframeToFocus) { try { iframeToFocus.contentWindow?.focus(); } catch(e){} }
-                return;
-            }
-
-
-            if (openWindows[windowId]) { // Window div exists, might be hidden or not loaded
+            if (openWindows[windowId]) {
                 const existingWindow = openWindows[windowId];
-                console.log(`[Desktop] Re-opening existing window structure for ${title}`);
+                console.log(`[Desktop] Window exists for ${title}. Display: ${existingWindow.style.display}`);
                 existingWindow.style.display = 'block';
                 bringToFront(existingWindow);
 
@@ -203,17 +195,20 @@
                     const currentSrc = iframe.getAttribute('src');
                     if (currentSrc === 'about:blank' || currentSrc !== url) {
                         console.log(`[Desktop] Iframe for ${title} needs reload. Setting src to: ${url}`);
-                        iframe.setAttribute('src', url); // Reload content
+                        iframe.setAttribute('src', url);
+                        // Add load listener for reloaded iframe to focus after load
+                        iframe.onload = () => {
+                            console.log(`[Desktop] Reloaded iframe for ${title} has loaded. Attempting focus.`);
+                            tryFocusIframe(iframe, "reopen-reload-onload");
+                            iframe.onload = null; // Remove listener after one use
+                        };
                     } else {
                         console.log(`[Desktop] Iframe for ${title} already has correct src. Focus handled by bringToFront.`);
-                        // Optional: A more delayed focus attempt if bringToFront's isn't enough
-                        // setTimeout(() => { try{iframe.contentWindow?.focus();} catch(e){} }, 100);
                     }
                 }
-                return; // Handled existing window
+                return;
             }
 
-            // --- Create New Window ---
             console.log(`[Desktop] Creating new window for ${title}`);
             const win = document.createElement('div');
             win.className = 'window'; win.id = windowId;
@@ -221,6 +216,8 @@
             const initialLeft = 100 + (Object.keys(openWindows).length % 6) * 25;
             const initialTop = 50 + (Object.keys(openWindows).length % 6) * 25;
             win.style.left = `${initialLeft}px`; win.style.top = `${initialTop}px`;
+            win.style.display = 'block'; // Make visible immediately
+
             win.innerHTML = `
                 <div class="title-bar"><span class="title-bar-text">${title}</span><div class="window-buttons"><button class="window-button close-button">X</button></div></div>
                 <div class="window-content"><iframe src="about:blank" title="${title}" sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-modals allow-forms"></iframe></div>
@@ -228,21 +225,18 @@
             document.getElementById('desktop').appendChild(win);
             openWindows[windowId] = win;
             makeDraggable(win);
+            bringToFront(win); // Bring new window to front immediately
 
             const iframeElement = win.querySelector('iframe');
             if (iframeElement) {
                 console.log(`[Desktop] Setting initial iframe src for new window ${title} to: ${url}`);
-                // Load the iframe content after the window structure is in the DOM
-                setTimeout(() => {
-                    iframeElement.setAttribute('src', url);
-                    // Attempt to focus iframe after src is set
-                    setTimeout(() => {
-                        try {
-                            console.log(`[Desktop] Attempting to focus iframe on creation for ${title}`);
-                            iframeElement.contentWindow?.focus();
-                        } catch (e) { /* console.warn(`[Desktop] Focus failed on iframe creation:`, e.message); */ }
-                    }, 150); // Delay focus
-                }, 50); // Delay setting src
+                // Add onload listener before setting src for new iframes
+                iframeElement.onload = () => {
+                    console.log(`[Desktop] New iframe for ${title} has loaded. Attempting focus.`);
+                    tryFocusIframe(iframeElement, "create-new-onload");
+                    iframeElement.onload = null; // Remove listener after first load
+                };
+                iframeElement.setAttribute('src', url); // Set src to trigger load
             }
 
             const closeButton = win.querySelector('.close-button');
@@ -250,56 +244,40 @@
                 e.stopPropagation();
                 const iframe = win.querySelector('iframe');
                 if (iframe) {
-                    console.log(`[Desktop] Close button clicked for ${title}. Current iframe src: ${iframe.getAttribute('src')}`);
+                    console.log(`[Desktop] Close button clicked for ${title}.`);
                     let directCleanupSuccess = false;
                     try {
                         if (iframe.contentWindow && typeof iframe.contentWindow.cleanupGame === 'function') {
-                            console.log(`[Desktop] Attempting to call cleanupGame for ${title} via direct access.`);
-                            iframe.contentWindow.cleanupGame();
-                            directCleanupSuccess = true;
-                            console.log(`[Desktop] cleanupGame function successfully called for ${title} via direct access.`);
-                        } else if (iframe.contentWindow) {
-                            console.warn(`[Desktop] Direct cleanup: cleanupGame function not found in ${title}.`);
-                        } else {
-                            console.warn(`[Desktop] Direct cleanup: iframe.contentWindow not accessible for ${title}.`);
-                        }
-                    } catch (err) {
-                        console.warn(`[Desktop] Error during direct cleanup attempt for ${title}: Name: "${err.name}", Message: "${err.message}"`);
-                    }
+                            iframe.contentWindow.cleanupGame(); directCleanupSuccess = true;
+                            console.log(`[Desktop] Direct cleanupGame called for ${title}.`);
+                        } else if (iframe.contentWindow) { console.warn(`[Desktop] cleanupGame not function in ${title}.`);}
+                        else { console.warn(`[Desktop] contentWindow not accessible for ${title} for direct cleanup.`);}
+                    } catch (err) { console.warn(`[Desktop] Error direct cleanup ${title}: ${err.message}`); }
 
                     if (!directCleanupSuccess) {
-                        console.log(`[Desktop] Proceeding with postMessage cleanup attempt for ${title} (direct success: ${directCleanupSuccess}).`);
+                        console.log(`[Desktop] Attempting postMessage cleanup for ${title}.`);
                         try {
-                            if (iframe.contentWindow) {
-                                iframe.contentWindow.postMessage('cleanup', '*');
-                                console.log(`[Desktop] 'cleanup' message posted to ${title}.`);
-                            } else {
-                                console.warn(`[Desktop] Cannot postMessage: contentWindow is null for ${title}.`);
-                            }
-                        } catch (pmErr) {
-                            console.error(`[Desktop] Error trying to post 'cleanup' message to ${title}: Name: "${pmErr.name}", Message: "${pmErr.message}"`);
-                        }
+                            if (iframe.contentWindow) iframe.contentWindow.postMessage('cleanup', '*');
+                            else console.warn(`[Desktop] Cannot postMessage, contentWindow null for ${title}.`);
+                        } catch (pmErr) { console.error(`[Desktop] Error postMessage ${title}: ${pmErr.message}`);}
                     }
-                    console.log(`[Desktop] Setting iframe src to 'about:blank' for ${title} as final step.`);
                     iframe.setAttribute('src', 'about:blank');
-                } else {
-                    console.error(`[Desktop] Could not find iframe for ${title} during close.`);
                 }
                 win.style.display = 'none';
             });
 
-            bringToFront(win);
+            // Reset appOpeningDebounce flag after a reasonable time for window creation and initial load
+            // This is now part of the icon dblclick handler
         }
 
-        // --- Application Launching (with click counter and opening state diagnostic) ---
+        // --- Application Launching ---
         let dblClickCounter = {};
-        let isOpeningApp = {}; // Tracks if an app is in the process of opening
 
         document.querySelectorAll('.icon').forEach(icon => {
-            const appIdForCounter = icon.dataset.appid;
-            if (appIdForCounter) {
-                dblClickCounter[appIdForCounter] = 0;
-                isOpeningApp[appIdForCounter] = false; // Initialize opening state
+            const appIdForIcon = icon.dataset.appid;
+            if (appIdForIcon) {
+                dblClickCounter[appIdForIcon] = 0;
+                appOpeningDebounce[appIdForIcon] = false;
             }
 
             icon.addEventListener('dblclick', () => {
@@ -311,24 +289,22 @@
 
                 if (appId) {
                     dblClickCounter[appId]++;
-                    console.log(`[Desktop] Icon DBLCLICK for ${title} - Click Count: ${dblClickCounter[appId]}. IsOpening: ${isOpeningApp[appId]}`);
+                    console.log(`[Desktop] Icon DBLCLICK for ${title} - Count: ${dblClickCounter[appId]}. Debounce State: ${appOpeningDebounce[appId]}`);
                 }
 
-                // If this app is already in the process of opening, ignore subsequent rapid clicks
-                if (isOpeningApp[appId]) {
-                    console.log(`[Desktop] Window for ${title} is already being processed. Ignoring click.`);
+                if (appOpeningDebounce[appId]) {
+                    console.log(`[Desktop] Debouncing dblclick for ${title}.`);
                     return;
                 }
 
                 if (appId && title && url) {
-                    isOpeningApp[appId] = true; // Set flag
+                    appOpeningDebounce[appId] = true;
+                    console.log(`[Desktop] Set appOpeningDebounce for ${title} to true.`);
                     createWindow(appId, title, url, width, height);
-                    // Reset the flag after a short delay to allow the window to stabilize
-                    // Adjust timeout as needed, might need to be longer if iframes load slowly
                     setTimeout(() => {
-                        isOpeningApp[appId] = false;
-                        console.log(`[Desktop] Reset isOpeningApp for ${title}.`);
-                    }, 700); // Increased delay
+                        appOpeningDebounce[appId] = false;
+                        console.log(`[Desktop] Reset appOpeningDebounce for ${title}.`);
+                    }, 700); // Reset debounce after this time
                 } else {
                     console.error("Icon is missing required data attributes (appid, title, url):", icon.id);
                 }
