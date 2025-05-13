@@ -5,31 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Windows XP Desktop</title>
     <style>
-        /* Basic Reset & Body */
+        /* Styles remain the same as before */
         * { box-sizing: border-box; user-select: none; }
         html, body { height: 100%; margin: 0; overflow: hidden; font-family: 'Tahoma', sans-serif; }
-
-        /* Desktop */
-        #desktop {
-            width: 100%; height: 100%;
-            background: url('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAEAAQDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAfEAACAQMFAQAAAAAAAAAAAAABAgMABAUGERIhMTL/xAAVAQEBAAAAAAAAAAAAAAAAAAAAA//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AIbS8ltpY4pYg6MACQSD+VUrA83D8RZ66aKNbWz3I2p0UAeBgeKUpT/2Q==') /* Simple blue fallback */;
-            background-color: #005cbe; background-size: cover; background-repeat: no-repeat; position: relative;
-        }
-
-        /* Icons */
-        .icon {
-            position: absolute; width: 80px; text-align: center; padding: 10px 5px; cursor: pointer;
-            color: white; text-shadow: 1px 1px 2px black; border-radius: 5px;
-        }
-        .icon:hover { background-color: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.4); padding: 9px 4px; }
-        .icon::before { /* Placeholder Icon Visuals */
-            content: '📄'; font-size: 38px; line-height: 48px; display: block; margin-bottom: 5px;
-            background-color: #eee; border-radius: 3px; width: 48px; height: 48px; margin: 0 auto 5px auto;
-            color: #333; text-shadow: none;
-        }
+        #desktop { width: 100%; height: 100%; background: #005cbe url('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAEAAQDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAfEAACAQMFAQAAAAAAAAAAAAABAgMABAUGERIhMTL/xAAVAQEBAAAAAAAAAAAAAAAAAAAAA//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AIbS8ltpY4pYg6MACQSD+VUrA83D8RZ66aKNbWz3I2p0UAeBgeKUpT/2Q==') center/cover no-repeat; position: relative; }
+        .icon { position: absolute; width: 80px; text-align: center; padding: 10px 5px; cursor: pointer; color: white; text-shadow: 1px 1px 2px black; border-radius: 5px; }
+        .icon:hover { background-color: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); padding: 9px 4px; }
+        .icon::before { content: '📄'; font-size: 38px; line-height: 48px; display: block; margin-bottom: 5px; background-color: #eee; border-radius: 3px; width: 48px; height: 48px; margin: 0 auto 5px auto; color: #333; text-shadow: none; }
         .icon span { display: block; font-size: 12px; word-wrap: break-word; }
-
-        /* Specific Icon Positions & Styles */
         #paint-icon { top: 30px; left: 30px; } #paint-icon::before { content: '🎨'; background-color: lightblue; }
         #video-icon { top: 130px; left: 30px; } #video-icon::before { content: '▶️'; background-color: lightcoral; }
         #calc-icon { top: 230px; left: 30px; } #calc-icon::before { content: '🧮'; background-color: lightgreen; }
@@ -40,59 +23,20 @@
         #memory-icon { top: 130px; left: 210px; } #memory-icon::before { content: '🧠'; background-color: #ffcc99; font-size: 38px;}
         #snake-icon { top: 230px; left: 210px; } #snake-icon::before { content: '🐍'; background-color: #90ee90; font-size: 38px;}
         #pong-icon { top: 330px; left: 30px; } #pong-icon::before { content: '||'; background-color: #add8e6; font-size: 38px; line-height: 45px; letter-spacing: 15px;}
-
-
-        /* Taskbar */
-        #taskbar {
-            position: absolute; bottom: 0; left: 0; width: 100%; height: 30px;
-            background: linear-gradient(to bottom, #245edc, #3f8cf5); border-top: 1px solid #6aa2f7;
-            display: flex; align-items: center; padding: 0 5px; z-index: 10000;
-        }
-        #start-button {
-            background: linear-gradient(to bottom, #5bde5b, #3aa53a); border: 1px outset #4caf4c; color: white;
-            font-weight: bold; font-style: italic; padding: 2px 15px; border-radius: 3px; cursor: pointer;
-            text-shadow: 1px 1px 1px #333; font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif; font-size: 14px;
-        }
+        #taskbar { position: absolute; bottom: 0; left: 0; width: 100%; height: 30px; background: linear-gradient(to bottom, #245edc, #3f8cf5); border-top: 1px solid #6aa2f7; display: flex; align-items: center; padding: 0 5px; z-index: 10000; }
+        #start-button { background: linear-gradient(to bottom, #5bde5b, #3aa53a); border: 1px outset #4caf4c; color: white; font-weight: bold; font-style: italic; padding: 2px 15px; border-radius: 3px; cursor: pointer; text-shadow: 1px 1px 1px #333; font-family: 'Franklin Gothic Medium', Arial, sans-serif; font-size: 14px; }
         #start-button:active { background: linear-gradient(to top, #5bde5b, #3aa53a); border-style: inset; }
-        #clock {
-            margin-left: auto; background-color: #6aa2f7; border: 1px inset #3f8cf5;
-            color: white; padding: 2px 8px; font-size: 12px; border-radius: 2px;
-        }
-
-        /* Windows (General Frame Styles) */
-        .window {
-            position: absolute; border: 1px solid #005cbf; box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.3);
-            background-color: #ece9d8; display: none; /* Initially hidden */
-            overflow: hidden; border-radius: 5px 5px 0 0;
-            min-width: 200px; min-height: 150px;
-            width: 400px; height: 300px;
-            top: 50px; left: 150px;
-        }
-        .title-bar {
-            background: linear-gradient(to bottom, #005cbf, #0053a8); color: white; padding: 3px 5px;
-            font-weight: bold; font-size: 13px; cursor: move; display: flex; align-items: center; height: 24px;
-        }
+        #clock { margin-left: auto; background-color: #6aa2f7; border: 1px inset #3f8cf5; color: white; padding: 2px 8px; font-size: 12px; border-radius: 2px; }
+        .window { position: absolute; border: 1px solid #005cbf; box-shadow: 3px 3px 5px rgba(0,0,0,0.3); background-color: #ece9d8; display: none; overflow: hidden; border-radius: 5px 5px 0 0; min-width: 200px; min-height: 150px; width: 400px; height: 300px; top: 50px; left: 150px; }
+        .title-bar { background: linear-gradient(to bottom, #005cbf, #0053a8); color: white; padding: 3px 5px; font-weight: bold; font-size: 13px; cursor: move; display: flex; align-items: center; height: 24px; }
         .title-bar-text { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 3px; }
         .window-buttons { display: flex; }
-        .window-button {
-            width: 18px; height: 18px; border: 1px outset #ccc; margin-left: 2px; cursor: pointer;
-            font-weight: bold; font-size: 10px; line-height: 16px; text-align: center; background-color: #d4d0c8;
-        }
+        .window-button { width: 18px; height: 18px; border: 1px outset #ccc; margin-left: 2px; cursor: pointer; font-weight: bold; font-size: 10px; line-height: 16px; text-align: center; background-color: #d4d0c8; }
         .close-button { background-color: #ff6347; color: white; }
         .close-button:hover { background-color: #e55337; }
         .window-button:active { border-style: inset; }
-        .window-content {
-            height: calc(100% - 24px);
-            background-color: #fff;
-            overflow: hidden;
-            position: relative;
-        }
-        .window-content iframe {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            border: none;
-        }
+        .window-content { height: calc(100% - 24px); background-color: #fff; overflow: hidden; position: relative; }
+        .window-content iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
     </style>
 </head>
 <body>
@@ -118,7 +62,7 @@
         let openWindows = {};
         let appOpeningDebounce = {};
 
-        function updateClock() {
+        function updateClock() { /* ... same as before ... */
             const clockElement = document.getElementById('clock');
             if (clockElement) {
                 const now = new Date();
@@ -128,18 +72,15 @@
         setInterval(updateClock, 1000);
         updateClock();
 
-        function tryFocusIframe(iframe, context) {
+        function tryFocusIframe(iframe, context) { /* ... same as before ... */
             if (iframe && iframe.contentWindow) {
                 try {
-                    // console.log(`[Desktop] Attempting focus via ${context} for iframe: ${iframe.title}`);
                     iframe.contentWindow.focus();
-                } catch (e) {
-                    // console.warn(`[Desktop] Focus failed via ${context} for iframe ${iframe.title}: ${e.message}`);
-                }
+                } catch (e) { }
             }
         }
 
-        function bringToFront(winElement) {
+        function bringToFront(winElement) { /* ... same as before ... */
             if (!winElement) return;
             highestZIndex++;
             winElement.style.zIndex = highestZIndex;
@@ -149,7 +90,7 @@
             }
         }
 
-        function makeDraggable(winElement) {
+        function makeDraggable(winElement) { /* ... same as before ... */
             const titleBar = winElement.querySelector('.title-bar');
             if (!titleBar) return;
             titleBar.addEventListener('mousedown', (e) => {
@@ -164,8 +105,7 @@
                 }
             }, true);
         }
-
-        function handleDrag(e) {
+        function handleDrag(e) { /* ... same as before ... */
             if (!isDragging || !activeWindow) return; e.preventDefault();
             let newX = e.clientX - dragOffsetX, newY = e.clientY - dragOffsetY;
             const desk = document.getElementById('desktop'), task = document.getElementById('taskbar');
@@ -173,8 +113,7 @@
             newX = Math.max(0, Math.min(newX, maxW)); newY = Math.max(0, Math.min(newY, maxH));
             activeWindow.style.left = `${newX}px`; activeWindow.style.top = `${newY}px`;
         }
-
-        function stopDrag() {
+        function stopDrag() { /* ... same as before ... */
             if (isDragging) {
                 isDragging = false;
                 document.removeEventListener('mousemove', handleDrag); document.removeEventListener('mouseup', stopDrag); document.removeEventListener('mouseleave', stopDrag);
@@ -184,78 +123,86 @@
         function createWindow(appId, title, url, width, height) {
             const windowId = `window-${appId}`;
 
-            if (openWindows[windowId]) { // Window div structure already exists
+            if (openWindows[windowId]) {
                 const existingWindow = openWindows[windowId];
                 console.log(`[Desktop] Window structure for ${title} exists. Display: ${existingWindow.style.display}`);
-                existingWindow.style.display = 'block'; // Ensure it's visible
-                bringToFront(existingWindow);           // Bring to front (also attempts focus)
+                existingWindow.style.display = 'block';
+                bringToFront(existingWindow);
 
                 const iframe = existingWindow.querySelector('iframe');
                 if (iframe) {
                     const currentSrc = iframe.getAttribute('src');
-                    // If iframe was cleared (properly closed) or if somehow URL changed, reload it.
                     if (currentSrc === 'about:blank' || currentSrc !== url) {
-                        console.log(`[Desktop] Iframe for ${title} was blank or src differs. Reloading with: ${url}`);
-                        iframe.onload = () => { // Add onload for focusing after reload
+                        console.log(`[Desktop] Iframe for ${title} needs reload. Setting src to: ${url}`);
+                        iframe.onload = () => {
                             console.log(`[Desktop] Reloaded iframe for ${title} has loaded. Attempting focus.`);
                             tryFocusIframe(iframe, "reopen-reload-onload");
-                            iframe.onload = null; // Important: Remove listener after one use
+                            iframe.onload = null;
                         };
                         iframe.setAttribute('src', url);
                     } else {
-                        console.log(`[Desktop] Iframe for ${title} already has correct src. Focus handled by bringToFront or previous load.`);
-                        // If src is correct, focus should have been handled by bringToFront or its initial load's onload.
-                        // A direct focus here might be redundant or interfere if called too often.
-                        // setTimeout(() => tryFocusIframe(iframe, "reopen-src-ok"), 50); // Optional extra focus attempt
+                        console.log(`[Desktop] Iframe for ${title} already has correct src. Focus handled by bringToFront.`);
                     }
                 }
-                // Reset debounce flag for THIS app, as the open action is now complete.
+                // Reset debounce for this app as the re-open action is complete
                 appOpeningDebounce[appId] = false;
-                console.log(`[Desktop] Reset appOpeningDebounce for ${title} after re-opening.`);
+                console.log(`[Desktop] Reset appOpeningDebounce for ${title} after re-opening existing window.`);
                 return;
             }
 
             // --- Create New Window ---
             console.log(`[Desktop] Creating NEW window for ${title}`);
-            // appOpeningDebounce[appId] is already true from the icon click handler
-
             const win = document.createElement('div');
             win.className = 'window'; win.id = windowId;
             win.style.width = `${parseInt(width) || 400}px`; win.style.height = `${parseInt(height) || 300}px`;
             const initialLeft = 100 + (Object.keys(openWindows).length % 6) * 25;
             const initialTop = 50 + (Object.keys(openWindows).length % 6) * 25;
             win.style.left = `${initialLeft}px`; win.style.top = `${initialTop}px`;
-            win.style.display = 'block'; // Make visible immediately
 
+            // Create basic shell, add to DOM, and make visible IMMEDIATELY
             win.innerHTML = `
                 <div class="title-bar"><span class="title-bar-text">${title}</span><div class="window-buttons"><button class="window-button close-button">X</button></div></div>
-                <div class="window-content"><iframe src="about:blank" title="${title}" sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-modals allow-forms"></iframe></div>
+                <div class="window-content"></div>
             `;
             document.getElementById('desktop').appendChild(win);
+            win.style.display = 'block'; // Make window shell visible right away
             openWindows[windowId] = win;
             makeDraggable(win);
-            bringToFront(win); // Bring new window to front immediately
+            bringToFront(win); // Bring new window shell to front
 
-            const iframeElement = win.querySelector('iframe');
-            if (iframeElement) {
-                console.log(`[Desktop] Setting initial iframe src for new window ${title} to: ${url}`);
+            // Now create and load the iframe with a slight delay
+            // to allow the window shell to render first.
+            setTimeout(() => {
+                const contentArea = win.querySelector('.window-content');
+                if (!contentArea) {
+                    console.error("[Desktop] Could not find .window-content for new window:", title);
+                    appOpeningDebounce[appId] = false; // Reset debounce if something goes wrong here
+                    return;
+                }
+
+                const iframeElement = document.createElement('iframe');
+                iframeElement.setAttribute('title', title);
+                iframeElement.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-pointer-lock allow-modals allow-forms');
+                iframeElement.style.width = '100%'; // Ensure iframe fills content area
+                iframeElement.style.height = '100%';
+                iframeElement.style.border = 'none';
+
+                console.log(`[Desktop] Setting iframe src for new window ${title} to: ${url}`);
                 iframeElement.onload = () => {
                     console.log(`[Desktop] NEW iframe for ${title} has loaded. Attempting focus.`);
                     tryFocusIframe(iframeElement, "create-new-onload");
-                    iframeElement.onload = null; // Remove listener after first load
-                    // Reset debounce flag for THIS app, as the new window is now loaded and focused.
-                    appOpeningDebounce[appId] = false;
-                    console.log(`[Desktop] Reset appOpeningDebounce for ${title} after new window onload.`);
+                    iframeElement.onload = null;
+                    appOpeningDebounce[appId] = false; // Reset debounce after successful load and focus attempt
+                    console.log(`[Desktop] Reset appOpeningDebounce for ${title} after new window iframe onload.`);
                 };
-                iframeElement.onerror = () => { // Handle iframe load errors
+                iframeElement.onerror = () => {
                     console.error(`[Desktop] Iframe for ${title} failed to load src: ${url}`);
-                    appOpeningDebounce[appId] = false; // Reset debounce if load fails
+                    appOpeningDebounce[appId] = false;
                     iframeElement.onload = null;
                 };
-                iframeElement.setAttribute('src', url); // Set src to trigger load
-            } else {
-                 appOpeningDebounce[appId] = false; // Reset if iframeElement isn't found (should not happen)
-            }
+                contentArea.appendChild(iframeElement); // Add iframe to content area
+                iframeElement.setAttribute('src', url);   // Now set the src
+            }, 50); // Small delay before creating and loading iframe
 
             const closeButton = win.querySelector('.close-button');
             closeButton.addEventListener('click', (e) => {
@@ -280,6 +227,8 @@
                         } catch (pmErr) { console.error(`[Desktop] Error postMessage ${title}: ${pmErr.message}`);}
                     }
                     iframe.setAttribute('src', 'about:blank');
+                     // Optional: remove the iframe from DOM after setting to about:blank
+                    // if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
                 }
                 win.style.display = 'none';
             });
@@ -313,17 +262,11 @@
                 }
 
                 if (appId && title && url) {
-                    appOpeningDebounce[appId] = true; // Set debounce flag before calling createWindow
+                    appOpeningDebounce[appId] = true;
                     console.log(`[Desktop] Set appOpeningDebounce for ${title} to true.`);
                     createWindow(appId, title, url, width, height);
-                    // The resetting of appOpeningDebounce[appId] is now handled
-                    // more reliably inside createWindow's onload/onerror for new windows,
-                    // and at the end of the re-open path.
-                    // We can remove the generic timeout here.
-                    // setTimeout(() => {
-                    //     appOpeningDebounce[appId] = false;
-                    //     console.log(`[Desktop] Reset appOpeningDebounce for ${title} (from icon click).`);
-                    // }, 800);
+                    // Debounce reset is now handled within createWindow's onload/onerror for new windows
+                    // and at the end of the re-open path for existing windows.
                 } else {
                     console.error("Icon is missing required data attributes (appid, title, url):", icon.id);
                 }
