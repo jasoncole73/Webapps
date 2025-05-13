@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notepad Content</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Lucida Console', 'Courier New', monospace; /* Classic Notepad font */
+            font-size: 13px; /* Default font size */
+            background-color: #fff; /* White background for text area */
+            display: flex;
+            flex-direction: column;
+            height: 100vh; /* Full iframe height */
+            overflow: hidden; /* Prevent body scroll, textarea will scroll */
+        }
+
+        #notepad-menu-bar {
+            background-color: #f0f0f0;
+            border-bottom: 1px solid #ccc;
+            padding: 2px 4px;
+            display: flex;
+            flex-shrink: 0;
+            user-select: none;
+        }
+
+        .menu-item {
+            padding: 3px 8px;
+            cursor: default;
+            font-size: 11px;
+            font-family: Tahoma, sans-serif;
+        }
+        .menu-item:hover {
+            background-color: #316ac5;
+            color: white;
+        }
+        .menu-item.disabled {
+            color: #aca899;
+            pointer-events: none;
+        }
+
+        /* Basic dropdown simulation */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border: 1px solid #ccc;
+            font-size: 11px;
+            font-family: Tahoma, sans-serif;
+        }
+        .dropdown-content div {
+            color: black;
+            padding: 6px 12px;
+            text-decoration: none;
+            display: block;
+            cursor: default;
+        }
+        .dropdown-content div:hover {background-color: #e0e0e0;}
+        .dropdown:hover .dropdown-content,
+        .dropdown.active .dropdown-content { /* Keep open if active */
+            display: block;
+        }
+
+
+        #notepad-textarea {
+            flex-grow: 1; /* Textarea fills remaining space */
+            width: 100%;
+            border: none;
+            padding: 5px;
+            font-family: inherit; /* Inherit from body */
+            font-size: inherit;   /* Inherit from body */
+            line-height: 1.4;
+            resize: none; /* Disable manual resize handle */
+            outline: none; /* No focus outline */
+            white-space: pre; /* Default: no word wrap, show scrollbars */
+        }
+
+        #notepad-textarea.word-wrap {
+            white-space: pre-wrap; /* Enable word wrap */
+            word-break: break-word; /* Break long words if necessary */
+        }
+
+        #notepad-statusbar {
+            background-color: #f0f0f0;
+            border-top: 1px solid #ccc;
+            padding: 2px 5px;
+            font-size: 10px;
+            font-family: Tahoma, sans-serif;
+            color: #333;
+            text-align: right;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="notepad-menu-bar">
+        <div class="dropdown" id="file-menu-dropdown">
+            <span class="menu-item"><u>F</u>ile</span>
+            <div class="dropdown-content">
+                <div id="file-new"><u>N</u>ew</div>
+                <div id="file-open" class="menu-item disabled"><u>O</u>pen... (disabled)</div>
+                <div id="file-save"><u>S</u>ave</div>
+                <div id="file-save-as" class="menu-item disabled">Save <u>A</u>s... (disabled)</div>
+                <hr style="margin: 2px 0; border-color: #ddd;">
+                <div id="file-exit">E<u>x</u>it</div>
+            </div>
+        </div>
+        <div class="dropdown" id="edit-menu-dropdown">
+            <span class="menu-item"><u>E</u>dit</span>
+             <div class="dropdown-content">
+                <div id="edit-undo" class="menu-item disabled"><u>U</u>ndo (disabled)</div>
+                <hr style="margin: 2px 0; border-color: #ddd;">
+                <div id="edit-cut" class="menu-item disabled">Cu<u>t</u> (disabled)</div>
+                <div id="edit-copy" class="menu-item disabled"><u>C</u>opy (disabled)</div>
+                <div id="edit-paste" class="menu-item disabled"><u>P</u>aste (disabled)</div>
+                <div id="edit-delete" class="menu-item disabled">De<u>l</u>ete (disabled)</div>
+             </div>
+        </div>
+        <div class="dropdown" id="format-menu-dropdown">
+            <span class="menu-item">F<u>o</u>rmat</span>
+            <div class="dropdown-content">
+                <div id="format-word-wrap"><u>W</u>ord Wrap</div>
+                <div id="format-font"><u>F</u>ont...</div>
+            </div>
+        </div>
+        <div class="dropdown" id="view-menu-dropdown">
+            <span class="menu-item"><u>V</u>iew</span>
+            <div class="dropdown-content">
+                <div id="view-zoom" class="menu-item disabled"><u>Z</u>oom (disabled)</div>
+                <div id="view-statusbar"><u>S</u>tatus Bar</div>
+            </div>
+        </div>
+         <div class="dropdown" id="help-menu-dropdown">
+            <span class="menu-item"><u>H</u>elp</span>
+            <div class="dropdown-content">
+                <div id="help-view" class="menu-item disabled">View <u>H</u>elp (disabled)</div>
+                <div id="help-about" class="menu-item disabled"><u>A</u>bout Notepad (disabled)</div>
+            </div>
+        </div>
+    </div>
+
+    <textarea id="notepad-textarea" spellcheck="false"></textarea>
+
+    <div id="notepad-statusbar" style="display: none;">Ln 1, Col 1</div>
+
+    <script>
+        const textarea = document.getElementById('notepad-textarea');
+        const wordWrapMenuItem = document.getElementById('format-word-wrap');
+        const fontMenuItem = document.getElementById('format-font');
+        const saveMenuItem = document.getElementById('file-save');
+        const newMenuItem = document.getElementById('file-new');
+        const exitMenuItem = document.getElementById('file-exit');
+        const statusBarMenuItem = document.getElementById('view-statusbar');
+        const statusBarElement = document.getElementById('notepad-statusbar');
+
+        let currentFileName = "Untitled";
+        let isWordWrap = false;
+        let currentFontSize = 13; // Default font size in px
+        let isStatusBarVisible = false;
+
+        // --- Word Wrap ---
+        function toggleWordWrap() {
+            isWordWrap = !isWordWrap;
+            textarea.classList.toggle('word-wrap', isWordWrap);
+            wordWrapMenuItem.innerHTML = isWordWrap ? '✓ <u>W</u>ord Wrap' : '<u>W</u>ord Wrap';
+            updateStatusBar(); // Word wrap affects column count calculation
+        }
+        wordWrapMenuItem.addEventListener('click', toggleWordWrap);
+
+        // --- Font Size (Simple Implementation) ---
+        fontMenuItem.addEventListener('click', () => {
+            const newSize = prompt("Enter font size (e.g., 10, 13, 16, 20):", currentFontSize);
+            if (newSize && !isNaN(parseInt(newSize))) {
+                currentFontSize = parseInt(newSize);
+                textarea.style.fontSize = `${currentFontSize}px`;
+                document.body.style.fontSize = `${currentFontSize}px`; // So menu looks proportional
+            }
+        });
+
+        // --- Save Functionality ---
+        function saveFile() {
+            const textToSave = textarea.value;
+            const blob = new Blob([textToSave], { type: "text/plain;charset=utf-8" });
+            const tempLink = document.createElement("a");
+            tempLink.href = URL.createObjectURL(blob);
+            let fileNameToSave = prompt("Save as:", currentFileName + ".txt");
+
+            if (fileNameToSave) {
+                if (!fileNameToSave.toLowerCase().endsWith(".txt")) {
+                    fileNameToSave += ".txt";
+                }
+                tempLink.download = fileNameToSave;
+                document.body.appendChild(tempLink); // Required for Firefox
+                tempLink.click();
+                document.body.removeChild(tempLink);
+                URL.revokeObjectURL(tempLink.href); // Free up memory
+
+                // Update window title in parent if possible (will require postMessage)
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({ type: 'SET_WINDOW_TITLE', appId: 'notepad', title: `${fileNameToSave.replace(".txt", "")} - Notepad` }, '*');
+                }
+                currentFileName = fileNameToSave.replace(".txt", ""); // Update current file name without .txt
+            }
+        }
+        saveMenuItem.addEventListener('click', saveFile);
+
+        // --- New File ---
+        newMenuItem.addEventListener('click', () => {
+            if (textarea.value !== "" && !confirm("Do you want to save changes to Untitled?")) {
+                // User cancelled or didn't want to save
+            }
+            textarea.value = "";
+            currentFileName = "Untitled";
+             if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'SET_WINDOW_TITLE', appId: 'notepad', title: `Untitled - Notepad` }, '*');
+            }
+            updateStatusBar();
+        });
+
+        // --- Exit ---
+        exitMenuItem.addEventListener('click', () => {
+            // To "close" from iframe, we ask the parent to hide the window
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'CLOSE_WINDOW', appId: 'notepad' }, '*');
+            }
+        });
+
+        // --- Status Bar ---
+        function updateStatusBar() {
+            if (!isStatusBarVisible) return;
+
+            const text = textarea.value;
+            const cursorPos = textarea.selectionStart;
+            let lineNum = 1;
+            let colNum = 1;
+
+            for (let i = 0; i < cursorPos; i++) {
+                if (text[i] === '\n') {
+                    lineNum++;
+                    colNum = 1;
+                } else {
+                    // This is a simplification for column count, especially with word wrap.
+                    // True column count with proportional fonts and word wrap is complex.
+                    // For monospaced fonts without wrap, this is more accurate.
+                    colNum++;
+                }
+            }
+            statusBarElement.textContent = `Ln ${lineNum}, Col ${colNum}`;
+        }
+
+        textarea.addEventListener('input', updateStatusBar);
+        textarea.addEventListener('click', updateStatusBar); // Also update on click
+        textarea.addEventListener('keyup', updateStatusBar); // And on keyup for arrow keys etc.
+
+        statusBarMenuItem.addEventListener('click', () => {
+            isStatusBarVisible = !isStatusBarVisible;
+            statusBarElement.style.display = isStatusBarVisible ? 'block' : 'none';
+            statusBarMenuItem.innerHTML = isStatusBarVisible ? '✓ <u>S</u>tatus Bar' : '<u>S</u>tatus Bar';
+            if (isStatusBarVisible) updateStatusBar();
+        });
+
+
+        // --- Menu Dropdown Handling (Simple Toggle) ---
+        document.querySelectorAll('.dropdown').forEach(dropdown => {
+            const trigger = dropdown.querySelector('.menu-item'); // The main menu item like "File"
+            const content = dropdown.querySelector('.dropdown-content');
+
+            trigger.addEventListener('click', (event) => {
+                event.stopPropagation();
+                // Close other open dropdowns
+                document.querySelectorAll('.dropdown.active').forEach(openDropdown => {
+                    if (openDropdown !== dropdown) {
+                        openDropdown.classList.remove('active');
+                    }
+                });
+                dropdown.classList.toggle('active');
+            });
+
+            // Hide dropdown if clicking outside
+            content.addEventListener('click', (event) => {
+                 // If an actual action item is clicked, close the dropdown
+                if (event.target.id && event.target.id.startsWith('file-') || event.target.id.startsWith('format-') || event.target.id.startsWith('view-')) {
+                    dropdown.classList.remove('active');
+                }
+            });
+        });
+        // Global click to close dropdowns
+        window.addEventListener('click', () => {
+            document.querySelectorAll('.dropdown.active').forEach(openDropdown => {
+                openDropdown.classList.remove('active');
+            });
+        });
+
+
+        // --- Cleanup Function (called by parent or postMessage) ---
+        function cleanupGame() { // Renamed to cleanupGame for consistency with parent
+            console.log("[Notepad] cleanupGame called (Notepad has no active intervals to stop).");
+            // Notepad doesn't have intervals or global listeners that need explicit removal here.
+            // The parent setting iframe src to about:blank handles most cleanup.
+        }
+
+        // --- Event listener for messages from parent ---
+        window.addEventListener('message', (event) => {
+            console.log(`[Notepad] Message received from parent. Data: "${event.data}", Origin: "${event.origin}"`);
+            if (event.data === 'cleanup') {
+                cleanupGame();
+            }
+        });
+
+        // Initial setup
+        updateStatusBar(); // Initial status bar text
+    </script>
+</body>
+</html>
