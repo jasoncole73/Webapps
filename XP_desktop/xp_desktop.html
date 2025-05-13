@@ -157,17 +157,7 @@
                 User
             </div>
             <ul id="start-menu-apps" style="list-style: none; padding: 5px 0; margin: 0; background-color: white;">
-                <li class="start-menu-item" data-appid="paint" data-title="Paint" data-url="paint.html" data-width="450" data-height="400"><span class="start-menu-icon">🎨</span> Paint</li>
-                <li class="start-menu-item" data-appid="video" data-title="Video Player" data-url="video.html" data-width="500" data-height="400"><span class="start-menu-icon">▶️</span> Video Player</li>
-                <li class="start-menu-item" data-appid="calc" data-title="Calculator" data-url="calculator.html" data-width="220" data-height="280"><span class="start-menu-icon">🧮</span> Calculator</li>
-                <li class="start-menu-item" data-appid="minesweeper" data-title="Minesweeper" data-url="minesweeper.html" data-width="300" data-height="490"><span class="start-menu-icon">💣</span> Minesweeper</li>
-                <li class="start-menu-item" data-appid="tictactoe" data-title="Tic Tac Toe" data-url="tictactoe.html" data-width="300" data-height="380"><span class="start-menu-icon">⭕</span> Tic Tac Toe</li>
-                <li class="start-menu-item" data-appid="memory" data-title="Memory Game" data-url="memory.html" data-width="450" data-height="450"><span class="start-menu-icon">🧠</span> Memory Game</li>
-                <hr style="margin: 5px 0; border-top: 1px solid #aaa; border-bottom: 1px solid #fff;">
-                <li class="start-menu-item" data-appid="solitaire" data-title="Solitaire" data-url="solitaire.html" data-width="600" data-height="500"><span class="start-menu-icon">🃏</span> Solitaire</li>
-                <li class="start-menu-item" data-appid="chess" data-title="Chess" data-url="chess.html" data-width="450" data-height="520"><span class="start-menu-icon">♚</span> Chess</li>
-                <li class="start-menu-item" data-appid="snake" data-title="Snake" data-url="snake.html" data-width="430" data-height="480"><span class="start-menu-icon">🐍</span> Snake</li>
-                <li class="start-menu-item" data-appid="pong" data-title="Pong" data-url="pong.html" data-width="630" data-height="480"><span class="start-menu-icon">||</span> Pong</li>
+                <!-- Apps will be populated here by JS -->
             </ul>
             <div id="start-menu-footer" style="position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, #005cbf, #0053a8); padding: 5px; display: flex; justify-content: flex-end; height: 35px; align-items: center;">
                 <button id="log-off-button-sm" class="start-menu-action-button">Log Off</button>
@@ -357,9 +347,9 @@
                     return;
                 }
                 if (appId && title && url) {
-                    // appOpeningDebounce is set inside createWindow for new windows.
-                    // For reopening, it's not strictly needed here if createWindow handles it.
+                    appOpeningDebounce[appId] = true; // Set debounce before calling createWindow
                     createWindow(appId, title, url, width, height);
+                    // The timeout to reset appOpeningDebounce is now primarily inside the new window path of createWindow
                 } else {
                     console.error("Icon is missing data attributes (appid, title, url):", icon.id);
                 }
@@ -371,15 +361,61 @@
         const startMenu = document.getElementById('start-menu');
         const startMenuAppList = document.getElementById('start-menu-apps');
 
+        function populateStartMenu() {
+            startMenuAppList.innerHTML = ''; // Clear existing items
+            const icons = document.querySelectorAll('.icon');
+            const appsForMenu = [];
+
+            icons.forEach(icon => {
+                const appData = {
+                    appid: icon.dataset.appid,
+                    title: icon.dataset.title,
+                    url: icon.dataset.url,
+                    width: icon.dataset.width,
+                    height: icon.dataset.height,
+                    // Attempt to get the icon character from the ::before pseudo-element's content
+                    // This is a bit hacky and relies on the icon content being a simple character.
+                    iconChar: window.getComputedStyle(icon, '::before').getPropertyValue('content').replace(/["']/g, '') || '📄'
+                };
+                if (appData.appid && appData.title && appData.url) {
+                    appsForMenu.push(appData);
+                }
+            });
+
+            // Optional: Sort apps alphabetically by title
+            appsForMenu.sort((a, b) => a.title.localeCompare(b.title));
+
+            appsForMenu.forEach(appData => {
+                const li = document.createElement('li');
+                li.className = 'start-menu-item';
+                li.dataset.appid = appData.appid;
+                li.dataset.title = appData.title;
+                li.dataset.url = appData.url;
+                li.dataset.width = appData.width;
+                li.dataset.height = appData.height;
+
+                const iconSpan = document.createElement('span');
+                iconSpan.className = 'start-menu-icon';
+                iconSpan.textContent = appData.iconChar;
+                li.appendChild(iconSpan);
+                li.appendChild(document.createTextNode(` ${appData.title}`));
+                startMenuAppList.appendChild(li);
+            });
+        }
+
+
         if (startButton && startMenu && startMenuAppList) {
             startButton.addEventListener('click', (event) => {
                 event.stopPropagation();
                 console.log("[Desktop] Start Button clicked.");
                 const isHidden = startMenu.style.display === 'none' || startMenu.style.display === '';
-                startMenu.style.display = isHidden ? 'block' : 'none';
                 if (isHidden) {
+                    populateStartMenu(); // Re-populate or update menu items each time it's opened
+                    startMenu.style.display = 'block';
                     highestZIndex++;
                     startMenu.style.zIndex = highestZIndex;
+                } else {
+                    startMenu.style.display = 'none';
                 }
             });
 
@@ -392,15 +428,15 @@
                     const width = targetItem.dataset.width;
                     const height = targetItem.dataset.height;
 
+                    if (appOpeningDebounce[appId]) {
+                        console.log(`[StartMenu] Debouncing launch for ${title} from Start Menu.`);
+                        return;
+                    }
                     if (appId && title && url) {
                         console.log(`[StartMenu] Launching ${title}`);
-                        if (appOpeningDebounce[appId]) {
-                            console.log(`[StartMenu] Debouncing launch for ${title}.`);
-                            return;
-                        }
-                        // Note: createWindow will set appOpeningDebounce for new windows.
-                        // For existing windows, it just brings to front.
+                        appOpeningDebounce[appId] = true;
                         createWindow(appId, title, url, width, height);
+                        // Debounce reset is handled within createWindow for new windows
                     }
                     startMenu.style.display = 'none';
                 }
@@ -418,11 +454,11 @@
             const logOffButtonSM = document.getElementById('log-off-button-sm');
             if (logOffButtonSM) {
                 logOffButtonSM.addEventListener('click', () => {
-                    alert("Log Off: Closing all windows (simulation).");
+                    alert("Log Off: Closing all open application windows.");
                     Object.values(openWindows).forEach(winElement => {
-                        if (winElement.style.display !== 'none') { // Only click if visible
+                        if (winElement.style.display !== 'none') {
                             const closeButton = winElement.querySelector('.close-button');
-                            closeButton?.click();
+                            closeButton?.click(); // Simulate clicking the close button
                         }
                     });
                     startMenu.style.display = 'none';
@@ -432,7 +468,8 @@
             const shutDownButtonSM = document.getElementById('shut-down-button-sm');
             if (shutDownButtonSM) {
                 shutDownButtonSM.addEventListener('click', () => {
-                    alert("Shut Down: It is now safe to turn off your computer (simulation).");
+                    alert("Shutting Down... Goodbye!");
+                    // Attempt to close all windows first
                     Object.values(openWindows).forEach(winElement => {
                          if (winElement.style.display !== 'none') {
                             const closeButton = winElement.querySelector('.close-button');
@@ -440,11 +477,16 @@
                         }
                     });
                     startMenu.style.display = 'none';
-                    // Optionally, you could overlay the screen
-                    // const overlay = document.createElement('div');
-                    // overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:black;color:white;display:flex;align-items:center;justify-content:center;font-size:24px;z-index:20000;';
-                    // overlay.textContent = 'It is now safe to turn off your computer.';
-                    // document.body.appendChild(overlay);
+                    // Attempt to close the browser tab/window
+                    // This will only work if the script opened the window, or for some single-tab scenarios.
+                    // Otherwise, the browser will likely block it or ignore it.
+                    setTimeout(() => { // Give a moment for alerts/cleanup
+                        window.close();
+                        // If window.close() doesn't work, provide a message.
+                        if (!document.hidden) { // A simple check if the window might still be visible
+                             // document.body.innerHTML = '<div style="width:100%;height:100%;background:black;color:white;display:flex;align-items:center;justify-content:center;font-size:24px;position:fixed;top:0;left:0;z-index:30000;">It is now safe to turn off your computer.<br>(Please close the browser tab/window manually if it did not close automatically)</div>';
+                        }
+                    }, 500);
                 });
             }
         } else {
