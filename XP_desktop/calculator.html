@@ -7,213 +7,151 @@
     * { box-sizing: border-box; }
     body {
         margin: 0;
-        padding: 10px; /* Add some padding around the calculator */
-        height: 100%; /* Use 100% of iframe height */
+        padding: 15px; /* Add some padding around the calculator body */
+        height: 100%; /* Full iframe height */
         background-color: #ece9d8; /* Standard XP window background */
         font-family: Tahoma, sans-serif;
-        display: flex;
-        align-items: center;    /* Vertically center */
-        justify-content: center; /* Horizontally center */
+        display: flex; /* Use flex to make calc-body fill space */
+        flex-direction: column; /* Make calc-body stack its children vertically */
         overflow: hidden; /* Prevent scrollbars on body */
     }
-    #calc-body { /* New wrapper for the calculator itself */
-        width: 210px; /* Original compact width */
-        height: 270px; /* Slightly adjusted compact height */
+    #calc-body { /* Calculator body will now fill the iframe */
+        width: 100%;
+        height: 100%;
         border: 1px solid #666;
         box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
         background-color: #d4d0c8; /* Calculator body color */
-        padding: 10px;
+        padding: 15px; /* Padding inside the calculator body */
         display: flex;
         flex-direction: column;
-        border-radius: 3px; /* Slight rounding for the calc body */
+        border-radius: 3px;
     }
     #calc-display {
         width: 100%;
-        margin-bottom: 8px; /* Increased margin */
-        padding: 8px 5px;   /* Increased padding */
+        margin-bottom: 10px; /* Increased margin */
+        padding: 10px 8px;   /* Increased padding */
         text-align: right;
-        font-size: 20px;    /* Larger display font */
-        background-color: #E0F0E0; /* Classic green display like Windows XP */
-        border: 1px inset #777;
+        font-size: 32px;    /* Significantly larger display font */
+        background-color: #E0F0E0;
+        border: 2px inset #777; /* More prominent inset */
         box-sizing: border-box;
         flex-shrink: 0;
-        height: 40px; /* Fixed height for display */
-        font-family: 'Lucida Console', Monaco, monospace; /* Monospaced font for display */
-        border-radius: 2px;
+        height: 60px; /* Increased fixed height for display */
+        font-family: 'Lucida Console', Monaco, monospace;
+        border-radius: 3px;
+        color: #222;
     }
      .calc-buttons {
          display: grid;
          grid-template-columns: repeat(4, 1fr);
-         gap: 4px; /* Slightly increased gap */
+         grid-template-rows: repeat(5, 1fr); /* Added for 5 rows of buttons */
+         gap: 8px; /* Increased gap */
          flex-grow: 1; /* Buttons fill remaining space in #calc-body */
       }
      .calc-buttons button {
-         padding: 5px;
-         font-size: 14px; /* Adjusted for better fit */
+         font-size: 20px; /* Larger button font */
          cursor: pointer;
-         background-color: #f0f0f0; /* Lighter button background */
-         border: 1px outset #ccc;   /* Standard button border */
+         background-color: #f0f0f0;
+         border: 1px outset #bbb; /* Clearer button borders */
          height: 100%;
          display: flex;
          align-items: center;
          justify-content: center;
-         font-weight: normal; /* Standard weight */
-         border-radius: 2px;
+         font-weight: bold;
+         border-radius: 3px;
          color: #333;
+         transition: background-color 0.1s;
       }
      .calc-buttons button:active {
          border-style: inset;
-         background-color: #d4d4d4;
+         background-color: #d0d0d0;
      }
-     .calc-op { background-color: #d4e8f7; } /* Lighter blue for operators */
-     .calc-eq { background-color: #f7e4d4; } /* Lighter Orange-ish for equals */
-     .calc-c { background-color: #f7d4d4; } /* Lighter Red-ish for clear */
+     .calc-op { background-color: #d4e8f7; }
+     .calc-eq { background-color: #f7e4d4; grid-column: span 4; /* Make equals full width */}
+     .calc-c { background-color: #f7d4d4; }
+     .calc-zero { grid-column: span 2; } /* Make zero button wider */
 </style>
 </head>
 <body>
      <div id="calc-body">
          <input type="text" id="calc-display" readonly value="0">
          <div class="calc-buttons">
+             <button onclick="calcClear()" class="calc-c">C</button>
+             <button style="visibility: hidden;"></button> <!-- Placeholder for layout -->
+             <button style="visibility: hidden;"></button> <!-- Placeholder for layout -->
+             <button onclick="handleOperator('/')" class="calc-op">/</button>
+
              <button onclick="calcInput('7')">7</button>
              <button onclick="calcInput('8')">8</button>
              <button onclick="calcInput('9')">9</button>
-             <button onclick="calcInput('/')" class="calc-op">/</button>
+             <button onclick="handleOperator('*')" class="calc-op">*</button>
 
              <button onclick="calcInput('4')">4</button>
              <button onclick="calcInput('5')">5</button>
              <button onclick="calcInput('6')">6</button>
-             <button onclick="calcInput('*')" class="calc-op">*</button>
+             <button onclick="handleOperator('-')" class="calc-op">-</button>
 
              <button onclick="calcInput('1')">1</button>
              <button onclick="calcInput('2')">2</button>
              <button onclick="calcInput('3')">3</button>
-             <button onclick="calcInput('-')" class="calc-op">-</button>
+             <button onclick="handleOperator('+')" class="calc-op">+</button>
 
-             <button onclick="calcClear()" class="calc-c">C</button>
-             <button onclick="calcInput('0')">0</button>
+             <button onclick="calcInput('0')" class="calc-zero">0</button>
              <button onclick="calcInput('.')">.</button>
-             <button onclick="calcInput('+')" class="calc-op">+</button>
-
-             <button onclick="calcEquals()" class="calc-eq" style="grid-column: span 4;">=</button>
+             <button onclick="calcEquals()" class="calc-eq">=</button>
          </div>
     </div>
 
      <script>
+        // Calculator JavaScript logic remains the same robust version from previous response.
         const calcDisplay = document.getElementById('calc-display');
         let currentCalcInput = '0';
         let previousInput = null;
         let operator = null;
-        let shouldResetDisplay = false; // Flag to reset display after an operator or equals
+        let shouldResetDisplay = false;
 
-        function updateDisplay() {
-            calcDisplay.value = currentCalcInput;
-        }
-
-        function calcClear() {
-            currentCalcInput = '0';
-            previousInput = null;
-            operator = null;
-            shouldResetDisplay = false;
-            updateDisplay();
-        }
+        function updateDisplay() { calcDisplay.value = currentCalcInput; }
+        function calcClear() { currentCalcInput = '0'; previousInput = null; operator = null; shouldResetDisplay = false; updateDisplay(); }
 
         function calcInput(value) {
             if (shouldResetDisplay && !['+', '-', '*', '/'].includes(value)) {
-                currentCalcInput = '0'; // Start fresh if a number is pressed after operator/equals
-                shouldResetDisplay = false;
+                currentCalcInput = '0'; shouldResetDisplay = false;
             }
-
-            if (value === '.') {
-                if (!currentCalcInput.includes('.')) {
-                    currentCalcInput += '.';
-                }
-            } else if (currentCalcInput === '0' && value !== '.') {
-                currentCalcInput = value; // Replace leading '0' unless it's for '0.'
-            } else {
-                 if (currentCalcInput.length < 15) { // Limit display length
-                    currentCalcInput += value;
-                }
-            }
+            if (value === '.') { if (!currentCalcInput.includes('.')) currentCalcInput += '.'; }
+            else if (currentCalcInput === '0' && value !== '.') { currentCalcInput = value; }
+            else { if (currentCalcInput.length < 15) currentCalcInput += value; }
             updateDisplay();
         }
 
         function handleOperator(nextOperator) {
-            if (operator && previousInput !== null && !shouldResetDisplay) { // If there's a pending operation and new number entered
-                calcEquals(); // Calculate the previous operation first
-            }
-            // After calculation (or if no pending op), set up for next
+            if (operator && previousInput !== null && !shouldResetDisplay) { calcEquals(); }
             previousInput = currentCalcInput;
             operator = nextOperator;
-            shouldResetDisplay = true; // Next number input should clear display
+            shouldResetDisplay = true;
             console.log(`Operator: ${operator}, Previous: ${previousInput}`);
         }
 
-
-        // Change the onclick for operator buttons to call handleOperator
-        document.querySelectorAll('.calc-op').forEach(button => {
-            const opValue = button.textContent; // Or button.onclick.toString().match(/'([^']+)'/)[1];
-            button.setAttribute('onclick', `handleOperator('${opValue}')`);
-        });
-
-
         function calcEquals() {
-            if (!operator || previousInput === null || shouldResetDisplay) {
-                // If equals is pressed repeatedly or no second operand after operator
-                console.log("Equals pressed with no valid operation pending or after reset.");
-                return;
-            }
-
-            let result;
-            const prev = parseFloat(previousInput);
-            const curr = parseFloat(currentCalcInput);
-
-            if (isNaN(prev) || isNaN(curr)) {
-                alert("Invalid input for calculation.");
-                calcClear();
-                return;
-            }
-
+            if (!operator || previousInput === null || shouldResetDisplay) { console.log("Equals pressed with no valid operation pending or after reset."); return; }
+            let result; const prev = parseFloat(previousInput); const curr = parseFloat(currentCalcInput);
+            if (isNaN(prev) || isNaN(curr)) { alert("Invalid input."); calcClear(); return; }
             switch(operator) {
-                case '+': result = prev + curr; break;
-                case '-': result = prev - curr; break;
+                case '+': result = prev + curr; break; case '-': result = prev - curr; break;
                 case '*': result = prev * curr; break;
-                case '/':
-                    if (curr === 0) {
-                        alert("Cannot divide by zero!");
-                        calcClear();
-                        return;
-                    }
-                    result = prev / curr;
-                    break;
-                default:
-                    console.error("Unknown operator:", operator);
-                    return;
+                case '/': if (curr === 0) { alert("Cannot divide by zero!"); calcClear(); return; } result = prev / curr; break;
+                default: console.error("Unknown operator:", operator); return;
             }
-
             currentCalcInput = String(parseFloat(result.toPrecision(12))).slice(0, 15);
-            operator = null; // Clear operator for next independent calculation
-            previousInput = null; // Clear previous input
-            shouldResetDisplay = true; // Next number input will clear the result
+            operator = null; previousInput = null; shouldResetDisplay = true;
             updateDisplay();
             console.log(`Equals: ${currentCalcInput}`);
         }
 
-        // Initial setup
-        calcClear(); // Or just updateDisplay(); if you want to keep '0'
+        calcClear(); // Initialize
 
-        // --- Cleanup Function (Stub) ---
-        function cleanupGame() {
-            console.log("[Calculator] cleanupGame called (no active processes to stop).");
-        }
-
-        // --- Event listener for messages from parent (for cleanup) ---
-        window.addEventListener('message', (event) => {
-            console.log(`[Calculator] Message received from parent. Data: "${event.data}", Origin: "${event.origin}"`);
-            if (event.data === 'cleanup') {
-                cleanupGame();
-            }
-        });
-        window.focus(); // Try to ensure iframe gets focus
+        function cleanupGame() { console.log("[Calculator] cleanupGame called."); }
+        window.addEventListener('message', (event) => { if (event.data === 'cleanup') cleanupGame(); });
+        window.focus();
      </script>
 </body>
 </html>
