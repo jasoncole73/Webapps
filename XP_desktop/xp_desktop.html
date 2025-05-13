@@ -116,7 +116,7 @@
         let isDragging = false;
         let dragOffsetX, dragOffsetY;
         let openWindows = {};
-        let appOpeningDebounce = {}; // Use for simple debounce per app
+        let appOpeningDebounce = {};
 
         function updateClock() {
             const clockElement = document.getElementById('clock');
@@ -160,7 +160,7 @@
             });
             winElement.addEventListener('mousedown', (e) => {
                 if (!isDragging || activeWindow !== winElement) {
-                     bringToFront(winElement); // Always bring to front on any click if not dragging current window
+                     bringToFront(winElement);
                 }
             }, true);
         }
@@ -184,32 +184,41 @@
         function createWindow(appId, title, url, width, height) {
             const windowId = `window-${appId}`;
 
-            if (openWindows[windowId]) {
+            if (openWindows[windowId]) { // Window div structure already exists
                 const existingWindow = openWindows[windowId];
-                console.log(`[Desktop] Window exists for ${title}. Display: ${existingWindow.style.display}`);
-                existingWindow.style.display = 'block';
-                bringToFront(existingWindow);
+                console.log(`[Desktop] Window structure for ${title} exists. Display: ${existingWindow.style.display}`);
+                existingWindow.style.display = 'block'; // Ensure it's visible
+                bringToFront(existingWindow);           // Bring to front (also attempts focus)
 
                 const iframe = existingWindow.querySelector('iframe');
                 if (iframe) {
                     const currentSrc = iframe.getAttribute('src');
+                    // If iframe was cleared (properly closed) or if somehow URL changed, reload it.
                     if (currentSrc === 'about:blank' || currentSrc !== url) {
-                        console.log(`[Desktop] Iframe for ${title} needs reload. Setting src to: ${url}`);
-                        iframe.setAttribute('src', url);
-                        // Add load listener for reloaded iframe to focus after load
-                        iframe.onload = () => {
+                        console.log(`[Desktop] Iframe for ${title} was blank or src differs. Reloading with: ${url}`);
+                        iframe.onload = () => { // Add onload for focusing after reload
                             console.log(`[Desktop] Reloaded iframe for ${title} has loaded. Attempting focus.`);
                             tryFocusIframe(iframe, "reopen-reload-onload");
-                            iframe.onload = null; // Remove listener after one use
+                            iframe.onload = null; // Important: Remove listener after one use
                         };
+                        iframe.setAttribute('src', url);
                     } else {
-                        console.log(`[Desktop] Iframe for ${title} already has correct src. Focus handled by bringToFront.`);
+                        console.log(`[Desktop] Iframe for ${title} already has correct src. Focus handled by bringToFront or previous load.`);
+                        // If src is correct, focus should have been handled by bringToFront or its initial load's onload.
+                        // A direct focus here might be redundant or interfere if called too often.
+                        // setTimeout(() => tryFocusIframe(iframe, "reopen-src-ok"), 50); // Optional extra focus attempt
                     }
                 }
+                // Reset debounce flag for THIS app, as the open action is now complete.
+                appOpeningDebounce[appId] = false;
+                console.log(`[Desktop] Reset appOpeningDebounce for ${title} after re-opening.`);
                 return;
             }
 
-            console.log(`[Desktop] Creating new window for ${title}`);
+            // --- Create New Window ---
+            console.log(`[Desktop] Creating NEW window for ${title}`);
+            // appOpeningDebounce[appId] is already true from the icon click handler
+
             const win = document.createElement('div');
             win.className = 'window'; win.id = windowId;
             win.style.width = `${parseInt(width) || 400}px`; win.style.height = `${parseInt(height) || 300}px`;
@@ -230,13 +239,22 @@
             const iframeElement = win.querySelector('iframe');
             if (iframeElement) {
                 console.log(`[Desktop] Setting initial iframe src for new window ${title} to: ${url}`);
-                // Add onload listener before setting src for new iframes
                 iframeElement.onload = () => {
-                    console.log(`[Desktop] New iframe for ${title} has loaded. Attempting focus.`);
+                    console.log(`[Desktop] NEW iframe for ${title} has loaded. Attempting focus.`);
                     tryFocusIframe(iframeElement, "create-new-onload");
                     iframeElement.onload = null; // Remove listener after first load
+                    // Reset debounce flag for THIS app, as the new window is now loaded and focused.
+                    appOpeningDebounce[appId] = false;
+                    console.log(`[Desktop] Reset appOpeningDebounce for ${title} after new window onload.`);
+                };
+                iframeElement.onerror = () => { // Handle iframe load errors
+                    console.error(`[Desktop] Iframe for ${title} failed to load src: ${url}`);
+                    appOpeningDebounce[appId] = false; // Reset debounce if load fails
+                    iframeElement.onload = null;
                 };
                 iframeElement.setAttribute('src', url); // Set src to trigger load
+            } else {
+                 appOpeningDebounce[appId] = false; // Reset if iframeElement isn't found (should not happen)
             }
 
             const closeButton = win.querySelector('.close-button');
@@ -265,9 +283,6 @@
                 }
                 win.style.display = 'none';
             });
-
-            // Reset appOpeningDebounce flag after a reasonable time for window creation and initial load
-            // This is now part of the icon dblclick handler
         }
 
         // --- Application Launching ---
@@ -298,13 +313,17 @@
                 }
 
                 if (appId && title && url) {
-                    appOpeningDebounce[appId] = true;
+                    appOpeningDebounce[appId] = true; // Set debounce flag before calling createWindow
                     console.log(`[Desktop] Set appOpeningDebounce for ${title} to true.`);
                     createWindow(appId, title, url, width, height);
-                    setTimeout(() => {
-                        appOpeningDebounce[appId] = false;
-                        console.log(`[Desktop] Reset appOpeningDebounce for ${title}.`);
-                    }, 700); // Reset debounce after this time
+                    // The resetting of appOpeningDebounce[appId] is now handled
+                    // more reliably inside createWindow's onload/onerror for new windows,
+                    // and at the end of the re-open path.
+                    // We can remove the generic timeout here.
+                    // setTimeout(() => {
+                    //     appOpeningDebounce[appId] = false;
+                    //     console.log(`[Desktop] Reset appOpeningDebounce for ${title} (from icon click).`);
+                    // }, 800);
                 } else {
                     console.error("Icon is missing required data attributes (appid, title, url):", icon.id);
                 }
