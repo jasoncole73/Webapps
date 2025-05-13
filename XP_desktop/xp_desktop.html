@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Windows XP Desktop</title>
     <style>
-        /* ... (ALL CSS REMAINS EXACTLY THE SAME AS THE PREVIOUS FULL VERSION) ... */
         /* Basic Reset & Body */
         * { box-sizing: border-box; user-select: none; }
         html, body { height: 100%; margin: 0; overflow: hidden; font-family: 'Tahoma', sans-serif; }
@@ -42,6 +41,7 @@
         #snake-icon { top: 230px; left: 210px; } #snake-icon::before { content: '🐍'; background-color: #90ee90; font-size: 38px;}
         #pong-icon { top: 330px; left: 30px; } #pong-icon::before { content: '||'; background-color: #add8e6; font-size: 38px; line-height: 45px; letter-spacing: 15px;}
         #notepad-icon { top: 330px; left: 120px; } #notepad-icon::before { content: '📝'; background-color: #f0f0f0; font-size: 38px;}
+        #my-computer-icon { top: 30px; left: 300px; } #my-computer-icon::before { content: '💻'; background-color: #e0e0e0; font-size: 38px; } /* My Computer Icon */
 
 
         /* Taskbar */
@@ -162,17 +162,12 @@
 
         /* --- System Overlay Screens --- */
         .system-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            display: none; /* Hidden by default */
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            z-index: 20000; /* Above everything */
-            color: white;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            display: none; align-items: center; justify-content: center;
+            text-align: center; z-index: 20000; color: white;
         }
-        #logging-off-screen { background-color: #005cbe; /* XP Blue */ }
-        #login-screen { background-color: #005cbe; /* XP Blue */ flex-direction: column; }
+        #logging-off-screen { background-color: #005cbe; }
+        #login-screen { background-color: #005cbe; flex-direction: column; }
         .login-user-card { background-color: rgba(255,255,255,0.1); padding: 30px; border-radius: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.3); }
         .login-user-card:hover { background-color: rgba(255,255,255,0.2); }
         .login-user-icon { font-size: 60px; margin-bottom: 10px; }
@@ -194,6 +189,8 @@
         <div class="icon" id="snake-icon" data-appid="snake" data-title="Snake" data-url="snake.html" data-width="430" data-height="480"><span>Snake</span></div>
         <div class="icon" id="pong-icon" data-appid="pong" data-title="Pong" data-url="pong.html" data-width="630" data-height="480"><span>Pong</span></div>
         <div class="icon" id="notepad-icon" data-appid="notepad" data-title="Untitled - Notepad" data-url="notepad.html" data-width="600" data-height="400"><span>Notepad</span></div>
+        <div class="icon" id="my-computer-icon" data-appid="mycomputer" data-title="My Computer" data-url="my_computer.html" data-width="550" data-height="400"><span>My Computer</span></div> {/* My Computer Icon added */}
+
 
         <div id="start-menu">
             <div class="start-menu-header"><div class="start-menu-user-icon">👤</div><span class="start-menu-username">Windows User</span></div>
@@ -214,9 +211,9 @@
                 </div>
                 <div class="start-menu-side-column">
                     <div class="start-menu-item" data-appid="calc"><span class="icon-placeholder">🧮</span>Calculator</div>
+                    <div class="start-menu-item" data-appid="mycomputer"><span class="icon-placeholder">💻</span>My Computer</div> {/* Added My Computer to Start Menu */}
                     <div class="start-menu-item"><span class="icon-placeholder">🖼️</span>My Pictures</div>
                     <div class="start-menu-item"><span class="icon-placeholder">🎵</span>My Music</div>
-                    <div class="start-menu-item"><span class="icon-placeholder">💻</span>My Computer</div>
                     <div class="start-menu-separator"></div>
                     <div class="start-menu-item"><span class="icon-placeholder">⚙️</span>Control Panel</div>
                     <div class="start-menu-item"><span class="icon-placeholder">🔌</span>Connect To</div>
@@ -265,7 +262,7 @@
 
              initializeStartMenu();
              initializeShutdownEvents();
-             updateClock(); // Initial clock update
+             updateClock();
         });
 
         function updateClock() { const clockElement = document.getElementById('clock'); if (clockElement) { const now = new Date(); clockElement.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); } }
@@ -280,31 +277,31 @@
             console.log("[Desktop] Closing all windows...");
             const windowsToClose = Object.values(openWindows);
             let S = 0;
-            const totalWindows = windowsToClose.filter(win => win.style.display !== 'none').length;
+            const totalVisibleWindows = windowsToClose.filter(win => win.style.display !== 'none').length;
 
-            if (totalWindows === 0) {
+            if (totalVisibleWindows === 0) {
                 if (callback) callback();
                 return;
             }
-
+            let closedCount = 0;
             windowsToClose.forEach(win => {
                 if (win.style.display !== 'none') {
                     const closeButton = win.querySelector('.close-button');
                     if (closeButton) {
-                        closeButton.click(); // This will trigger existing close logic including setting src to about:blank
+                        closeButton.click();
                     } else {
                         const iframe = win.querySelector('iframe');
                         if (iframe) iframe.setAttribute('src', 'about:blank');
                         win.style.display = 'none';
                     }
                 }
-                S++; // Count processed windows (visible or not, for simplicity here)
-                     // More accurately, count those for which close was attempted
-                if (S === windowsToClose.length) { // Check after processing all
-                    if (callback) setTimeout(callback, 150); // Delay for display changes and iframe unload
-                }
+                // This logic for callback needs to be more robust if clicks are async
+                // For now, assume display 'none' is reasonably fast.
             });
+             // Call callback after a delay to allow close operations to attempt completion
+            if (callback) setTimeout(callback, 250 * totalVisibleWindows + 100);
         }
+
 
         function createWindow(appId, title, url, iconDataWidth, iconDataHeight) {
             const windowId = `window-${appId}`;
@@ -374,7 +371,8 @@
                 startButton.addEventListener('click', (event) => { event.stopPropagation(); startMenu.style.display = startMenu.style.display === 'block' ? 'none' : 'block'; console.log(`[Desktop] Start Menu toggled to: ${startMenu.style.display}`); });
                 startMenu.querySelectorAll('.start-menu-item').forEach(item => {
                     item.addEventListener('click', (event) => {
-                        event.stopPropagation(); const appId = item.dataset.appid; if (!appId) { console.log("[Desktop] Non-app Start Menu item clicked:", item.textContent); startMenu.style.display = 'none'; return; }
+                        event.stopPropagation(); const appId = item.dataset.appid; if (!appId && item.textContent.trim() !== "Log Off" && item.textContent.trim() !== "Turn Off Computer") { console.log("[Desktop] Non-app Start Menu item clicked:", item.textContent); startMenu.style.display = 'none'; return; }
+                        if (!appId) return; // Skip if no appId (like for placeholder menu items without functionality yet)
                         const iconElement = document.getElementById(`${appId}-icon`);
                         if (iconElement) {
                             const title = iconElement.dataset.title || 'Application', url = iconElement.dataset.url;
@@ -391,51 +389,9 @@
         }
 
         function initializeShutdownEvents() {
-            if (logOffButton) {
-                logOffButton.addEventListener('click', () => {
-                    console.log("[Desktop] Log Off button clicked.");
-                    if (startMenu) startMenu.style.display = 'none';
-                    closeAllWindows(() => {
-                        if (loggingOffScreen) loggingOffScreen.style.display = 'flex';
-                        if (document.getElementById('desktop')) document.getElementById('desktop').style.display = 'none';
-                        if (document.getElementById('taskbar')) document.getElementById('taskbar').style.display = 'none';
-                        setTimeout(() => {
-                            if (loggingOffScreen) loggingOffScreen.style.display = 'none';
-                            if (loginScreen) loginScreen.style.display = 'flex';
-                            console.log("[Desktop] Showing Login Screen.");
-                        }, 2000);
-                    });
-                });
-            } else { console.error("[Desktop] Log Off button element not found!"); }
-
-            if (turnOffButton) {
-                turnOffButton.addEventListener('click', () => {
-                    console.log("[Desktop] Turn Off Computer button clicked.");
-                    if (startMenu) startMenu.style.display = 'none';
-                    closeAllWindows(() => {
-                        if (shuttingDownScreen) shuttingDownScreen.style.display = 'flex';
-                        if (document.getElementById('desktop')) document.getElementById('desktop').style.display = 'none';
-                        if (document.getElementById('taskbar')) document.getElementById('taskbar').style.display = 'none';
-                        setTimeout(() => {
-                            if (shuttingDownScreen) shuttingDownScreen.style.display = 'none';
-                            if (powerOffMessage) powerOffMessage.style.display = 'flex';
-                            console.log("[Desktop] Showing Power Off Message.");
-                        }, 3000);
-                    });
-                });
-            } else { console.error("[Desktop] Turn Off button element not found!"); }
-
-            if (loginUserCard) {
-                loginUserCard.addEventListener('click', () => {
-                    console.log("[Desktop] Login User Card clicked - Returning to desktop.");
-                    if (loginScreen) loginScreen.style.display = 'none';
-                    const desktopDiv = document.getElementById('desktop');
-                    const taskbarDiv = document.getElementById('taskbar');
-                    if (desktopDiv) desktopDiv.style.display = 'block'; // Or 'flex' if it was that
-                    if (taskbarDiv) taskbarDiv.style.display = 'flex';
-                    Object.keys(appOpeningDebounce).forEach(key => appOpeningDebounce[key] = false);
-                });
-            } else { console.error("[Desktop] Login User Card element not found!");}
+            if (logOffButton) { logOffButton.addEventListener('click', () => { console.log("[Desktop] Log Off button clicked."); if (startMenu) startMenu.style.display = 'none'; closeAllWindows(() => { if (loggingOffScreen) loggingOffScreen.style.display = 'flex'; if (document.getElementById('desktop')) document.getElementById('desktop').style.display = 'none'; if (document.getElementById('taskbar')) document.getElementById('taskbar').style.display = 'none'; setTimeout(() => { if (loggingOffScreen) loggingOffScreen.style.display = 'none'; if (loginScreen) loginScreen.style.display = 'flex'; console.log("[Desktop] Showing Login Screen."); }, 2000); }); }); } else { console.error("[Desktop] Log Off button element not found!"); }
+            if (turnOffButton) { turnOffButton.addEventListener('click', () => { console.log("[Desktop] Turn Off Computer button clicked."); if (startMenu) startMenu.style.display = 'none'; closeAllWindows(() => { if (shuttingDownScreen) shuttingDownScreen.style.display = 'flex'; if (document.getElementById('desktop')) document.getElementById('desktop').style.display = 'none'; if (document.getElementById('taskbar')) document.getElementById('taskbar').style.display = 'none'; setTimeout(() => { if (shuttingDownScreen) shuttingDownScreen.style.display = 'none'; if (powerOffMessage) powerOffMessage.style.display = 'flex'; console.log("[Desktop] Showing Power Off Message."); }, 3000); }); }); } else { console.error("[Desktop] Turn Off button element not found!"); }
+            if (loginUserCard) { loginUserCard.addEventListener('click', () => { console.log("[Desktop] Login User Card clicked."); if (loginScreen) loginScreen.style.display = 'none'; const desktopDiv = document.getElementById('desktop'); const taskbarDiv = document.getElementById('taskbar'); if (desktopDiv) desktopDiv.style.display = 'block'; if (taskbarDiv) taskbarDiv.style.display = 'flex'; Object.keys(appOpeningDebounce).forEach(key => appOpeningDebounce[key] = false); }); } else { console.error("[Desktop] Login User Card element not found!");}
         }
 
         window.addEventListener('message', (event) => {
