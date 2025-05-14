@@ -42,7 +42,7 @@
         #pong-icon { top: 330px; left: 30px; } #pong-icon::before { content: '||'; background-color: #add8e6; font-size: 38px; line-height: 45px; letter-spacing: 15px;}
         #notepad-icon { top: 330px; left: 120px; } #notepad-icon::before { content: '📝'; background-color: #f0f0f0; font-size: 38px;}
         #mycomputer-icon { top: 30px; left: 300px; } #mycomputer-icon::before { content: '💻'; background-color: #e0e0e0; font-size: 38px; }
-        #hangman-icon { top: 130px; left: 300px; } #hangman-icon::before { content: '🤔'; background-color: #f5deb3; font-size: 38px; }
+        #hangman-icon { top: 130px; left: 300px; } #hangman-icon::before { content: '🤔'; background-color: #f5deb3; font-size: 38px; } /* Hangman Icon CSS */
 
 
         /* Taskbar */
@@ -217,22 +217,8 @@
     </div>
 
     <script>
-        // --- All JavaScript from the previous complete xp_desktop.html ---
-        // This includes:
-        // - Global variables (highestZIndex, activeWindow, etc., taskbarAppsContainer)
-        // - DOMContentLoaded listener to initialize elements
-        // - updateClock, tryFocusIframe, updateTaskbarActiveButton, bringToFront
-        // - makeDraggable, handleDrag, stopDrag
-        // - closeAllWindows
-        // - addAppToTaskbar, removeAppFromTaskbar
-        // - createWindow (the robust version that handles sizing, re-opening, closing with cleanup)
-        // - initializeDesktopIconListeners (was dblClickCounter and icon listeners)
-        // - initializeStartMenu
-        // - initializeShutdownEvents
-        // - Global window message listener
-
-        // --- PASTE THE ENTIRE <script> ... </script> CONTENT FROM THE PREVIOUS FULL xp_desktop.html HERE ---
-        // (The one that included taskbar button logic)
+        // --- All JavaScript from the previous full xp_desktop.html ---
+        // (The version that included Taskbar App Button functionality)
         let highestZIndex = 100; let activeWindow = null; let isDragging = false;
         let dragOffsetX, dragOffsetY; let openWindows = {}; let appOpeningDebounce = {};
         let startButton, startMenu, loggingOffScreen, loginScreen, shuttingDownScreen, powerOffMessage, loginUserCard, logOffButton, turnOffButton, taskbarAppsContainer;
