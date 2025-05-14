@@ -95,8 +95,8 @@
             bottom: 30px;
             left: 0;
             width: 280px;
-            /* height: 450px;  REMOVED FIXED HEIGHT */
-            max-height: 450px; /* MAX HEIGHT REMAINS */
+            /* height: 450px; /* REMOVED fixed height */
+            max-height: 450px; /* Constrain overall growth */
             background-color: #c6d8f0;
             border: 1px outset #FFFFFF;
             border-top: 2px solid #FFFFFF;
@@ -120,28 +120,28 @@
 
         .start-menu-columns { /* This div contains the two item columns */
             display: flex;
-            flex-grow: 1;      /* Allows this area to fill available space within #start-menu's max-height */
+            flex-grow: 1;      /* Allows this area to fill available vertical space */
             overflow-y: auto;  /* Vertical scrollbar for THIS PART ONLY if content overflows */
             overflow-x: hidden;/* Prevent horizontal scrollbar on this columns container */
-            min-height: 0;     /* ESSENTIAL for allowing a flex item with overflow:auto to shrink and show its scrollbar */
+            min-height: 0;     /* ESSENTIAL for allowing a flex item to shrink and show its scrollbar */
         }
         .start-menu-main-column {
             width: 55%; padding: 5px 0;
             border-right: 1px solid #84a4ce;
-            overflow-x: hidden; /* Prevent items from making this column wider */
+            overflow: hidden; /* Prevent items from making this column wider */
         }
         .start-menu-side-column {
             width: 45%; padding: 5px 0;
             background-color: #dde8f5;
-            overflow-x: hidden; /* Prevent items from making this column wider */
+            overflow: hidden; /* Prevent items from making this column wider */
         }
         .start-menu-item {
             padding: 5px 10px;
             cursor: pointer; color: #000;
             display: flex; align-items: center;
             white-space: nowrap;
-            overflow: hidden;         /* If item text is too long */
-            text-overflow: ellipsis;  /* Show ... */
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .start-menu-item:hover { background-color: #316ac5; color: white; }
         .start-menu-item .icon-placeholder { width: 20px; height: 20px; font-size: 16px; line-height: 20px; margin-right: 8px; display: inline-flex; align-items: center; justify-content: center; text-align: center; }
@@ -208,7 +208,7 @@
 
         <div id="start-menu">
             <div class="start-menu-header"><div class="start-menu-user-icon">👤</div><span class="start-menu-username">Windows User</span></div>
-            <div class="start-menu-columns"> {/* NO STRAY COMMENTS HERE */}
+            <div class="start-menu-columns"> {/* No stray comments here */}
                 <div class="start-menu-main-column">
                     <div class="start-menu-item" data-appid="paint"><span class="icon-placeholder">🎨</span>Paint</div>
                     <div class="start-menu-item" data-appid="notepad"><span class="icon-placeholder">📝</span>Notepad</div>
@@ -265,6 +265,7 @@
 
     <script>
         // --- All JavaScript from the previous full xp_desktop.html ---
+        // (The version that included Taskbar App Button functionality and all previous fixes)
         let highestZIndex = 100; let activeWindow = null; let isDragging = false;
         let dragOffsetX, dragOffsetY; let openWindows = {}; let appOpeningDebounce = {};
         let startButton, startMenu, loggingOffScreen, loginScreen, shuttingDownScreen, powerOffMessage, loginUserCard, logOffButton, turnOffButton, taskbarAppsContainer;
@@ -281,7 +282,9 @@
             turnOffButton = document.getElementById('turn-off-button');
             taskbarAppsContainer = document.getElementById('taskbar-apps');
 
-            if (startMenu) { startMenu.style.display = 'none'; }
+            if (startMenu) { // Ensure Start Menu is hidden on load by JS too
+                startMenu.style.display = 'none';
+            }
 
             initializeStartMenu();
             initializeShutdownEvents();
@@ -381,8 +384,10 @@
         function createWindow(appId, title, url, iconDataWidth, iconDataHeight) {
             const windowId = `window-${appId}`;
             const parsedWidth = parseInt(iconDataWidth) || 400; const parsedHeight = parseInt(iconDataHeight) || 300;
+            // console.log(`[Desktop] createWindow for ${appId}. Parsed: ${parsedWidth}x${parsedHeight}`);
             let win = openWindows[windowId];
             if (win) {
+                // console.log(`[Desktop] Window ${title} exists. Display: ${win.style.display}`);
                 win.style.width = `${parsedWidth}px`; win.style.height = `${parsedHeight}px`;
                 win.style.display = 'block';
                 addAppToTaskbar(appId, title); bringToFront(win);
@@ -392,6 +397,7 @@
                 }
                 appOpeningDebounce[appId] = false; return;
             }
+            // console.log(`[Desktop] Creating NEW window for ${title}`);
             win = document.createElement('div'); win.className = 'window'; win.id = windowId;
             win.style.width = `${parsedWidth}px`; win.style.height = `${parsedHeight}px`;
             const initialLeft = 100 + (Object.keys(openWindows).length % 6) * 25; const initialTop = 50 + (Object.keys(openWindows).length % 6) * 25;
@@ -413,6 +419,7 @@
                 icon.addEventListener('dblclick', () => {
                     const appId = icon.dataset.appid, title = icon.dataset.title || 'Application', url = icon.dataset.url;
                     const iconWidth = icon.dataset.width, iconHeight = icon.dataset.height;
+                    // if (appId) { dblClickCounter[appId]++; console.log(`[Desktop] Icon DBLCLICK for ${title}. Debounce: ${appOpeningDebounce[appId]}`); }
                     if (appOpeningDebounce[appId]) { return; }
                     if (appId && title && url) { appOpeningDebounce[appId] = true; createWindow(appId, title, url, iconWidth, iconHeight); }
                 });
