@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Windows XP Desktop</title>
     <style>
+        /* ... (ALL CSS REMAINS EXACTLY THE SAME as the previous complete file) ... */
         /* Basic Reset & Body */
         * { box-sizing: border-box; user-select: none; }
         html, body { height: 100%; margin: 0; overflow: hidden; font-family: 'Tahoma', sans-serif; }
@@ -190,7 +191,7 @@
 
         <div id="start-menu">
             <div class="start-menu-header"><div class="start-menu-user-icon">👤</div><span class="start-menu-username">Windows User</span></div>
-            <div class="start-menu-columns"> {/* This div will scroll based on CSS */
+            <div class="start-menu-columns">
                 <div class="start-menu-main-column">
                     <div class="start-menu-item" data-appid="paint"><span class="icon-placeholder">🎨</span>Paint</div>
                     <div class="start-menu-item" data-appid="notepad"><span class="icon-placeholder">📝</span>Notepad</div>
@@ -209,7 +210,6 @@
                 <div class="start-menu-side-column">
                     <div class="start-menu-item" data-appid="calc"><span class="icon-placeholder">🧮</span>Calculator</div>
                     <div class="start-menu-item" data-appid="mycomputer"><span class="icon-placeholder">💻</span>My Computer</div>
-                    {/* Stray comment REMOVED from here */}
                     <div class="start-menu-item"><span class="icon-placeholder">🖼️</span>My Pictures</div>
                     <div class="start-menu-item"><span class="icon-placeholder">🎵</span>My Music</div>
                     <div class="start-menu-separator"></div>
@@ -246,8 +246,6 @@
     </div>
 
     <script>
-        // --- All JavaScript from the previous full xp_desktop.html ---
-        // (The version that included Taskbar App Button functionality and all previous fixes)
         let highestZIndex = 100; let activeWindow = null; let isDragging = false;
         let dragOffsetX, dragOffsetY; let openWindows = {}; let appOpeningDebounce = {};
         let startButton, startMenu, loggingOffScreen, loginScreen, shuttingDownScreen, powerOffMessage, loginUserCard, logOffButton, turnOffButton, taskbarAppsContainer;
@@ -263,6 +261,10 @@
             logOffButton = document.getElementById('log-off-button');
             turnOffButton = document.getElementById('turn-off-button');
             taskbarAppsContainer = document.getElementById('taskbar-apps');
+
+            if (startMenu) { // Explicitly ensure start menu is hidden on load
+                startMenu.style.display = 'none';
+            }
 
             initializeStartMenu();
             initializeShutdownEvents();
@@ -406,11 +408,20 @@
 
         function initializeStartMenu() {
             if (startButton && startMenu) {
-                startButton.addEventListener('click', (event) => { event.stopPropagation(); startMenu.style.display = startMenu.style.display === 'block' ? 'none' : 'block'; });
+                startButton.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    const isMenuOpen = startMenu.style.display === 'block';
+                    startMenu.style.display = isMenuOpen ? 'none' : 'block';
+                    // console.log(`[Desktop] Start Menu toggled to: ${startMenu.style.display}`); // Reduced logging
+                });
                 startMenu.querySelectorAll('.start-menu-item').forEach(item => {
                     item.addEventListener('click', (event) => {
-                        event.stopPropagation(); const appId = item.dataset.appid; if (!appId && !item.id ) { startMenu.style.display = 'none'; return; }
-                        if (!appId) return;
+                        event.stopPropagation(); const appId = item.dataset.appid;
+                        // Allow Log Off and Turn Off to be processed by their own dedicated listeners later
+                        if (!appId && item.id !== "log-off-button" && item.id !== "turn-off-button") {
+                            startMenu.style.display = 'none'; return;
+                        }
+                        if (!appId) return; // Only process items with appIds for launching
                         const iconElement = document.getElementById(`${appId}-icon`);
                         if (iconElement) {
                             const title = iconElement.dataset.title || 'Application', url = iconElement.dataset.url;
@@ -421,13 +432,17 @@
                         startMenu.style.display = 'none';
                     });
                 });
-                document.addEventListener('click', (event) => { if (startMenu.style.display === 'block' && !startMenu.contains(event.target) && event.target !== startButton) { startMenu.style.display = 'none'; } });
+                document.addEventListener('click', (event) => {
+                    if (startMenu.style.display === 'block' && !startMenu.contains(event.target) && event.target !== startButton) {
+                        startMenu.style.display = 'none';
+                    }
+                });
             } else { console.error("[Desktop] Start Button or Start Menu element not found!"); }
         }
 
         function initializeShutdownEvents() {
-            if (logOffButton) { logOffButton.addEventListener('click', () => { if (startMenu) startMenu.style.display = 'none'; closeAllWindows(() => { if (loggingOffScreen) loggingOffScreen.style.display = 'flex'; if (document.getElementById('desktop')) document.getElementById('desktop').style.display = 'none'; if (document.getElementById('taskbar')) document.getElementById('taskbar').style.display = 'none'; setTimeout(() => { if (loggingOffScreen) loggingOffScreen.style.display = 'none'; if (loginScreen) loginScreen.style.display = 'flex'; }, 2000); }); }); }
-            if (turnOffButton) { turnOffButton.addEventListener('click', () => { if (startMenu) startMenu.style.display = 'none'; closeAllWindows(() => { if (shuttingDownScreen) shuttingDownScreen.style.display = 'flex'; if (document.getElementById('desktop')) document.getElementById('desktop').style.display = 'none'; if (document.getElementById('taskbar')) document.getElementById('taskbar').style.display = 'none'; setTimeout(() => { if (shuttingDownScreen) shuttingDownScreen.style.display = 'none'; if (powerOffMessage) powerOffMessage.style.display = 'flex'; }, 3000); }); }); }
+            if (logOffButton) { logOffButton.addEventListener('click', (event) => { event.stopPropagation(); if (startMenu) startMenu.style.display = 'none'; closeAllWindows(() => { if (loggingOffScreen) loggingOffScreen.style.display = 'flex'; if (document.getElementById('desktop')) document.getElementById('desktop').style.display = 'none'; if (document.getElementById('taskbar')) document.getElementById('taskbar').style.display = 'none'; setTimeout(() => { if (loggingOffScreen) loggingOffScreen.style.display = 'none'; if (loginScreen) loginScreen.style.display = 'flex'; }, 2000); }); }); }
+            if (turnOffButton) { turnOffButton.addEventListener('click', (event) => { event.stopPropagation(); if (startMenu) startMenu.style.display = 'none'; closeAllWindows(() => { if (shuttingDownScreen) shuttingDownScreen.style.display = 'flex'; if (document.getElementById('desktop')) document.getElementById('desktop').style.display = 'none'; if (document.getElementById('taskbar')) document.getElementById('taskbar').style.display = 'none'; setTimeout(() => { if (shuttingDownScreen) shuttingDownScreen.style.display = 'none'; if (powerOffMessage) powerOffMessage.style.display = 'flex'; }, 3000); }); }); }
             if (loginUserCard) { loginUserCard.addEventListener('click', () => { if (loginScreen) loginScreen.style.display = 'none'; const desktopDiv = document.getElementById('desktop'); const taskbarDiv = document.getElementById('taskbar'); if (desktopDiv) desktopDiv.style.display = 'block'; if (taskbarDiv) taskbarDiv.style.display = 'flex'; Object.keys(appOpeningDebounce).forEach(key => appOpeningDebounce[key] = false); }); }
         }
 
