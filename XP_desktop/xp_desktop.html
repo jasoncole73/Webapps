@@ -42,6 +42,7 @@
         #pong-icon { top: 330px; left: 30px; } #pong-icon::before { content: '||'; background-color: #add8e6; font-size: 38px; line-height: 45px; letter-spacing: 15px;}
         #notepad-icon { top: 330px; left: 120px; } #notepad-icon::before { content: '📝'; background-color: #f0f0f0; font-size: 38px;}
         #mycomputer-icon { top: 30px; left: 300px; } #mycomputer-icon::before { content: '💻'; background-color: #e0e0e0; font-size: 38px; }
+        #hangman-icon { top: 130px; left: 300px; } #hangman-icon::before { content: '🤔'; background-color: #f5deb3; font-size: 38px; }
 
 
         /* Taskbar */
@@ -54,61 +55,37 @@
             background: linear-gradient(to bottom, #5bde5b, #3aa53a); border: 1px outset #4caf4c; color: white;
             font-weight: bold; font-style: italic; padding: 2px 15px; border-radius: 3px; cursor: pointer;
             text-shadow: 1px 1px 1px #333; font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif; font-size: 14px;
-            flex-shrink: 0; /* Prevent start button from shrinking */
+            flex-shrink: 0;
         }
         #start-button:active { background: linear-gradient(to top, #5bde5b, #3aa53a); border-style: inset; }
 
-        /* --- Taskbar Application Buttons Area --- */
         #taskbar-apps {
-            display: flex;
-            align-items: center;
-            height: 100%;
-            margin-left: 5px;
-            overflow-x: auto; /* Allow horizontal scroll if too many buttons */
-            overflow-y: hidden;
-            flex-grow: 1; /* Allow to take available space */
-            padding-bottom: 2px; /* Prevent scrollbar from overlapping buttons too much */
+            display: flex; align-items: center; height: 100%;
+            margin-left: 5px; overflow-x: auto; overflow-y: hidden;
+            flex-grow: 1; padding-bottom: 2px;
         }
-        /* Simple scrollbar for taskbar-apps if needed */
         #taskbar-apps::-webkit-scrollbar { height: 5px; }
         #taskbar-apps::-webkit-scrollbar-thumb { background: #888; border-radius: 3px;}
         #taskbar-apps::-webkit-scrollbar-thumb:hover { background: #555; }
 
         .taskbar-app-button {
-            background: linear-gradient(to bottom, #5283ea, #2c62c8);
-            border: 1px outset #799eeb;
-            color: white;
-            padding: 0 10px;
-            margin-right: 3px;
-            height: 22px; /* Slightly less than taskbar height */
-            line-height: 20px; /* Vertically center text */
-            font-size: 11px;
-            font-family: 'Tahoma', sans-serif;
-            border-radius: 3px;
-            cursor: pointer;
-            max-width: 150px; /* Prevent very long titles */
-            min-width: 80px; /* Minimum width */
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            box-shadow: 1px 1px 1px rgba(0,0,0,0.2);
-            flex-shrink: 0; /* Prevent buttons from shrinking too much */
+            background: linear-gradient(to bottom, #5283ea, #2c62c8); border: 1px outset #799eeb;
+            color: white; padding: 0 10px; margin-right: 3px; height: 22px;
+            line-height: 20px; font-size: 11px; font-family: 'Tahoma', sans-serif;
+            border-radius: 3px; cursor: pointer; max-width: 150px; min-width: 80px;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            box-shadow: 1px 1px 1px rgba(0,0,0,0.2); flex-shrink: 0;
         }
-        .taskbar-app-button:hover {
-            background: linear-gradient(to bottom, #6f9cf5, #4a7cd6);
-        }
-        .taskbar-app-button.active-window { /* Style for the currently focused window's button */
-            background: linear-gradient(to top, #3a6cc7, #244ea0); /* Darker, inset look */
-            border-style: inset;
-            border-color: #1c3b73;
-            padding: 0 9px; /* Adjust padding for inset border effect */
+        .taskbar-app-button:hover { background: linear-gradient(to bottom, #6f9cf5, #4a7cd6); }
+        .taskbar-app-button.active-window {
+            background: linear-gradient(to top, #3a6cc7, #244ea0); border-style: inset;
+            border-color: #1c3b73; padding: 0 9px;
         }
 
         #clock {
-            margin-left: 5px; /* Give some space from app buttons */
-            background-color: #6aa2f7; border: 1px inset #3f8cf5;
+            margin-left: 5px; background-color: #6aa2f7; border: 1px inset #3f8cf5;
             color: white; padding: 2px 8px; font-size: 12px; border-radius: 2px;
-            flex-shrink: 0; /* Prevent clock from shrinking */
+            flex-shrink: 0;
         }
 
         /* --- Start Menu --- */
@@ -180,6 +157,8 @@
         <div class="icon" id="pong-icon" data-appid="pong" data-title="Pong" data-url="pong.html" data-width="630" data-height="480"><span>Pong</span></div>
         <div class="icon" id="notepad-icon" data-appid="notepad" data-title="Untitled - Notepad" data-url="notepad.html" data-width="600" data-height="400"><span>Notepad</span></div>
         <div class="icon" id="mycomputer-icon" data-appid="mycomputer" data-title="My Computer" data-url="my_computer.html" data-width="550" data-height="400"><span>My Computer</span></div>
+        <div class="icon" id="hangman-icon" data-appid="hangman" data-title="Hangman" data-url="hangman.html" data-width="400" data-height="450"><span>Hangman</span></div>
+
 
         <div id="start-menu">
             <div class="start-menu-header"><div class="start-menu-user-icon">👤</div><span class="start-menu-username">Windows User</span></div>
@@ -191,6 +170,7 @@
                     <div class="start-menu-separator"></div>
                     <div class="start-menu-item" data-appid="minesweeper"><span class="icon-placeholder">💣</span>Minesweeper</div>
                     <div class="start-menu-item" data-appid="solitaire"><span class="icon-placeholder">🃏</span>Solitaire</div>
+                    <div class="start-menu-item" data-appid="hangman"><span class="icon-placeholder">🤔</span>Hangman</div>
                     <div class="start-menu-separator"></div>
                     <div class="start-menu-item" data-appid="snake"><span class="icon-placeholder">🐍</span>Snake</div>
                     <div class="start-menu-item" data-appid="pong"><span class="icon-placeholder">||</span>Pong</div>
@@ -232,18 +212,29 @@
 
     <div id="taskbar">
         <button id="start-button">Start</button>
-        <div id="taskbar-apps"></div> {/* Container for app buttons */}
+        <div id="taskbar-apps"></div>
         <div id="clock"></div>
     </div>
 
     <script>
-        let highestZIndex = 100; // Start z-index for windows higher
-        let activeWindow = null;
-        let isDragging = false;
-        let dragOffsetX, dragOffsetY;
-        let openWindows = {};
-        let appOpeningDebounce = {};
+        // --- All JavaScript from the previous complete xp_desktop.html ---
+        // This includes:
+        // - Global variables (highestZIndex, activeWindow, etc., taskbarAppsContainer)
+        // - DOMContentLoaded listener to initialize elements
+        // - updateClock, tryFocusIframe, updateTaskbarActiveButton, bringToFront
+        // - makeDraggable, handleDrag, stopDrag
+        // - closeAllWindows
+        // - addAppToTaskbar, removeAppFromTaskbar
+        // - createWindow (the robust version that handles sizing, re-opening, closing with cleanup)
+        // - initializeDesktopIconListeners (was dblClickCounter and icon listeners)
+        // - initializeStartMenu
+        // - initializeShutdownEvents
+        // - Global window message listener
 
+        // --- PASTE THE ENTIRE <script> ... </script> CONTENT FROM THE PREVIOUS FULL xp_desktop.html HERE ---
+        // (The one that included taskbar button logic)
+        let highestZIndex = 100; let activeWindow = null; let isDragging = false;
+        let dragOffsetX, dragOffsetY; let openWindows = {}; let appOpeningDebounce = {};
         let startButton, startMenu, loggingOffScreen, loginScreen, shuttingDownScreen, powerOffMessage, loginUserCard, logOffButton, turnOffButton, taskbarAppsContainer;
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -264,15 +255,10 @@
             updateClock();
         });
 
-        function updateClock() {
-            const clockElement = document.getElementById('clock');
-            if (clockElement) { const now = new Date(); clockElement.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
-        }
+        function updateClock() { const clockElement = document.getElementById('clock'); if (clockElement) { const now = new Date(); clockElement.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); } }
         setInterval(updateClock, 1000);
 
-        function tryFocusIframe(iframe) {
-            if (iframe && iframe.contentWindow) { try { iframe.contentWindow.focus(); } catch (e) {} }
-        }
+        function tryFocusIframe(iframe) { if (iframe && iframe.contentWindow) { try { iframe.contentWindow.focus(); } catch (e) {} } }
 
         function updateTaskbarActiveButton(activeAppId) {
             if (!taskbarAppsContainer) return;
@@ -282,75 +268,48 @@
         }
 
         function bringToFront(winElement) {
-            if (!winElement || winElement === activeWindow && parseInt(winElement.style.zIndex) === highestZIndex) {
-                // If it's already the active, frontmost window, try focusing iframe but don't increment zIndex
-                const iframe = winElement?.querySelector('iframe'); // Optional chaining
-                if (iframe && winElement.style.display === 'block') {
-                    setTimeout(() => tryFocusIframe(iframe), 0);
-                }
+            if (!winElement || (activeWindow === winElement && parseInt(winElement.style.zIndex) === highestZIndex)) {
+                const iframe = winElement?.querySelector('iframe');
+                if (iframe && winElement.style.display === 'block') { setTimeout(() => tryFocusIframe(iframe), 0); }
                 return;
             }
-            highestZIndex++;
-            winElement.style.zIndex = highestZIndex;
-            activeWindow = winElement;
-            const appId = winElement.id.replace('window-', '');
-            updateTaskbarActiveButton(appId);
+            highestZIndex++; winElement.style.zIndex = highestZIndex; activeWindow = winElement;
+            const appId = winElement.id.replace('window-', ''); updateTaskbarActiveButton(appId);
             const iframe = winElement.querySelector('iframe');
-            if (iframe && winElement.style.display === 'block') {
-                setTimeout(() => tryFocusIframe(iframe), 50);
-            }
+            if (iframe && winElement.style.display === 'block') { setTimeout(() => tryFocusIframe(iframe), 50); }
         }
 
         function makeDraggable(winElement) {
-            const titleBar = winElement.querySelector('.title-bar');
-            if (!titleBar) return;
+            const titleBar = winElement.querySelector('.title-bar'); if (!titleBar) return;
             titleBar.addEventListener('mousedown', (e) => {
                 if (e.target.classList.contains('window-button')) return;
-                isDragging = true;
-                // No need to set activeWindow here, mousedown on winElement handles it
-                // bringToFront(winElement); // This will be called by winElement's mousedown
+                isDragging = true; activeWindow = winElement; bringToFront(winElement);
                 winElement.classList.add('dragging');
-                dragOffsetX = e.clientX - winElement.offsetLeft;
-                dragOffsetY = e.clientY - winElement.offsetTop;
-                document.addEventListener('mousemove', handleDrag);
-                document.addEventListener('mouseup', stopDrag);
-                document.addEventListener('mouseleave', stopDrag);
+                dragOffsetX = e.clientX - winElement.offsetLeft; dragOffsetY = e.clientY - winElement.offsetTop;
+                document.addEventListener('mousemove', handleDrag); document.addEventListener('mouseup', stopDrag); document.addEventListener('mouseleave', stopDrag);
             });
-            winElement.addEventListener('mousedown', () => {
-                bringToFront(winElement); // Bring to front when any part of window is clicked
-            }, true);
+            winElement.addEventListener('mousedown', () => { bringToFront(winElement); }, true);
         }
 
         function handleDrag(e) {
-            if (!isDragging || !activeWindow) return;
-            e.preventDefault();
-            let newX = e.clientX - dragOffsetX;
-            let newY = e.clientY - dragOffsetY;
+            if (!isDragging || !activeWindow) return; e.preventDefault();
+            let newX = e.clientX - dragOffsetX, newY = e.clientY - dragOffsetY;
             const taskbarHeight = document.getElementById('taskbar').offsetHeight;
-            const maxW = window.innerWidth - activeWindow.offsetWidth;
-            const maxH = window.innerHeight - activeWindow.offsetHeight - taskbarHeight;
-            newX = Math.max(0, Math.min(newX, maxW));
-            newY = Math.max(0, Math.min(newY, maxH));
-            activeWindow.style.left = `${newX}px`;
-            activeWindow.style.top = `${newY}px`;
+            const maxW = window.innerWidth - activeWindow.offsetWidth; const maxH = window.innerHeight - activeWindow.offsetHeight - taskbarHeight;
+            newX = Math.max(0, Math.min(newX, maxW)); newY = Math.max(0, Math.min(newY, maxH));
+            activeWindow.style.left = `${newX}px`; activeWindow.style.top = `${newY}px`;
         }
 
         function stopDrag() {
-            if (isDragging) {
-                if (activeWindow) activeWindow.classList.remove('dragging');
-                isDragging = false;
-                document.removeEventListener('mousemove', handleDrag);
-                document.removeEventListener('mouseup', stopDrag);
-                document.removeEventListener('mouseleave', stopDrag);
+            if (isDragging) { if (activeWindow) activeWindow.classList.remove('dragging'); isDragging = false;
+                document.removeEventListener('mousemove', handleDrag); document.removeEventListener('mouseup', stopDrag); document.removeEventListener('mouseleave', stopDrag);
             }
         }
 
         function closeAllWindows(callback) {
             const windowsToClose = Object.values(openWindows);
             const visibleWindows = windowsToClose.filter(win => win.style.display !== 'none');
-            if (visibleWindows.length === 0) {
-                if (callback) callback(); return;
-            }
+            if (visibleWindows.length === 0) { if (callback) callback(); return; }
             visibleWindows.forEach(win => {
                 const closeButton = win.querySelector('.close-button');
                 if (closeButton) closeButton.click();
@@ -367,75 +326,50 @@
             button.dataset.appid = appId;
             button.addEventListener('click', () => {
                 const targetWindow = openWindows[`window-${appId}`];
-                if (targetWindow) {
-                    if (targetWindow.style.display === 'none') targetWindow.style.display = 'block';
-                    bringToFront(targetWindow);
-                } else {
-                    const iconElement = document.getElementById(`${appId}-icon`);
-                    if (iconElement) iconElement.dispatchEvent(new Event('dblclick'));
-                }
+                if (targetWindow) { if (targetWindow.style.display === 'none') targetWindow.style.display = 'block'; bringToFront(targetWindow); }
+                else { const iconElement = document.getElementById(`${appId}-icon`); if (iconElement) iconElement.dispatchEvent(new Event('dblclick'));}
             });
             taskbarAppsContainer.appendChild(button);
         }
 
         function removeAppFromTaskbar(appId) {
             if (!taskbarAppsContainer) return;
-            const button = document.getElementById(`taskbar-btn-${appId}`);
-            if (button) taskbarAppsContainer.removeChild(button);
-
+            const button = document.getElementById(`taskbar-btn-${appId}`); if (button) taskbarAppsContainer.removeChild(button);
             if (activeWindow && activeWindow.id === `window-${appId}`) activeWindow = null;
             const visibleWindows = Object.values(openWindows).filter(w => w.style.display === 'block');
             if (visibleWindows.length > 0) {
                 let topZ = -1; let nextActiveWindow = null;
-                visibleWindows.forEach(w => {
-                    const z = parseInt(w.style.zIndex || 0);
-                    if (z > topZ) { topZ = z; nextActiveWindow = w;}
-                });
-                if(nextActiveWindow) bringToFront(nextActiveWindow);
-                else updateTaskbarActiveButton(null);
-            } else {
-                updateTaskbarActiveButton(null);
-            }
+                visibleWindows.forEach(w => { const z = parseInt(w.style.zIndex || 0); if (z > topZ) { topZ = z; nextActiveWindow = w;}});
+                if(nextActiveWindow) bringToFront(nextActiveWindow); else updateTaskbarActiveButton(null);
+            } else { updateTaskbarActiveButton(null); }
         }
 
         function createWindow(appId, title, url, iconDataWidth, iconDataHeight) {
             const windowId = `window-${appId}`;
-            const parsedWidth = parseInt(iconDataWidth) || 400;
-            const parsedHeight = parseInt(iconDataHeight) || 300;
+            const parsedWidth = parseInt(iconDataWidth) || 400; const parsedHeight = parseInt(iconDataHeight) || 300;
             console.log(`[Desktop] createWindow for ${appId}. Parsed: ${parsedWidth}x${parsedHeight}`);
-
             let win = openWindows[windowId];
             if (win) {
                 console.log(`[Desktop] Window ${title} exists. Display: ${win.style.display}`);
                 win.style.width = `${parsedWidth}px`; win.style.height = `${parsedHeight}px`;
                 win.style.display = 'block';
-                addAppToTaskbar(appId, title); // Ensure taskbar button exists
-                bringToFront(win);
+                addAppToTaskbar(appId, title); bringToFront(win);
                 const iframe = win.querySelector('iframe');
                 if (iframe && (iframe.getAttribute('src') === 'about:blank' || iframe.getAttribute('src') !== url)) {
                     iframe.setAttribute('src', url); setTimeout(() => tryFocusIframe(iframe), 250);
                 }
                 appOpeningDebounce[appId] = false; return;
             }
-
             console.log(`[Desktop] Creating NEW window for ${title}`);
             win = document.createElement('div'); win.className = 'window'; win.id = windowId;
             win.style.width = `${parsedWidth}px`; win.style.height = `${parsedHeight}px`;
-            const initialLeft = 100 + (Object.keys(openWindows).length % 6) * 25;
-            const initialTop = 50 + (Object.keys(openWindows).length % 6) * 25;
-            win.style.left = `${initialLeft}px`; win.style.top = `${initialTop}px`;
-            win.style.display = 'block';
+            const initialLeft = 100 + (Object.keys(openWindows).length % 6) * 25; const initialTop = 50 + (Object.keys(openWindows).length % 6) * 25;
+            win.style.left = `${initialLeft}px`; win.style.top = `${initialTop}px`; win.style.display = 'block';
             win.innerHTML = `<div class="title-bar"><span class="title-bar-text">${title}</span><div class="window-buttons"><button class="window-button close-button">X</button></div></div><div class="window-content"><iframe src="about:blank" title="${title}" sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-modals allow-forms"></iframe></div>`;
-            document.getElementById('desktop').appendChild(win);
-            openWindows[windowId] = win;
-            makeDraggable(win);
-            addAppToTaskbar(appId, title);
-            bringToFront(win); // This sets activeWindow and updates taskbar button
-
+            document.getElementById('desktop').appendChild(win); openWindows[windowId] = win; makeDraggable(win);
+            addAppToTaskbar(appId, title); bringToFront(win);
             const iframeElement = win.querySelector('iframe');
-            if (iframeElement) {
-                setTimeout(() => { iframeElement.setAttribute('src', url); setTimeout(() => tryFocusIframe(iframeElement), 350); }, 50);
-            }
+            if (iframeElement) { setTimeout(() => { iframeElement.setAttribute('src', url); setTimeout(() => tryFocusIframe(iframeElement), 350); }, 50); }
             const closeButton = win.querySelector('.close-button');
             closeButton.addEventListener('click', (e) => { e.stopPropagation(); const iframe = win.querySelector('iframe'); if (iframe) { let directCleanupSuccess = false; try { if (iframe.contentWindow && typeof iframe.contentWindow.cleanupGame === 'function') { iframe.contentWindow.cleanupGame(); directCleanupSuccess = true; } } catch (err) {} if (!directCleanupSuccess) { try { if (iframe.contentWindow) iframe.contentWindow.postMessage('cleanup', '*'); } catch (pmErr) {} } iframe.setAttribute('src', 'about:blank'); } win.style.display = 'none'; removeAppFromTaskbar(appId); });
             setTimeout(() => { appOpeningDebounce[appId] = false; }, 800);
