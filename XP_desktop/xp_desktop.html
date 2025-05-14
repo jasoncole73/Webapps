@@ -104,27 +104,42 @@
             padding: 0;
             color: black;
             font-size: 11px;
-            display: none; /* Hidden by default, JS will toggle to flex */
-            flex-direction: column; /* Stack header, content, footer vertically */
+            display: none; /* JS will toggle to flex */
+            flex-direction: column;
         }
         .start-menu-header {
             background-color: #316ac5; padding: 8px 10px;
             display:flex; align-items:center;
             border-bottom: 1px solid #1c3e73;
-            flex-shrink: 0; /* Prevent header from shrinking */
+            flex-shrink: 0;
         }
         .start-menu-user-icon { width:36px; height:36px; background-color:#fff; border: 1px solid #7f9db9; border-radius:3px; margin-right:10px; display:flex; align-items:center; justify-content:center; font-size:22px; }
         .start-menu-username { color:white; font-weight:bold; font-size: 13px; }
 
-        .start-menu-columns { /* This div will contain the two columns and will scroll */
+        .start-menu-columns {
             display: flex;
-            flex-grow: 1; /* Takes up available vertical space */
-            overflow-y: auto; /* Enables vertical scrolling for this part only */
-            min-height: 0; /* Crucial for allowing flex item to shrink and scroll */
+            flex-grow: 1;
+            overflow-y: auto;   /* Vertical scroll for content */
+            overflow-x: hidden; /* Prevent horizontal scroll for the columns container */
+            min-height: 0;
         }
-        .start-menu-main-column { width: 55%; padding: 5px 0; border-right: 1px solid #84a4ce; }
-        .start-menu-side-column { width: 45%; padding: 5px 0; background-color: #dde8f5; }
-        .start-menu-item { padding: 5px 10px 5px 10px; cursor: pointer; color: #000; display: flex; align-items: center; white-space: nowrap; }
+        .start-menu-main-column {
+            width: 55%; padding: 5px 0;
+            border-right: 1px solid #84a4ce;
+            overflow: hidden; /* Prevent internal content from causing parent scroll */
+        }
+        .start-menu-side-column {
+            width: 45%; padding: 5px 0;
+            background-color: #dde8f5;
+            overflow: hidden; /* Prevent internal content from causing parent scroll */
+        }
+        .start-menu-item {
+            padding: 5px 10px 5px 10px; cursor: pointer;
+            color: #000; display: flex; align-items: center;
+            white-space: nowrap;
+            overflow: hidden;        /* Prevent item text from overflowing */
+            text-overflow: ellipsis; /* Show ... for long text */
+        }
         .start-menu-item:hover { background-color: #316ac5; color: white; }
         .start-menu-item .icon-placeholder { width: 20px; height: 20px; font-size: 16px; line-height: 20px; margin-right: 8px; display: inline-flex; align-items: center; justify-content: center; text-align: center; }
         .start-menu-item:hover .icon-placeholder { color: white; }
@@ -133,7 +148,7 @@
         .start-menu-footer {
             background-color: #316ac5; padding: 5px;
             text-align:right; border-top: 1px solid #1c3e73;
-            flex-shrink: 0; /* Prevent footer from shrinking */
+            flex-shrink: 0;
         }
         .start-menu-footer button { font-size:10px; padding: 2px 8px; margin-left: 5px; background-color:#dfdfdf; border:1px outset #ccc; cursor: pointer; }
 
@@ -189,7 +204,7 @@
 
         <div id="start-menu">
             <div class="start-menu-header"><div class="start-menu-user-icon">👤</div><span class="start-menu-username">Windows User</span></div>
-            <div class="start-menu-columns"> {/* This div will scroll (due to CSS) */}
+            <div class="start-menu-columns"> {/* Stray comment removed from here */}
                 <div class="start-menu-main-column">
                     <div class="start-menu-item" data-appid="paint"><span class="icon-placeholder">🎨</span>Paint</div>
                     <div class="start-menu-item" data-appid="notepad"><span class="icon-placeholder">📝</span>Notepad</div>
@@ -262,8 +277,8 @@
             turnOffButton = document.getElementById('turn-off-button');
             taskbarAppsContainer = document.getElementById('taskbar-apps');
 
-            if (startMenu) { // Explicitly ensure start menu is hidden on load
-                startMenu.style.display = 'none';
+            if (startMenu) {
+                startMenu.style.display = 'none'; // Ensure Start Menu is hidden on load
             }
 
             initializeStartMenu();
@@ -410,15 +425,14 @@
             if (startButton && startMenu) {
                 startButton.addEventListener('click', (event) => {
                     event.stopPropagation();
-                    const isMenuOpen = startMenu.style.display === 'block';
-                    startMenu.style.display = isMenuOpen ? 'none' : 'block';
-                    // console.log(`[Desktop] Start Menu toggled to: ${startMenu.style.display}`); // Can be verbose
+                    const isMenuOpen = startMenu.style.display === 'flex'; // Check against 'flex' as that's what we set
+                    startMenu.style.display = isMenuOpen ? 'none' : 'flex'; // Toggle to 'flex'
+                    // console.log(`[Desktop] Start Menu toggled to: ${startMenu.style.display}`);
                 });
                 startMenu.querySelectorAll('.start-menu-item').forEach(item => {
                     item.addEventListener('click', (event) => {
                         event.stopPropagation(); const appId = item.dataset.appid;
-                        if (!appId && item.id !== "log-off-button" && item.id !== "turn-off-button") { // Check for specific button IDs if they are not apps
-                            // console.log("[Desktop] Non-app, non-action Start Menu item clicked:", item.textContent);
+                        if (!appId && item.id !== "log-off-button" && item.id !== "turn-off-button") {
                             startMenu.style.display = 'none'; return;
                         }
                         if (!appId) return; // Only process items with appIds for launching here
@@ -433,7 +447,7 @@
                     });
                 });
                 document.addEventListener('click', (event) => {
-                    if (startMenu.style.display === 'block' && !startMenu.contains(event.target) && event.target !== startButton) {
+                    if (startMenu.style.display === 'flex' && !startMenu.contains(event.target) && event.target !== startButton) {
                         startMenu.style.display = 'none';
                     }
                 });
