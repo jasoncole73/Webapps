@@ -42,7 +42,7 @@
         #pong-icon { top: 330px; left: 30px; } #pong-icon::before { content: '||'; background-color: #add8e6; font-size: 38px; line-height: 45px; letter-spacing: 15px;}
         #notepad-icon { top: 330px; left: 120px; } #notepad-icon::before { content: '📝'; background-color: #f0f0f0; font-size: 38px;}
         #mycomputer-icon { top: 30px; left: 300px; } #mycomputer-icon::before { content: '💻'; background-color: #e0e0e0; font-size: 38px; }
-        #hangman-icon { top: 130px; left: 300px; } #hangman-icon::before { content: '🤔'; background-color: #f5deb3; font-size: 38px; } /* Hangman Icon CSS */
+        #hangman-icon { top: 130px; left: 300px; } #hangman-icon::before { content: '🤔'; background-color: #f5deb3; font-size: 38px; }
 
 
         /* Taskbar */
@@ -159,7 +159,6 @@
         <div class="icon" id="mycomputer-icon" data-appid="mycomputer" data-title="My Computer" data-url="my_computer.html" data-width="550" data-height="400"><span>My Computer</span></div>
         <div class="icon" id="hangman-icon" data-appid="hangman" data-title="Hangman" data-url="hangman.html" data-width="400" data-height="450"><span>Hangman</span></div>
 
-
         <div id="start-menu">
             <div class="start-menu-header"><div class="start-menu-user-icon">👤</div><span class="start-menu-username">Windows User</span></div>
             <div class="start-menu-columns">
@@ -212,7 +211,7 @@
 
     <div id="taskbar">
         <button id="start-button">Start</button>
-        <div id="taskbar-apps"></div>
+        <div id="taskbar-apps"></div> {/* ENSURE THIS DIV IS PRESENT AND CORRECT */}
         <div id="clock"></div>
     </div>
 
@@ -233,7 +232,7 @@
             loginUserCard = document.getElementById('login-user-card');
             logOffButton = document.getElementById('log-off-button');
             turnOffButton = document.getElementById('turn-off-button');
-            taskbarAppsContainer = document.getElementById('taskbar-apps');
+            taskbarAppsContainer = document.getElementById('taskbar-apps'); // Ensure this is queried
 
             initializeStartMenu();
             initializeShutdownEvents();
