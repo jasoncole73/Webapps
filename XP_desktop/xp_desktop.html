@@ -95,7 +95,7 @@
             bottom: 30px;
             left: 0;
             width: 280px;
-            max-height: 450px; 
+            max-height: 480px; /* INCREASED max-height to accommodate more items */
             background-color: #c6d8f0;
             border: 1px outset #FFFFFF;
             border-top: 2px solid #FFFFFF;
@@ -120,9 +120,9 @@
         .start-menu-columns { 
             display: flex;
             flex-grow: 1;      
-            overflow-y: auto;  
-            overflow-x: hidden;
-            min-height: 0;     
+            /* overflow-y: auto;  -- REMOVED to prevent internal scrollbar */
+            overflow-x: hidden; /* Kept to prevent horizontal scroll issues */
+            /* min-height: 0;     -- REMOVED as it's not needed without overflow-y */
         }
         .start-menu-main-column {
             width: 55%; padding: 5px 0;
@@ -207,7 +207,8 @@
 
         <div id="start-menu">
             <div class="start-menu-header"><div class="start-menu-user-icon">👤</div><span class="start-menu-username">Windows User</span></div>
-            <div class="start-menu-columns"> <div class="start-menu-main-column">
+            <div class="start-menu-columns"> 
+                <div class="start-menu-main-column">
                     <div class="start-menu-item" data-appid="paint"><span class="icon-placeholder">🎨</span>Paint</div>
                     <div class="start-menu-item" data-appid="notepad"><span class="icon-placeholder">📝</span>Notepad</div>
                     <div class="start-menu-item" data-appid="video"><span class="icon-placeholder">▶️</span>Video Player</div>
