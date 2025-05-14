@@ -90,16 +90,39 @@
 
         /* --- Start Menu --- */
         #start-menu {
-            position: absolute; bottom: 30px; left: 0; width: 280px; height: 450px;
-            background-color: #c6d8f0; border: 1px outset #FFFFFF; border-top: 2px solid #FFFFFF;
-            border-left: 2px solid #FFFFFF; box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
-            z-index: 9999; display: none; padding: 0; color: black; font-size: 11px;
-            display: flex; flex-direction: column;
+            position: absolute;
+            bottom: 30px; /* Positioned above the taskbar */
+            left: 0;
+            width: 280px;
+            height: 450px; /* Fixed height for the whole menu */
+            background-color: #c6d8f0;
+            border: 1px outset #FFFFFF;
+            border-top: 2px solid #FFFFFF;
+            border-left: 2px solid #FFFFFF;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+            z-index: 9999;
+            display: none; /* Hidden by default */
+            padding: 0;
+            color: black;
+            font-size: 11px;
+            display: flex; /* Use flexbox for vertical stacking of header, content, footer */
+            flex-direction: column;
         }
-        .start-menu-header { background-color: #316ac5; padding: 8px 10px; display:flex; align-items:center; border-bottom: 1px solid #1c3e73; flex-shrink: 0; }
+        .start-menu-header {
+            background-color: #316ac5; padding: 8px 10px;
+            display:flex; align-items:center;
+            border-bottom: 1px solid #1c3e73;
+            flex-shrink: 0; /* Prevent header from shrinking */
+        }
         .start-menu-user-icon { width:36px; height:36px; background-color:#fff; border: 1px solid #7f9db9; border-radius:3px; margin-right:10px; display:flex; align-items:center; justify-content:center; font-size:22px; }
         .start-menu-username { color:white; font-weight:bold; font-size: 13px; }
-        .start-menu-columns { display: flex; flex-grow: 1; overflow-y: auto; min-height: 0; }
+
+        .start-menu-columns {
+            display: flex;
+            flex-grow: 1; /* This section takes available space */
+            overflow-y: auto; /* Scrollbar only for this section */
+            min-height: 0; /* Crucial for flex scrolling */
+        }
         .start-menu-main-column { width: 55%; padding: 5px 0; border-right: 1px solid #84a4ce; }
         .start-menu-side-column { width: 45%; padding: 5px 0; background-color: #dde8f5; }
         .start-menu-item { padding: 5px 10px 5px 10px; cursor: pointer; color: #000; display: flex; align-items: center; white-space: nowrap; }
@@ -107,7 +130,12 @@
         .start-menu-item .icon-placeholder { width: 20px; height: 20px; font-size: 16px; line-height: 20px; margin-right: 8px; display: inline-flex; align-items: center; justify-content: center; text-align: center; }
         .start-menu-item:hover .icon-placeholder { color: white; }
         .start-menu-separator { height: 1px; background-color: #84a4ce; margin: 4px 5px; }
-        .start-menu-footer { background-color: #316ac5; padding: 5px; text-align:right; border-top: 1px solid #1c3e73; flex-shrink: 0; }
+
+        .start-menu-footer {
+            background-color: #316ac5; padding: 5px;
+            text-align:right; border-top: 1px solid #1c3e73;
+            flex-shrink: 0; /* Prevent footer from shrinking */
+        }
         .start-menu-footer button { font-size:10px; padding: 2px 8px; margin-left: 5px; background-color:#dfdfdf; border:1px outset #ccc; cursor: pointer; }
 
         /* Windows (General Frame Styles) */
@@ -162,7 +190,7 @@
 
         <div id="start-menu">
             <div class="start-menu-header"><div class="start-menu-user-icon">👤</div><span class="start-menu-username">Windows User</span></div>
-            <div class="start-menu-columns">
+            <div class="start-menu-columns"> {/* This div will scroll based on CSS */
                 <div class="start-menu-main-column">
                     <div class="start-menu-item" data-appid="paint"><span class="icon-placeholder">🎨</span>Paint</div>
                     <div class="start-menu-item" data-appid="notepad"><span class="icon-placeholder">📝</span>Notepad</div>
@@ -181,6 +209,7 @@
                 <div class="start-menu-side-column">
                     <div class="start-menu-item" data-appid="calc"><span class="icon-placeholder">🧮</span>Calculator</div>
                     <div class="start-menu-item" data-appid="mycomputer"><span class="icon-placeholder">💻</span>My Computer</div>
+                    {/* Stray comment REMOVED from here */}
                     <div class="start-menu-item"><span class="icon-placeholder">🖼️</span>My Pictures</div>
                     <div class="start-menu-item"><span class="icon-placeholder">🎵</span>My Music</div>
                     <div class="start-menu-separator"></div>
@@ -212,11 +241,13 @@
 
     <div id="taskbar">
         <button id="start-button">Start</button>
-        <div id="taskbar-apps"></div> {/* Correct container for taskbar buttons */}
+        <div id="taskbar-apps"></div>
         <div id="clock"></div>
     </div>
 
     <script>
+        // --- All JavaScript from the previous full xp_desktop.html ---
+        // (The version that included Taskbar App Button functionality and all previous fixes)
         let highestZIndex = 100; let activeWindow = null; let isDragging = false;
         let dragOffsetX, dragOffsetY; let openWindows = {}; let appOpeningDebounce = {};
         let startButton, startMenu, loggingOffScreen, loginScreen, shuttingDownScreen, powerOffMessage, loginUserCard, logOffButton, turnOffButton, taskbarAppsContainer;
@@ -231,15 +262,7 @@
             loginUserCard = document.getElementById('login-user-card');
             logOffButton = document.getElementById('log-off-button');
             turnOffButton = document.getElementById('turn-off-button');
-            taskbarAppsContainer = document.getElementById('taskbar-apps'); // Get the container
-
-            // Diagnostic log
-            if (!taskbarAppsContainer) {
-                console.error("[Desktop] CRITICAL: taskbar-apps container not found!");
-            } else {
-                console.log("[Desktop] taskbar-apps container found.", taskbarAppsContainer);
-            }
-
+            taskbarAppsContainer = document.getElementById('taskbar-apps');
 
             initializeStartMenu();
             initializeShutdownEvents();
@@ -311,73 +334,55 @@
         }
 
         function addAppToTaskbar(appId, title) {
-            if (!taskbarAppsContainer) { console.error("[Desktop] Taskbar apps container not found in addAppToTaskbar!"); return; }
-            if (document.getElementById(`taskbar-btn-${appId}`)) return; // Button already exists
-
+            if (!taskbarAppsContainer || document.getElementById(`taskbar-btn-${appId}`)) return;
             const button = document.createElement('button');
             button.className = 'taskbar-app-button'; button.id = `taskbar-btn-${appId}`;
             button.textContent = title.length > 20 ? title.substring(0, 17) + "..." : title;
             button.dataset.appid = appId;
             button.addEventListener('click', () => {
                 const targetWindow = openWindows[`window-${appId}`];
-                if (targetWindow) {
-                    if (targetWindow.style.display === 'none') targetWindow.style.display = 'block'; // Show if hidden (minimized)
-                    bringToFront(targetWindow);
-                } else { // Should not happen if button exists, but as a fallback
-                    const iconElement = document.getElementById(`${appId}-icon`);
-                    if (iconElement) iconElement.dispatchEvent(new Event('dblclick'));
-                }
+                if (targetWindow) { if (targetWindow.style.display === 'none') targetWindow.style.display = 'block'; bringToFront(targetWindow); }
+                else { const iconElement = document.getElementById(`${appId}-icon`); if (iconElement) iconElement.dispatchEvent(new Event('dblclick'));}
             });
             taskbarAppsContainer.appendChild(button);
-            console.log(`[Desktop] Added ${title} to taskbar.`);
         }
 
         function removeAppFromTaskbar(appId) {
-            if (!taskbarAppsContainer) { console.error("[Desktop] Taskbar apps container not found in removeAppFromTaskbar!"); return;}
-            const button = document.getElementById(`taskbar-btn-${appId}`);
-            if (button) {
-                taskbarAppsContainer.removeChild(button);
-                console.log(`[Desktop] Removed appID ${appId} from taskbar.`);
-            }
-
+            if (!taskbarAppsContainer) return;
+            const button = document.getElementById(`taskbar-btn-${appId}`); if (button) taskbarAppsContainer.removeChild(button);
             if (activeWindow && activeWindow.id === `window-${appId}`) activeWindow = null;
             const visibleWindows = Object.values(openWindows).filter(w => w.style.display === 'block');
             if (visibleWindows.length > 0) {
                 let topZ = -1; let nextActiveWindow = null;
                 visibleWindows.forEach(w => { const z = parseInt(w.style.zIndex || 0); if (z > topZ) { topZ = z; nextActiveWindow = w;}});
                 if(nextActiveWindow) bringToFront(nextActiveWindow); else updateTaskbarActiveButton(null);
-            } else {
-                updateTaskbarActiveButton(null); // No windows are active
-            }
+            } else { updateTaskbarActiveButton(null); }
         }
 
         function createWindow(appId, title, url, iconDataWidth, iconDataHeight) {
             const windowId = `window-${appId}`;
             const parsedWidth = parseInt(iconDataWidth) || 400; const parsedHeight = parseInt(iconDataHeight) || 300;
-            // console.log(`[Desktop] createWindow for ${appId}. Parsed: ${parsedWidth}x${parsedHeight}`); // Simplified log
+            // console.log(`[Desktop] createWindow for ${appId}. Parsed: ${parsedWidth}x${parsedHeight}`);
             let win = openWindows[windowId];
             if (win) {
-                console.log(`[Desktop] Window ${title} exists. Display: ${win.style.display}`);
+                // console.log(`[Desktop] Window ${title} exists. Display: ${win.style.display}`);
                 win.style.width = `${parsedWidth}px`; win.style.height = `${parsedHeight}px`;
                 win.style.display = 'block';
-                addAppToTaskbar(appId, title); // Call this when re-showing
-                bringToFront(win);
+                addAppToTaskbar(appId, title); bringToFront(win);
                 const iframe = win.querySelector('iframe');
                 if (iframe && (iframe.getAttribute('src') === 'about:blank' || iframe.getAttribute('src') !== url)) {
                     iframe.setAttribute('src', url); setTimeout(() => tryFocusIframe(iframe), 250);
                 }
                 appOpeningDebounce[appId] = false; return;
             }
-            console.log(`[Desktop] Creating NEW window for ${title}`);
+            // console.log(`[Desktop] Creating NEW window for ${title}`);
             win = document.createElement('div'); win.className = 'window'; win.id = windowId;
             win.style.width = `${parsedWidth}px`; win.style.height = `${parsedHeight}px`;
             const initialLeft = 100 + (Object.keys(openWindows).length % 6) * 25; const initialTop = 50 + (Object.keys(openWindows).length % 6) * 25;
             win.style.left = `${initialLeft}px`; win.style.top = `${initialTop}px`; win.style.display = 'block';
             win.innerHTML = `<div class="title-bar"><span class="title-bar-text">${title}</span><div class="window-buttons"><button class="window-button close-button">X</button></div></div><div class="window-content"><iframe src="about:blank" title="${title}" sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-modals allow-forms"></iframe></div>`;
             document.getElementById('desktop').appendChild(win); openWindows[windowId] = win; makeDraggable(win);
-            addAppToTaskbar(appId, title); // Add to taskbar on creation
-            bringToFront(win); // Sets activeWindow and updates taskbar button
-
+            addAppToTaskbar(appId, title); bringToFront(win);
             const iframeElement = win.querySelector('iframe');
             if (iframeElement) { setTimeout(() => { iframeElement.setAttribute('src', url); setTimeout(() => tryFocusIframe(iframeElement), 350); }, 50); }
             const closeButton = win.querySelector('.close-button');
@@ -392,7 +397,7 @@
                 icon.addEventListener('dblclick', () => {
                     const appId = icon.dataset.appid, title = icon.dataset.title || 'Application', url = icon.dataset.url;
                     const iconWidth = icon.dataset.width, iconHeight = icon.dataset.height;
-                    if (appId) { dblClickCounter[appId]++; console.log(`[Desktop] Icon DBLCLICK for ${title}. Debounce: ${appOpeningDebounce[appId]}`); }
+                    // if (appId) { dblClickCounter[appId]++; console.log(`[Desktop] Icon DBLCLICK for ${title}. Debounce: ${appOpeningDebounce[appId]}`); } // Reduced logging
                     if (appOpeningDebounce[appId]) { return; }
                     if (appId && title && url) { appOpeningDebounce[appId] = true; createWindow(appId, title, url, iconWidth, iconHeight); }
                 });
