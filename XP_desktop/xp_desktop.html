@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Windows XP Desktop</title>
     <style>
-        /* ... (ALL CSS REMAINS EXACTLY THE SAME as the previous complete file) ... */
         /* Basic Reset & Body */
         * { box-sizing: border-box; user-select: none; }
         html, body { height: 100%; margin: 0; overflow: hidden; font-family: 'Tahoma', sans-serif; }
@@ -102,12 +101,11 @@
             border-left: 2px solid #FFFFFF;
             box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
             z-index: 9999;
-            display: none; /* Hidden by default */
             padding: 0;
             color: black;
             font-size: 11px;
-            display: flex; /* Use flexbox for vertical stacking of header, content, footer */
-            flex-direction: column;
+            display: none; /* Hidden by default, JS will toggle to flex */
+            flex-direction: column; /* Stack header, content, footer vertically */
         }
         .start-menu-header {
             background-color: #316ac5; padding: 8px 10px;
@@ -118,11 +116,11 @@
         .start-menu-user-icon { width:36px; height:36px; background-color:#fff; border: 1px solid #7f9db9; border-radius:3px; margin-right:10px; display:flex; align-items:center; justify-content:center; font-size:22px; }
         .start-menu-username { color:white; font-weight:bold; font-size: 13px; }
 
-        .start-menu-columns {
+        .start-menu-columns { /* This div will contain the two columns and will scroll */
             display: flex;
-            flex-grow: 1; /* This section takes available space */
-            overflow-y: auto; /* Scrollbar only for this section */
-            min-height: 0; /* Crucial for flex scrolling */
+            flex-grow: 1; /* Takes up available vertical space */
+            overflow-y: auto; /* Enables vertical scrolling for this part only */
+            min-height: 0; /* Crucial for allowing flex item to shrink and scroll */
         }
         .start-menu-main-column { width: 55%; padding: 5px 0; border-right: 1px solid #84a4ce; }
         .start-menu-side-column { width: 45%; padding: 5px 0; background-color: #dde8f5; }
@@ -191,7 +189,7 @@
 
         <div id="start-menu">
             <div class="start-menu-header"><div class="start-menu-user-icon">👤</div><span class="start-menu-username">Windows User</span></div>
-            <div class="start-menu-columns">
+            <div class="start-menu-columns"> {/* This div will scroll (due to CSS) */}
                 <div class="start-menu-main-column">
                     <div class="start-menu-item" data-appid="paint"><span class="icon-placeholder">🎨</span>Paint</div>
                     <div class="start-menu-item" data-appid="notepad"><span class="icon-placeholder">📝</span>Notepad</div>
@@ -246,6 +244,8 @@
     </div>
 
     <script>
+        // --- All JavaScript from the previous full xp_desktop.html ---
+        // (The version that included Taskbar App Button functionality and all previous fixes)
         let highestZIndex = 100; let activeWindow = null; let isDragging = false;
         let dragOffsetX, dragOffsetY; let openWindows = {}; let appOpeningDebounce = {};
         let startButton, startMenu, loggingOffScreen, loginScreen, shuttingDownScreen, powerOffMessage, loginUserCard, logOffButton, turnOffButton, taskbarAppsContainer;
@@ -412,16 +412,16 @@
                     event.stopPropagation();
                     const isMenuOpen = startMenu.style.display === 'block';
                     startMenu.style.display = isMenuOpen ? 'none' : 'block';
-                    // console.log(`[Desktop] Start Menu toggled to: ${startMenu.style.display}`); // Reduced logging
+                    // console.log(`[Desktop] Start Menu toggled to: ${startMenu.style.display}`); // Can be verbose
                 });
                 startMenu.querySelectorAll('.start-menu-item').forEach(item => {
                     item.addEventListener('click', (event) => {
                         event.stopPropagation(); const appId = item.dataset.appid;
-                        // Allow Log Off and Turn Off to be processed by their own dedicated listeners later
-                        if (!appId && item.id !== "log-off-button" && item.id !== "turn-off-button") {
+                        if (!appId && item.id !== "log-off-button" && item.id !== "turn-off-button") { // Check for specific button IDs if they are not apps
+                            // console.log("[Desktop] Non-app, non-action Start Menu item clicked:", item.textContent);
                             startMenu.style.display = 'none'; return;
                         }
-                        if (!appId) return; // Only process items with appIds for launching
+                        if (!appId) return; // Only process items with appIds for launching here
                         const iconElement = document.getElementById(`${appId}-icon`);
                         if (iconElement) {
                             const title = iconElement.dataset.title || 'Application', url = iconElement.dataset.url;
