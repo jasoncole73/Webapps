@@ -204,7 +204,7 @@
 
         <div id="start-menu">
             <div class="start-menu-header"><div class="start-menu-user-icon">👤</div><span class="start-menu-username">Windows User</span></div>
-            <div class="start-menu-columns"> {/* Stray comment removed from here */}
+            <div class="start-menu-columns">
                 <div class="start-menu-main-column">
                     <div class="start-menu-item" data-appid="paint"><span class="icon-placeholder">🎨</span>Paint</div>
                     <div class="start-menu-item" data-appid="notepad"><span class="icon-placeholder">📝</span>Notepad</div>
@@ -277,8 +277,8 @@
             turnOffButton = document.getElementById('turn-off-button');
             taskbarAppsContainer = document.getElementById('taskbar-apps');
 
-            if (startMenu) {
-                startMenu.style.display = 'none'; // Ensure Start Menu is hidden on load
+            if (startMenu) { // Ensure Start Menu is hidden on load
+                startMenu.style.display = 'none';
             }
 
             initializeStartMenu();
@@ -425,13 +425,14 @@
             if (startButton && startMenu) {
                 startButton.addEventListener('click', (event) => {
                     event.stopPropagation();
-                    const isMenuOpen = startMenu.style.display === 'flex'; // Check against 'flex' as that's what we set
-                    startMenu.style.display = isMenuOpen ? 'none' : 'flex'; // Toggle to 'flex'
+                    const isMenuOpen = startMenu.style.display === 'flex'; // Check against 'flex'
+                    startMenu.style.display = isMenuOpen ? 'none' : 'flex';
                     // console.log(`[Desktop] Start Menu toggled to: ${startMenu.style.display}`);
                 });
                 startMenu.querySelectorAll('.start-menu-item').forEach(item => {
                     item.addEventListener('click', (event) => {
                         event.stopPropagation(); const appId = item.dataset.appid;
+                        // Allow Log Off and Turn Off buttons (which are also .start-menu-item) to be handled by their own listeners
                         if (!appId && item.id !== "log-off-button" && item.id !== "turn-off-button") {
                             startMenu.style.display = 'none'; return;
                         }
