@@ -90,15 +90,39 @@
 
         /* --- Start Menu --- */
         #start-menu {
-            position: absolute; bottom: 30px; left: 0; width: 280px; max-height: 450px;
-            background-color: #c6d8f0; border: 1px outset #FFFFFF; border-top: 2px solid #FFFFFF;
-            border-left: 2px solid #FFFFFF; box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
-            z-index: 9999; display: none; overflow-y: auto; padding: 0; color: black; font-size: 11px;
+            position: absolute;
+            bottom: 30px; /* Positioned above the taskbar */
+            left: 0;
+            width: 280px;
+            height: 450px; /* Fixed height for the whole menu */
+            background-color: #c6d8f0;
+            border: 1px outset #FFFFFF;
+            border-top: 2px solid #FFFFFF;
+            border-left: 2px solid #FFFFFF;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+            z-index: 9999;
+            display: none; /* Hidden by default */
+            padding: 0;
+            color: black;
+            font-size: 11px;
+            display: flex; /* Use flexbox for vertical stacking of header, content, footer */
+            flex-direction: column;
         }
-        .start-menu-header { background-color: #316ac5; padding: 8px 10px; display:flex; align-items:center; border-bottom: 1px solid #1c3e73; }
+        .start-menu-header {
+            background-color: #316ac5; padding: 8px 10px;
+            display:flex; align-items:center;
+            border-bottom: 1px solid #1c3e73;
+            flex-shrink: 0; /* Prevent header from shrinking */
+        }
         .start-menu-user-icon { width:36px; height:36px; background-color:#fff; border: 1px solid #7f9db9; border-radius:3px; margin-right:10px; display:flex; align-items:center; justify-content:center; font-size:22px; }
         .start-menu-username { color:white; font-weight:bold; font-size: 13px; }
-        .start-menu-columns { display: flex; flex-grow: 1; }
+
+        .start-menu-columns {
+            display: flex;
+            flex-grow: 1; /* This section takes available space */
+            overflow-y: auto; /* Scrollbar only for this section */
+            min-height: 0; /* Crucial for flex scrolling */
+        }
         .start-menu-main-column { width: 55%; padding: 5px 0; border-right: 1px solid #84a4ce; }
         .start-menu-side-column { width: 45%; padding: 5px 0; background-color: #dde8f5; }
         .start-menu-item { padding: 5px 10px 5px 10px; cursor: pointer; color: #000; display: flex; align-items: center; white-space: nowrap; }
@@ -106,7 +130,12 @@
         .start-menu-item .icon-placeholder { width: 20px; height: 20px; font-size: 16px; line-height: 20px; margin-right: 8px; display: inline-flex; align-items: center; justify-content: center; text-align: center; }
         .start-menu-item:hover .icon-placeholder { color: white; }
         .start-menu-separator { height: 1px; background-color: #84a4ce; margin: 4px 5px; }
-        .start-menu-footer { background-color: #316ac5; padding: 5px; text-align:right; border-top: 1px solid #1c3e73; flex-shrink: 0; }
+
+        .start-menu-footer {
+            background-color: #316ac5; padding: 5px;
+            text-align:right; border-top: 1px solid #1c3e73;
+            flex-shrink: 0; /* Prevent footer from shrinking */
+        }
         .start-menu-footer button { font-size:10px; padding: 2px 8px; margin-left: 5px; background-color:#dfdfdf; border:1px outset #ccc; cursor: pointer; }
 
         /* Windows (General Frame Styles) */
@@ -161,7 +190,7 @@
 
         <div id="start-menu">
             <div class="start-menu-header"><div class="start-menu-user-icon">👤</div><span class="start-menu-username">Windows User</span></div>
-            <div class="start-menu-columns">
+            <div class="start-menu-columns"> {/* This div will scroll */}
                 <div class="start-menu-main-column">
                     <div class="start-menu-item" data-appid="paint"><span class="icon-placeholder">🎨</span>Paint</div>
                     <div class="start-menu-item" data-appid="notepad"><span class="icon-placeholder">📝</span>Notepad</div>
@@ -211,13 +240,13 @@
 
     <div id="taskbar">
         <button id="start-button">Start</button>
-        <div id="taskbar-apps"></div> {/* ENSURE THIS DIV IS PRESENT AND CORRECT */}
+        <div id="taskbar-apps"></div>
         <div id="clock"></div>
     </div>
 
     <script>
         // --- All JavaScript from the previous full xp_desktop.html ---
-        // (The version that included Taskbar App Button functionality)
+        // (The version that included Taskbar App Button functionality and all previous fixes)
         let highestZIndex = 100; let activeWindow = null; let isDragging = false;
         let dragOffsetX, dragOffsetY; let openWindows = {}; let appOpeningDebounce = {};
         let startButton, startMenu, loggingOffScreen, loginScreen, shuttingDownScreen, powerOffMessage, loginUserCard, logOffButton, turnOffButton, taskbarAppsContainer;
@@ -232,7 +261,7 @@
             loginUserCard = document.getElementById('login-user-card');
             logOffButton = document.getElementById('log-off-button');
             turnOffButton = document.getElementById('turn-off-button');
-            taskbarAppsContainer = document.getElementById('taskbar-apps'); // Ensure this is queried
+            taskbarAppsContainer = document.getElementById('taskbar-apps');
 
             initializeStartMenu();
             initializeShutdownEvents();
