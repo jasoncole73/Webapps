@@ -16,20 +16,11 @@
             background-color: #005cbe; background-size: cover; background-repeat: no-repeat; position: relative;
         }
 
-        /* Icons */
-        .icon {
-            position: absolute; width: 80px; text-align: center; padding: 10px 5px; cursor: pointer;
-            color: white; text-shadow: 1px 1px 2px black; border-radius: 5px;
-        }
+        /* Icons (Same as before) */
+        .icon { position: absolute; width: 80px; text-align: center; padding: 10px 5px; cursor: pointer; color: white; text-shadow: 1px 1px 2px black; border-radius: 5px; }
         .icon:hover { background-color: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.4); padding: 9px 4px; }
-        .icon::before { /* Placeholder Icon Visuals */
-            content: '📄'; font-size: 38px; line-height: 48px; display: block; margin-bottom: 5px;
-            background-color: #eee; border-radius: 3px; width: 48px; height: 48px; margin: 0 auto 5px auto;
-            color: #333; text-shadow: none;
-        }
+        .icon::before { content: '📄'; font-size: 38px; line-height: 48px; display: block; margin-bottom: 5px; background-color: #eee; border-radius: 3px; width: 48px; height: 48px; margin: 0 auto 5px auto; color: #333; text-shadow: none; }
         .icon span { display: block; font-size: 12px; word-wrap: break-word; }
-
-        /* Specific Icon Positions & Styles */
         #paint-icon { top: 30px; left: 30px; } #paint-icon::before { content: '🎨'; background-color: lightblue; }
         #video-icon { top: 130px; left: 30px; } #video-icon::before { content: '▶️'; background-color: lightcoral; }
         #calc-icon { top: 230px; left: 30px; } #calc-icon::before { content: '🧮'; background-color: lightgreen; }
@@ -46,50 +37,18 @@
         #tetris-icon {top: 230px; left: 300px; } #tetris-icon::before { content: '🧱'; background-color: #cc66cc; font-size: 38px;}
 
 
-        /* Taskbar */
-        #taskbar {
-            position: absolute; bottom: 0; left: 0; width: 100%; height: 30px;
-            background: linear-gradient(to bottom, #245edc, #3f8cf5); border-top: 1px solid #6aa2f7;
-            display: flex; align-items: center; padding: 0 5px; z-index: 10000;
-        }
-        #start-button {
-            background: linear-gradient(to bottom, #5bde5b, #3aa53a); border: 1px outset #4caf4c; color: white;
-            font-weight: bold; font-style: italic; padding: 2px 15px; border-radius: 3px; cursor: pointer;
-            text-shadow: 1px 1px 1px #333; font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif; font-size: 14px;
-            flex-shrink: 0;
-        }
+        /* Taskbar (Same as previous versions) */
+        #taskbar { position: absolute; bottom: 0; left: 0; width: 100%; height: 30px; background: linear-gradient(to bottom, #245edc, #3f8cf5); border-top: 1px solid #6aa2f7; display: flex; align-items: center; padding: 0 5px; z-index: 10000; }
+        #start-button { background: linear-gradient(to bottom, #5bde5b, #3aa53a); border: 1px outset #4caf4c; color: white; font-weight: bold; font-style: italic; padding: 2px 15px; border-radius: 3px; cursor: pointer; text-shadow: 1px 1px 1px #333; font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif; font-size: 14px; flex-shrink: 0; }
         #start-button:active { background: linear-gradient(to top, #5bde5b, #3aa53a); border-style: inset; }
-
-        #taskbar-apps {
-            display: flex; align-items: center; height: 100%;
-            margin-left: 5px; overflow-x: auto; overflow-y: hidden;
-            flex-grow: 1; padding-bottom: 2px;
-        }
-        #taskbar-apps::-webkit-scrollbar { height: 5px; }
-        #taskbar-apps::-webkit-scrollbar-thumb { background: #888; border-radius: 3px;}
-        #taskbar-apps::-webkit-scrollbar-thumb:hover { background: #555; }
-
-        .taskbar-app-button {
-            background: linear-gradient(to bottom, #5283ea, #2c62c8); border: 1px outset #799eeb;
-            color: white; padding: 0 10px; margin-right: 3px; height: 22px;
-            line-height: 20px; font-size: 11px; font-family: 'Tahoma', sans-serif;
-            border-radius: 3px; cursor: pointer; max-width: 150px; min-width: 80px;
-            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-            box-shadow: 1px 1px 1px rgba(0,0,0,0.2); flex-shrink: 0;
-        }
+        #taskbar-apps { display: flex; align-items: center; height: 100%; margin-left: 5px; overflow-x: auto; overflow-y: hidden; flex-grow: 1; padding-bottom: 2px; }
+        #taskbar-apps::-webkit-scrollbar { height: 5px; } #taskbar-apps::-webkit-scrollbar-thumb { background: #888; border-radius: 3px;} #taskbar-apps::-webkit-scrollbar-thumb:hover { background: #555; }
+        .taskbar-app-button { background: linear-gradient(to bottom, #5283ea, #2c62c8); border: 1px outset #799eeb; color: white; padding: 0 10px; margin-right: 3px; height: 22px; line-height: 20px; font-size: 11px; font-family: 'Tahoma', sans-serif; border-radius: 3px; cursor: pointer; max-width: 150px; min-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; box-shadow: 1px 1px 1px rgba(0,0,0,0.2); flex-shrink: 0; }
         .taskbar-app-button:hover { background: linear-gradient(to bottom, #6f9cf5, #4a7cd6); }
-        .taskbar-app-button.active-window {
-            background: linear-gradient(to top, #3a6cc7, #244ea0); border-style: inset;
-            border-color: #1c3b73; padding: 0 9px;
-        }
+        .taskbar-app-button.active-window { background: linear-gradient(to top, #3a6cc7, #244ea0); border-style: inset; border-color: #1c3b73; padding: 0 9px; }
+        #clock { margin-left: 5px; background-color: #6aa2f7; border: 1px inset #3f8cf5; color: white; padding: 2px 8px; font-size: 12px; border-radius: 2px; flex-shrink: 0; }
 
-        #clock {
-            margin-left: 5px; background-color: #6aa2f7; border: 1px inset #3f8cf5;
-            color: white; padding: 2px 8px; font-size: 12px; border-radius: 2px;
-            flex-shrink: 0;
-        }
-
-        /* --- Start Menu --- */
+        /* --- Start Menu --- CORRECTED CSS */
         #start-menu {
             position: absolute;
             bottom: 30px;
@@ -107,7 +66,7 @@
             color: black;
             font-size: 11px;
             display: none; /* JS will toggle to flex */
-            flex-direction: column; /* Key for header/content/footer stacking */
+            flex-direction: column; /* Stack header, columns, footer */
         }
         .start-menu-header {
             background-color: #316ac5; padding: 8px 10px;
@@ -118,7 +77,7 @@
         .start-menu-user-icon { width:36px; height:36px; background-color:#fff; border: 1px solid #7f9db9; border-radius:3px; margin-right:10px; display:flex; align-items:center; justify-content:center; font-size:22px; }
         .start-menu-username { color:white; font-weight:bold; font-size: 13px; }
 
-        .start-menu-columns { /* This div contains the two item columns */
+        .start-menu-columns { /* This div contains the two item lists */
             display: flex;
             flex-grow: 1;      /* Allows this area to fill available vertical space */
             overflow-y: auto;  /* Vertical scrollbar for THIS PART ONLY if content overflows */
@@ -128,12 +87,12 @@
         .start-menu-main-column {
             width: 55%; padding: 5px 0;
             border-right: 1px solid #84a4ce;
-            overflow: hidden; /* Prevent items from making this column wider */
+            overflow-x: hidden; /* Prevent items from making this column wider */
         }
         .start-menu-side-column {
             width: 45%; padding: 5px 0;
             background-color: #dde8f5;
-            overflow: hidden; /* Prevent items from making this column wider */
+            overflow-x: hidden; /* Prevent items from making this column wider */
         }
         .start-menu-item {
             padding: 5px 10px;
@@ -155,14 +114,8 @@
         }
         .start-menu-footer button { font-size:10px; padding: 2px 8px; margin-left: 5px; background-color:#dfdfdf; border:1px outset #ccc; cursor: pointer; }
 
-        /* Windows (General Frame Styles) */
-        .window {
-            position: absolute; border: 1px solid #005cbf; box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.3);
-            background-color: #ece9d8; display: none;
-            overflow: hidden; border-radius: 5px 5px 0 0;
-            min-width: 200px; min-height: 150px;
-            top: 50px; left: 150px;
-        }
+        /* Windows (General Frame Styles) - Same as before */
+        .window { position: absolute; border: 1px solid #005cbf; box-shadow: 3px 3px 5px rgba(0,0,0,0.3); background-color: #ece9d8; display: none; overflow: hidden; border-radius: 5px 5px 0 0; min-width: 200px; min-height: 150px; top: 50px; left: 150px;}
         .title-bar { background: linear-gradient(to bottom, #005cbf, #0053a8); color: white; padding: 3px 5px; font-weight: bold; font-size: 13px; cursor: move; display: flex; align-items: center; height: 24px;}
         .title-bar-text { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 3px; }
         .window-buttons { display: flex; }
@@ -173,19 +126,12 @@
         .window-content iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
         .window.dragging .window-content iframe { pointer-events: none; }
 
-        /* --- System Overlay Screens --- */
-        .system-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            display: none; align-items: center; justify-content: center;
-            text-align: center; z-index: 20000; color: white;
-        }
-        #logging-off-screen { background-color: #005cbe; }
-        #login-screen { background-color: #005cbe; flex-direction: column; }
+        /* System Overlay Screens - Same as before */
+        .system-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: none; align-items: center; justify-content: center; text-align: center; z-index: 20000; color: white; }
+        #logging-off-screen { background-color: #005cbe; } #login-screen { background-color: #005cbe; flex-direction: column; }
         .login-user-card { background-color: rgba(255,255,255,0.1); padding: 30px; border-radius: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.3); }
-        .login-user-card:hover { background-color: rgba(255,255,255,0.2); }
-        .login-user-icon { font-size: 60px; margin-bottom: 10px; }
-        .login-username { font-size: 18px; }
-        #shutting-down-screen { background-color: #003a8e; font-size: 18px; }
+        .login-user-card:hover { background-color: rgba(255,255,255,0.2); } .login-user-icon { font-size: 60px; margin-bottom: 10px; }
+        .login-username { font-size: 18px; } #shutting-down-screen { background-color: #003a8e; font-size: 18px; }
         #power-off-message { background-color: black; font-family: 'Courier New', Courier, monospace; font-size: 16px;}
     </style>
 </head>
@@ -208,7 +154,7 @@
 
         <div id="start-menu">
             <div class="start-menu-header"><div class="start-menu-user-icon">👤</div><span class="start-menu-username">Windows User</span></div>
-            <div class="start-menu-columns"> {/* No stray comments here */}
+            <div class="start-menu-columns"> {/* NO STRAY COMMENTS HERE */}
                 <div class="start-menu-main-column">
                     <div class="start-menu-item" data-appid="paint"><span class="icon-placeholder">🎨</span>Paint</div>
                     <div class="start-menu-item" data-appid="notepad"><span class="icon-placeholder">📝</span>Notepad</div>
@@ -228,6 +174,7 @@
                 <div class="start-menu-side-column">
                     <div class="start-menu-item" data-appid="calc"><span class="icon-placeholder">🧮</span>Calculator</div>
                     <div class="start-menu-item" data-appid="mycomputer"><span class="icon-placeholder">💻</span>My Computer</div>
+                    {/* NO STRAY COMMENTS HERE */}
                     <div class="start-menu-item"><span class="icon-placeholder">🖼️</span>My Pictures</div>
                     <div class="start-menu-item"><span class="icon-placeholder">🎵</span>My Music</div>
                     <div class="start-menu-separator"></div>
@@ -430,8 +377,8 @@
             if (startButton && startMenu) {
                 startButton.addEventListener('click', (event) => {
                     event.stopPropagation();
-                    const isMenuOpen = startMenu.style.display === 'flex';
-                    startMenu.style.display = isMenuOpen ? 'none' : 'flex';
+                    const isMenuOpen = startMenu.style.display === 'flex'; // Check if currently flex (visible)
+                    startMenu.style.display = isMenuOpen ? 'none' : 'flex'; // Toggle to 'flex' to show
                 });
                 startMenu.querySelectorAll('.start-menu-item').forEach(item => {
                     item.addEventListener('click', (event) => {
@@ -439,7 +386,7 @@
                         if (!appId && item.id !== "log-off-button" && item.id !== "turn-off-button") {
                             startMenu.style.display = 'none'; return;
                         }
-                        if (!appId) return;
+                        if (!appId) return; // Only process items with appIds for launching here
                         const iconElement = document.getElementById(`${appId}-icon`);
                         if (iconElement) {
                             const title = iconElement.dataset.title || 'Application', url = iconElement.dataset.url;
