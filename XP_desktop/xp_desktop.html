@@ -43,6 +43,7 @@
         #notepad-icon { top: 330px; left: 120px; } #notepad-icon::before { content: '📝'; background-color: #f0f0f0; font-size: 38px;}
         #mycomputer-icon { top: 30px; left: 300px; } #mycomputer-icon::before { content: '💻'; background-color: #e0e0e0; font-size: 38px; }
         #hangman-icon { top: 130px; left: 300px; } #hangman-icon::before { content: '🤔'; background-color: #f5deb3; font-size: 38px; }
+        #tetris-icon {top: 230px; left: 300px; } #tetris-icon::before { content: '🧱'; background-color: #cc66cc; font-size: 38px;}
 
 
         /* Taskbar */
@@ -94,7 +95,8 @@
             bottom: 30px; /* Positioned above the taskbar */
             left: 0;
             width: 280px;
-            height: 450px; /* Fixed height for the whole menu */
+            /* height: 450px; REMOVED fixed height */
+            max-height: 450px; /* Constrain maximum height */
             background-color: #c6d8f0;
             border: 1px outset #FFFFFF;
             border-top: 2px solid #FFFFFF;
@@ -105,23 +107,23 @@
             color: black;
             font-size: 11px;
             display: none; /* JS will toggle to flex */
-            flex-direction: column;
+            flex-direction: column; /* Stack header, content, footer vertically */
         }
         .start-menu-header {
             background-color: #316ac5; padding: 8px 10px;
             display:flex; align-items:center;
             border-bottom: 1px solid #1c3e73;
-            flex-shrink: 0;
+            flex-shrink: 0; /* Prevent header from shrinking */
         }
         .start-menu-user-icon { width:36px; height:36px; background-color:#fff; border: 1px solid #7f9db9; border-radius:3px; margin-right:10px; display:flex; align-items:center; justify-content:center; font-size:22px; }
         .start-menu-username { color:white; font-weight:bold; font-size: 13px; }
 
         .start-menu-columns {
             display: flex;
-            flex-grow: 1;
-            overflow-y: auto;   /* Vertical scroll for content */
+            flex-grow: 1; /* This section takes available vertical space */
+            overflow-y: auto;   /* Enables vertical scrolling for this part only */
             overflow-x: hidden; /* Prevent horizontal scroll for the columns container */
-            min-height: 0;
+            min-height: 0; /* Crucial for allowing flex item to shrink and scroll */
         }
         .start-menu-main-column {
             width: 55%; padding: 5px 0;
@@ -148,7 +150,7 @@
         .start-menu-footer {
             background-color: #316ac5; padding: 5px;
             text-align:right; border-top: 1px solid #1c3e73;
-            flex-shrink: 0;
+            flex-shrink: 0; /* Prevent footer from shrinking */
         }
         .start-menu-footer button { font-size:10px; padding: 2px 8px; margin-left: 5px; background-color:#dfdfdf; border:1px outset #ccc; cursor: pointer; }
 
@@ -201,10 +203,12 @@
         <div class="icon" id="notepad-icon" data-appid="notepad" data-title="Untitled - Notepad" data-url="notepad.html" data-width="600" data-height="400"><span>Notepad</span></div>
         <div class="icon" id="mycomputer-icon" data-appid="mycomputer" data-title="My Computer" data-url="my_computer.html" data-width="550" data-height="400"><span>My Computer</span></div>
         <div class="icon" id="hangman-icon" data-appid="hangman" data-title="Hangman" data-url="hangman.html" data-width="400" data-height="450"><span>Hangman</span></div>
+        <div class="icon" id="tetris-icon" data-appid="tetris" data-title="Tetris" data-url="tetris.html" data-width="320" data-height="550"><span>Tetris</span></div>
+
 
         <div id="start-menu">
             <div class="start-menu-header"><div class="start-menu-user-icon">👤</div><span class="start-menu-username">Windows User</span></div>
-            <div class="start-menu-columns">
+            <div class="start-menu-columns"> {/* Stray comment removed from here and CSS adjusted */}
                 <div class="start-menu-main-column">
                     <div class="start-menu-item" data-appid="paint"><span class="icon-placeholder">🎨</span>Paint</div>
                     <div class="start-menu-item" data-appid="notepad"><span class="icon-placeholder">📝</span>Notepad</div>
@@ -213,6 +217,7 @@
                     <div class="start-menu-item" data-appid="minesweeper"><span class="icon-placeholder">💣</span>Minesweeper</div>
                     <div class="start-menu-item" data-appid="solitaire"><span class="icon-placeholder">🃏</span>Solitaire</div>
                     <div class="start-menu-item" data-appid="hangman"><span class="icon-placeholder">🤔</span>Hangman</div>
+                    <div class="start-menu-item" data-appid="tetris"><span class="icon-placeholder">🧱</span>Tetris</div>
                     <div class="start-menu-separator"></div>
                     <div class="start-menu-item" data-appid="snake"><span class="icon-placeholder">🐍</span>Snake</div>
                     <div class="start-menu-item" data-appid="pong"><span class="icon-placeholder">||</span>Pong</div>
@@ -277,7 +282,7 @@
             turnOffButton = document.getElementById('turn-off-button');
             taskbarAppsContainer = document.getElementById('taskbar-apps');
 
-            if (startMenu) { // Ensure Start Menu is hidden on load
+            if (startMenu) { // Ensure Start Menu is hidden on load by JS too
                 startMenu.style.display = 'none';
             }
 
@@ -414,7 +419,7 @@
                 icon.addEventListener('dblclick', () => {
                     const appId = icon.dataset.appid, title = icon.dataset.title || 'Application', url = icon.dataset.url;
                     const iconWidth = icon.dataset.width, iconHeight = icon.dataset.height;
-                    // if (appId) { dblClickCounter[appId]++; console.log(`[Desktop] Icon DBLCLICK for ${title}. Debounce: ${appOpeningDebounce[appId]}`); } // Reduced logging
+                    // if (appId) { dblClickCounter[appId]++; console.log(`[Desktop] Icon DBLCLICK for ${title}. Debounce: ${appOpeningDebounce[appId]}`); }
                     if (appOpeningDebounce[appId]) { return; }
                     if (appId && title && url) { appOpeningDebounce[appId] = true; createWindow(appId, title, url, iconWidth, iconHeight); }
                 });
@@ -425,18 +430,16 @@
             if (startButton && startMenu) {
                 startButton.addEventListener('click', (event) => {
                     event.stopPropagation();
-                    const isMenuOpen = startMenu.style.display === 'flex'; // Check against 'flex'
+                    const isMenuOpen = startMenu.style.display === 'flex';
                     startMenu.style.display = isMenuOpen ? 'none' : 'flex';
-                    // console.log(`[Desktop] Start Menu toggled to: ${startMenu.style.display}`);
                 });
                 startMenu.querySelectorAll('.start-menu-item').forEach(item => {
                     item.addEventListener('click', (event) => {
                         event.stopPropagation(); const appId = item.dataset.appid;
-                        // Allow Log Off and Turn Off buttons (which are also .start-menu-item) to be handled by their own listeners
                         if (!appId && item.id !== "log-off-button" && item.id !== "turn-off-button") {
                             startMenu.style.display = 'none'; return;
                         }
-                        if (!appId) return; // Only process items with appIds for launching here
+                        if (!appId) return;
                         const iconElement = document.getElementById(`${appId}-icon`);
                         if (iconElement) {
                             const title = iconElement.dataset.title || 'Application', url = iconElement.dataset.url;
