@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whack-a-Mole</title>
+    <style>
+        body {
+            font-family: 'Tahoma', 'Verdana', sans-serif;
+            background-color: #ECE9D8; /* XP-like background */
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden; /* Prevent scrollbars in iframe */
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: #003399; /* XP blue */
+            margin-top: 5px;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            width: 300px;
+            margin-bottom: 15px;
+            background-color: #d4d0c8; /* XP control background */
+            padding: 8px;
+            border: 1px solid #7f9db9; /* XP border */
+            border-radius: 3px;
+            font-size: 14px;
+        }
+
+        .game-info span {
+            font-weight: bold;
+        }
+
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3x3 grid */
+            grid-gap: 10px;
+            width: 300px;
+            height: 300px;
+            background-color: #A0A0A0; /* Darker grey for contrast */
+            padding: 10px;
+            border: 2px solid #4A4A4A;
+            border-radius: 5px;
+        }
+
+        .hole {
+            background-color: #5B3A29; /* Dark brown for hole */
+            border-radius: 50%; /* Make them circular */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.1s ease;
+            border: 3px solid #402A1D; /* Darker border for depth */
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .hole:hover {
+            background-color: #704833;
+        }
+
+        .mole {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="35" fill="%238B4513"/><circle cx="35" cy="40" r="5" fill="black"/><circle cx="65" cy="40" r="5" fill="black"/><ellipse cx="50" cy="65" rx="10" ry="5" fill="%23FFC0CB"/></svg>');
+            background-size: 70%;
+            background-repeat: no-repeat;
+            background-position: center;
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            /* Mole color can be changed here if not using SVG or for fallback */
+            /* background-color: #8B4513;  SaddleBrown */
+        }
+
+        button#startButton {
+            background-color: #4CAF50; /* Green */
+            color: white;
+            padding: 10px 20px;
+            border: 1px outset #ccc;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 15px;
+            transition: background-color 0.2s;
+        }
+
+        button#startButton:hover {
+            background-color: #45a049;
+        }
+        
+        button#startButton:active {
+            border-style: inset;
+        }
+
+        #message {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #003399;
+            min-height: 20px; /* Reserve space for messages */
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Whack-a-Mole!</h1>
+
+    <div class="game-info">
+        <div>Score: <span id="score">0</span></div>
+        <div>Time Left: <span id="time-left">30</span></div>
+    </div>
+
+    <div id="game-board">
+        </div>
+
+    <button id="startButton">Start Game</button>
+    <div id="message"></div>
+
+    <script>
+        // Game elements
+        const gameBoard = document.getElementById('game-board');
+        const scoreDisplay = document.getElementById('score');
+        const timeLeftDisplay = document.getElementById('time-left');
+        const startButton = document.getElementById('startButton');
+        const messageDisplay = document.getElementById('message');
+
+        // Game variables
+        const gridSize = 3; // 3x3 grid
+        let holes = [];
+        let score = 0;
+        let timeLeft = 30; // Game duration in seconds
+        let moleTimerId = null; // For mole appearance interval
+        let countdownTimerId = null; // For game time countdown
+        let currentMolePosition = null;
+        let gameActive = false;
+        let moleAppearanceTime = 1000; // How long mole stays visible in ms
+        let moleIntervalTime = 1200; // How often a new mole appears in ms
+
+
+        // --- Game Setup ---
+
+        /**
+         * Creates the game board with holes.
+         */
+        function createBoard() {
+            gameBoard.innerHTML = ''; // Clear previous board if any
+            holes = []; // Reset holes array
+            for (let i = 0; i < gridSize * gridSize; i++) {
+                const hole = document.createElement('div');
+                hole.classList.add('hole');
+                hole.dataset.id = i;
+                hole.addEventListener('mousedown', handleWhack);
+                gameBoard.appendChild(hole);
+                holes.push(hole);
+            }
+        }
+
+        // --- Game Logic ---
+
+        /**
+         * Starts the game.
+         */
+        function startGame() {
+            if (gameActive) return; // Prevent multiple starts
+
+            gameActive = true;
+            score = 0;
+            timeLeft = 30;
+            scoreDisplay.textContent = score;
+            timeLeftDisplay.textContent = timeLeft;
+            messageDisplay.textContent = '';
+            startButton.disabled = true;
+            startButton.textContent = 'Playing...';
+
+            createBoard(); // Recreate board to clear any existing moles
+            moveMole(); // Start mole appearances
+            countdownTimerId = setInterval(countdown, 1000); // Start game timer
+        }
+
+        /**
+         * Ends the game.
+         */
+        function endGame() {
+            gameActive = false;
+            clearInterval(moleTimerId);
+            clearInterval(countdownTimerId);
+            if (currentMolePosition !== null) {
+                holes[currentMolePosition].innerHTML = ''; // Clear last mole
+                currentMolePosition = null;
+            }
+            messageDisplay.textContent = `Game Over! Your final score: ${score}`;
+            startButton.disabled = false;
+            startButton.textContent = 'Start Game';
+        }
+
+        /**
+         * Handles the countdown timer for the game.
+         */
+        function countdown() {
+            timeLeft--;
+            timeLeftDisplay.textContent = timeLeft;
+            if (timeLeft <= 0) {
+                endGame();
+            }
+        }
+
+        /**
+         * Randomly places a mole in one of the holes.
+         */
+        function moveMole() {
+            // Clear previous mole if any
+            if (currentMolePosition !== null) {
+                holes[currentMolePosition].innerHTML = '';
+            }
+
+            // Pick a random hole
+            const randomIndex = Math.floor(Math.random() * holes.length);
+            currentMolePosition = randomIndex;
+
+            // Add mole to the new hole
+            const moleElement = document.createElement('div');
+            moleElement.classList.add('mole');
+            holes[currentMolePosition].appendChild(moleElement);
+
+            // Set timer for next mole appearance
+            // The mole stays for `moleAppearanceTime` and a new one appears after `moleIntervalTime`
+            // If game is active, schedule next mole
+            if (gameActive) {
+                 // Clear the mole after a short duration
+                setTimeout(() => {
+                    if (gameActive && holes[currentMolePosition] && holes[currentMolePosition].contains(moleElement)) {
+                         holes[currentMolePosition].innerHTML = '';
+                    }
+                }, moleAppearanceTime); // Mole stays for this duration
+
+                moleTimerId = setTimeout(moveMole, moleIntervalTime); // New mole appears after this interval
+            }
+        }
+
+        /**
+         * Handles a click on a hole (attempt to whack a mole).
+         * @param {MouseEvent} event - The mousedown event.
+         */
+        function handleWhack(event) {
+            if (!gameActive) return;
+
+            const clickedHoleId = parseInt(event.currentTarget.dataset.id);
+
+            if (clickedHoleId === currentMolePosition) {
+                score++;
+                scoreDisplay.textContent = score;
+                
+                // Clear the whacked mole immediately
+                if (holes[currentMolePosition]) {
+                    holes[currentMolePosition].innerHTML = '';
+                }
+                
+                // Optional: Add a small visual feedback for a successful whack
+                // event.currentTarget.style.backgroundColor = 'lightgreen';
+                // setTimeout(() => {
+                //     if(event.currentTarget) event.currentTarget.style.backgroundColor = ''; // Reset color
+                // }, 100);
+
+                // Speed up next mole slightly after a successful hit (optional)
+                // clearTimeout(moleTimerId);
+                // moleTimerId = setTimeout(moveMole, moleIntervalTime * 0.9);
+            }
+        }
+
+        // --- Event Listeners ---
+        startButton.addEventListener('click', startGame);
+
+        // --- Initial Setup ---
+        createBoard(); // Create the initial board structure
+
+        // Optional: Cleanup function for when the iframe is closed by the parent
+        window.cleanupGame = () => {
+            console.log("Whack-a-Mole cleanup called.");
+            gameActive = false; // Ensure game stops
+            clearInterval(moleTimerId);
+            clearInterval(countdownTimerId);
+            // Any other specific cleanup for this game
+        };
+    </script>
+</body>
+</html>
