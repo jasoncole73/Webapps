@@ -95,7 +95,7 @@
             bottom: 30px;
             left: 0;
             width: 280px;
-            max-height: 480px; /* INCREASED max-height to accommodate more items */
+            max-height: 480px; 
             background-color: #c6d8f0;
             border: 1px outset #FFFFFF;
             border-top: 2px solid #FFFFFF;
@@ -120,9 +120,7 @@
         .start-menu-columns { 
             display: flex;
             flex-grow: 1;      
-            /* overflow-y: auto;  -- REMOVED to prevent internal scrollbar */
-            overflow-x: hidden; /* Kept to prevent horizontal scroll issues */
-            /* min-height: 0;     -- REMOVED as it's not needed without overflow-y */
+            overflow-x: hidden; 
         }
         .start-menu-main-column {
             width: 55%; padding: 5px 0;
@@ -156,12 +154,27 @@
 
         /* Windows (General Frame Styles) */
         .window {
-            position: absolute; border: 1px solid #005cbf; box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.3);
-            background-color: #ece9d8; display: none;
-            overflow: hidden; border-radius: 5px 5px 0 0;
-            min-width: 200px; min-height: 150px;
-            top: 50px; left: 150px;
+            position: absolute; 
+            border: 1px solid #005cbf; 
+            box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.3);
+            background-color: #ece9d8; 
+            overflow: hidden; 
+            border-radius: 5px 5px 0 0;
+            min-width: 200px; 
+            min-height: 150px;
+            top: 50px; left: 150px; 
+
+            opacity: 0;
+            transform: scale(0.95);
+            transform-origin: center center; 
+            transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+            display: none; 
         }
+        .window.open {
+            opacity: 1;
+            transform: scale(1);
+        }
+
         .title-bar { background: linear-gradient(to bottom, #005cbf, #0053a8); color: white; padding: 3px 5px; font-weight: bold; font-size: 13px; cursor: move; display: flex; align-items: center; height: 24px;}
         .title-bar-text { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 3px; }
         .window-buttons { display: flex; }
@@ -312,9 +325,7 @@
             if (iframe && iframe.contentWindow) {
                 try {
                     iframe.contentWindow.focus();
-                } catch (e) {
-                    // Silently catch cross-origin errors
-                }
+                } catch (e) { /* Silently catch */ }
             }
         }
 
@@ -404,31 +415,74 @@
                 document.removeEventListener('mouseleave', stopDrag);
             }
         }
+        
+        // --- Helper function to open a window with animation ---
+        function openWindowAnimated(winElement) {
+            if (!winElement) return;
+
+            // If it's already open and visible, just bring to front.
+            if (winElement.style.display === 'block' && winElement.classList.contains('open')) {
+                bringToFront(winElement);
+                return;
+            }
+
+            winElement.style.display = 'block'; // Make it part of the layout
+            
+            // Force a reflow to ensure the initial state (opacity 0, scale 0.95 from CSS) is applied
+            // before adding the 'open' class for the transition.
+            void winElement.offsetWidth; 
+
+            winElement.classList.add('open'); // Add class to trigger animation
+            bringToFront(winElement); // Always bring to front
+        }
+
 
         // --- Application Window Management ---
         function closeAllWindows(callback) {
             const windowsToClose = Object.values(openWindows);
-            const visibleWindows = windowsToClose.filter(win => win.style.display !== 'none');
+            const visibleWindows = windowsToClose.filter(win => win.style.display !== 'none' && win.classList.contains('open'));
 
             if (visibleWindows.length === 0) {
                 if (callback) callback();
                 return;
             }
+            
+            let closedCount = 0;
+            const totalToClose = visibleWindows.length;
 
             visibleWindows.forEach(win => {
                 const closeButton = win.querySelector('.close-button');
                 if (closeButton) {
+                    const handleCloseTransitionForShutdown = (event) => {
+                        if (event.target === win && event.propertyName === 'opacity' && !win.classList.contains('open')) {
+                            closedCount++;
+                            if (closedCount === totalToClose && callback) {
+                                callback();
+                            }
+                             // Clean up this specific listener to prevent multiple calls if something else triggers transitionend
+                            win.removeEventListener('transitionend', handleCloseTransitionForShutdown);
+                        }
+                    };
+                    win.addEventListener('transitionend', handleCloseTransitionForShutdown);
                     closeButton.click(); 
-                } else {
+                } else { 
                     const iframe = win.querySelector('iframe');
                     if (iframe) iframe.setAttribute('src', 'about:blank');
                     win.style.display = 'none';
                     removeAppFromTaskbar(win.id.replace('window-', ''));
+                    closedCount++;
+                     if (closedCount === totalToClose && callback) {
+                        callback();
+                    }
                 }
             });
-
-            if (callback) {
-                setTimeout(callback, Math.max(200, visibleWindows.length * 100)); 
+            if (callback && totalToClose > 0) {
+                setTimeout(() => {
+                    if (closedCount < totalToClose) {
+                        // console.warn("Shutdown callback timeout, not all windows confirmed closed via transition.");
+                        callback(); 
+                    }
+                }, Math.max(300, totalToClose * 200)); 
             }
         }
 
@@ -444,10 +498,17 @@
             button.addEventListener('click', () => {
                 const targetWindow = openWindows[`window-${appId}`];
                 if (targetWindow) {
-                    if (targetWindow.style.display === 'none') { 
-                        targetWindow.style.display = 'block';
+                    if (targetWindow.style.display === 'none' || !targetWindow.classList.contains('open')) {
+                        const iframe = targetWindow.querySelector('iframe');
+                        // Ensure the URL is correct if reopening, especially if it might have been set to about:blank
+                        if (iframe && (iframe.getAttribute('src') === 'about:blank' || iframe.getAttribute('src') !== targetWindow.dataset.url)) {
+                             iframe.setAttribute('src', targetWindow.dataset.url); 
+                             setTimeout(() => tryFocusIframe(iframe), 50); // Give it a moment to load before focus
+                        }
+                        openWindowAnimated(targetWindow);
+                    } else { 
+                        bringToFront(targetWindow);
                     }
-                    bringToFront(targetWindow);
                 } else {
                     const iconElement = document.getElementById(`${appId}-icon`);
                     if (iconElement) {
@@ -467,7 +528,7 @@
                 activeWindow = null; 
             }
 
-            const visibleWindows = Object.values(openWindows).filter(w => w.style.display === 'block');
+            const visibleWindows = Object.values(openWindows).filter(w => w.style.display === 'block' && w.classList.contains('open'));
             if (visibleWindows.length > 0) {
                 let topZ = -1;
                 let nextActiveWindow = null;
@@ -492,25 +553,27 @@
 
             let win = openWindows[windowId];
 
-            if (win) { 
+            if (win) { // Window already exists
                 win.style.width = `${parsedWidth}px`; 
                 win.style.height = `${parsedHeight}px`;
-                win.style.display = 'block'; 
-                addAppToTaskbar(appId, title); 
-                bringToFront(win);
-
+                win.dataset.url = url; // Update the stored URL if it changed
+                
                 const iframe = win.querySelector('iframe');
                 if (iframe && (iframe.getAttribute('src') === 'about:blank' || iframe.getAttribute('src') !== url)) {
-                    iframe.setAttribute('src', url);
-                    setTimeout(() => tryFocusIframe(iframe), 250); 
+                    iframe.setAttribute('src', url); 
+                    setTimeout(() => tryFocusIframe(iframe), 50); 
                 }
+                openWindowAnimated(win); // Animate open if it was hidden
+
                 appOpeningDebounce[appId] = false; 
                 return;
             }
 
+            // Create new window element
             win = document.createElement('div');
-            win.className = 'window';
+            win.className = 'window'; 
             win.id = windowId;
+            win.dataset.url = url; // Store the url on the window element
             win.style.width = `${parsedWidth}px`;
             win.style.height = `${parsedHeight}px`;
 
@@ -518,7 +581,6 @@
             const initialTop = 50 + (Object.keys(openWindows).length % 6) * 25;
             win.style.left = `${initialLeft}px`;
             win.style.top = `${initialTop}px`;
-            win.style.display = 'block';
 
             win.innerHTML = `
                 <div class="title-bar">
@@ -535,38 +597,48 @@
             openWindows[windowId] = win; 
             makeDraggable(win); 
             addAppToTaskbar(appId, title); 
-            bringToFront(win); 
-
+            
             const iframeElement = win.querySelector('iframe');
             if (iframeElement) {
-                setTimeout(() => {
-                    iframeElement.setAttribute('src', url);
-                    setTimeout(() => tryFocusIframe(iframeElement), 350); 
-                }, 50);
+                // Set src *before* openWindowAnimated makes it visually appear and animate.
+                // The window is in the DOM, styled with opacity 0 and scaled down.
+                iframeElement.setAttribute('src', url); 
+            }
+            
+            openWindowAnimated(win); // Now make it visible and animate.
+
+            if (iframeElement) { 
+                 setTimeout(() => tryFocusIframe(iframeElement), 200); // Delay focus attempt
             }
 
             const closeButton = win.querySelector('.close-button');
             closeButton.addEventListener('click', (e) => {
                 e.stopPropagation(); 
-                const iframe = win.querySelector('iframe');
-                if (iframe) {
-                    let directCleanupSuccess = false;
-                    try {
-                        if (iframe.contentWindow && typeof iframe.contentWindow.cleanupGame === 'function') {
-                            iframe.contentWindow.cleanupGame();
-                            directCleanupSuccess = true;
-                        }
-                    } catch (err) { /* Silently catch */ }
+                win.classList.remove('open'); 
 
-                    if (!directCleanupSuccess) {
-                        try {
-                            if (iframe.contentWindow) iframe.contentWindow.postMessage('cleanup', '*');
-                        } catch (pmErr) { /* Silently catch */ }
+                win.addEventListener('transitionend', function handleCloseTransition(event) {
+                    if (event.target === win && event.propertyName === 'opacity' && !win.classList.contains('open')) {
+                        const iframe = win.querySelector('iframe');
+                        if (iframe) {
+                            let directCleanupSuccess = false;
+                            try {
+                                if (iframe.contentWindow && typeof iframe.contentWindow.cleanupGame === 'function') {
+                                    iframe.contentWindow.cleanupGame();
+                                    directCleanupSuccess = true;
+                                }
+                            } catch (err) { /* Silently catch */ }
+
+                            if (!directCleanupSuccess) {
+                                try {
+                                    if (iframe.contentWindow) iframe.contentWindow.postMessage('cleanup', '*');
+                                } catch (pmErr) { /* Silently catch */ }
+                            }
+                            iframe.setAttribute('src', 'about:blank'); 
+                        }
+                        win.style.display = 'none'; 
+                        removeAppFromTaskbar(appId); 
                     }
-                    iframe.setAttribute('src', 'about:blank'); 
-                }
-                win.style.display = 'none'; 
-                removeAppFromTaskbar(appId); 
+                }, { once: true }); 
             });
 
             setTimeout(() => {
@@ -630,8 +702,9 @@
 
                             if (appOpeningDebounce[appId]) {
                                 const winId = `window-${appId}`;
-                                if(openWindows[winId] && openWindows[winId].style.display === 'block') {
-                                    bringToFront(openWindows[winId]);
+                                const targetWindow = openWindows[winId];
+                                if(targetWindow){
+                                     openWindowAnimated(targetWindow); 
                                 }
                                 startMenu.style.display = 'none';
                                 return;
@@ -711,7 +784,7 @@
                 const windowId = `window-${data.appId}`;
                 const targetWindow = openWindows[windowId];
 
-                if (targetWindow && targetWindow.style.display === 'block') { 
+                if (targetWindow && targetWindow.classList.contains('open')) { 
                     switch (data.type) {
                         case 'SET_WINDOW_TITLE':
                             if (data.title) {
