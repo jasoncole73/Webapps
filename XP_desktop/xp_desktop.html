@@ -44,6 +44,9 @@
         #mycomputer-icon { top: 30px; left: 300px; } #mycomputer-icon::before { content: '💻'; background-color: #e0e0e0; font-size: 38px; }
         #hangman-icon { top: 130px; left: 300px; } #hangman-icon::before { content: '🤔'; background-color: #f5deb3; font-size: 38px; }
         #tetris-icon {top: 230px; left: 300px; } #tetris-icon::before { content: '🧱'; background-color: #cc66cc; font-size: 38px;}
+        /* Add Whack-a-Mole icon style if you added the icon */
+        #whackamole-icon { top: 330px; left: 210px; } 
+        #whackamole-icon::before { content: '🔨'; background-color: #DAA520; font-size: 38px; }
 
 
         /* Taskbar */
@@ -95,7 +98,7 @@
             bottom: 30px;
             left: 0;
             width: 280px;
-            max-height: 480px; 
+            max-height: 480px; /* Adjusted for more items */
             background-color: #c6d8f0;
             border: 1px outset #FFFFFF;
             border-top: 2px solid #FFFFFF;
@@ -120,7 +123,7 @@
         .start-menu-columns { 
             display: flex;
             flex-grow: 1;      
-            overflow-x: hidden; 
+            overflow-x: hidden; /* Prevent horizontal scroll, vertical scroll removed */
         }
         .start-menu-main-column {
             width: 55%; padding: 5px 0;
@@ -162,13 +165,14 @@
             border-radius: 5px 5px 0 0;
             min-width: 200px; 
             min-height: 150px;
-            top: 50px; left: 150px; 
+            top: 50px; left: 150px; /* Default initial position, JS overrides */
 
+            /* Animation properties */
             opacity: 0;
             transform: scale(0.95);
             transform-origin: center center; 
             transition: opacity 0.15s ease-out, transform 0.15s ease-out;
-            display: none; 
+            display: none; /* Start hidden, JS will set to block before animating */
         }
         .window.open {
             opacity: 1;
@@ -217,6 +221,8 @@
         <div class="icon" id="mycomputer-icon" data-appid="mycomputer" data-title="My Computer" data-url="my_computer.html" data-width="550" data-height="400"><span>My Computer</span></div>
         <div class="icon" id="hangman-icon" data-appid="hangman" data-title="Hangman" data-url="hangman.html" data-width="400" data-height="450"><span>Hangman</span></div>
         <div class="icon" id="tetris-icon" data-appid="tetris" data-title="Tetris" data-url="tetris.html" data-width="320" data-height="550"><span>Tetris</span></div>
+        <div class="icon" id="whackamole-icon" data-appid="whackamole" data-title="Whack-a-Mole" data-url="whack_a_mole.html" data-width="350" data-height="480"><span>Whack-a-Mole</span></div>
+
 
         <div id="start-menu">
             <div class="start-menu-header"><div class="start-menu-user-icon">👤</div><span class="start-menu-username">Windows User</span></div>
@@ -236,6 +242,7 @@
                     <div class="start-menu-item" data-appid="tictactoe"><span class="icon-placeholder">⭕</span>Tic Tac Toe</div>
                     <div class="start-menu-item" data-appid="memory"><span class="icon-placeholder">🧠</span>Memory Game</div>
                     <div class="start-menu-item" data-appid="chess"><span class="icon-placeholder">♚</span>Chess</div>
+                    <div class="start-menu-item" data-appid="whackamole"><span class="icon-placeholder">🔨</span>Whack-a-Mole</div>
                 </div>
                 <div class="start-menu-side-column">
                     <div class="start-menu-item" data-appid="calc"><span class="icon-placeholder">🧮</span>Calculator</div>
@@ -459,7 +466,6 @@
                             if (closedCount === totalToClose && callback) {
                                 callback();
                             }
-                             // Clean up this specific listener to prevent multiple calls if something else triggers transitionend
                             win.removeEventListener('transitionend', handleCloseTransitionForShutdown);
                         }
                     };
@@ -500,10 +506,10 @@
                 if (targetWindow) {
                     if (targetWindow.style.display === 'none' || !targetWindow.classList.contains('open')) {
                         const iframe = targetWindow.querySelector('iframe');
-                        // Ensure the URL is correct if reopening, especially if it might have been set to about:blank
+                        // Ensure the URL is correct if reopening
                         if (iframe && (iframe.getAttribute('src') === 'about:blank' || iframe.getAttribute('src') !== targetWindow.dataset.url)) {
                              iframe.setAttribute('src', targetWindow.dataset.url); 
-                             setTimeout(() => tryFocusIframe(iframe), 50); // Give it a moment to load before focus
+                             setTimeout(() => tryFocusIframe(iframe), 50); 
                         }
                         openWindowAnimated(targetWindow);
                     } else { 
@@ -601,7 +607,6 @@
             const iframeElement = win.querySelector('iframe');
             if (iframeElement) {
                 // Set src *before* openWindowAnimated makes it visually appear and animate.
-                // The window is in the DOM, styled with opacity 0 and scaled down.
                 iframeElement.setAttribute('src', url); 
             }
             
