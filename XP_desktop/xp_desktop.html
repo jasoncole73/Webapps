@@ -44,8 +44,10 @@
         #mycomputer-icon { top: 30px; left: 300px; } #mycomputer-icon::before { content: '💻'; background-color: #e0e0e0; font-size: 38px; }
         #hangman-icon { top: 130px; left: 300px; } #hangman-icon::before { content: '🤔'; background-color: #f5deb3; font-size: 38px; }
         #tetris-icon {top: 230px; left: 300px; } #tetris-icon::before { content: '🧱'; background-color: #cc66cc; font-size: 38px;}
-        #whackamole-icon { top: 330px; left: 210px; } /* Position for Whack-a-Mole desktop icon */
+        #whackamole-icon { top: 330px; left: 210px; } 
         #whackamole-icon::before { content: '🔨'; background-color: #DAA520; font-size: 38px; }
+        #spaceinvaders-icon { top: 330px; left: 300px; } /* Position for Space Invaders desktop icon */
+        #spaceinvaders-icon::before { content: '👾'; background-color: #333; color: #00FF00; font-size: 38px; line-height: 48px; }
 
 
         /* Taskbar */
@@ -96,8 +98,8 @@
             position: absolute;
             bottom: 30px;
             left: 0;
-            width: 320px; /* UPDATED width */
-            max-height: 540px; /* UPDATED max-height */
+            width: 320px; /* Adjusted width */
+            max-height: 540px; /* Adjusted max-height */
             background-color: #c6d8f0;
             border: 1px outset #FFFFFF;
             border-top: 2px solid #FFFFFF;
@@ -220,6 +222,7 @@
         <div class="icon" id="hangman-icon" data-appid="hangman" data-title="Hangman" data-url="hangman.html" data-width="400" data-height="450"><span>Hangman</span></div>
         <div class="icon" id="tetris-icon" data-appid="tetris" data-title="Tetris" data-url="tetris.html" data-width="320" data-height="550"><span>Tetris</span></div>
         <div class="icon" id="whackamole-icon" data-appid="whackamole" data-title="Whack-a-Mole" data-url="whack_a_mole.html" data-width="350" data-height="480"><span>Whack-a-Mole</span></div>
+        <div class="icon" id="spaceinvaders-icon" data-appid="spaceinvaders" data-title="Space Invaders" data-url="space_invaders.html" data-width="550" data-height="520"><span>Space Invaders</span></div>
 
 
         <div id="start-menu">
@@ -234,13 +237,14 @@
                     <div class="start-menu-item" data-appid="solitaire"><span class="icon-placeholder">🃏</span>Solitaire</div>
                     <div class="start-menu-item" data-appid="hangman"><span class="icon-placeholder">🤔</span>Hangman</div>
                     <div class="start-menu-item" data-appid="tetris"><span class="icon-placeholder">🧱</span>Tetris</div>
+                    <div class="start-menu-item" data-appid="whackamole"><span class="icon-placeholder">🔨</span>Whack-a-Mole</div>
+                    <div class="start-menu-item" data-appid="spaceinvaders"><span class="icon-placeholder">👾</span>Space Invaders</div>
                     <div class="start-menu-separator"></div>
                     <div class="start-menu-item" data-appid="snake"><span class="icon-placeholder">🐍</span>Snake</div>
                     <div class="start-menu-item" data-appid="pong"><span class="icon-placeholder">||</span>Pong</div>
                     <div class="start-menu-item" data-appid="tictactoe"><span class="icon-placeholder">⭕</span>Tic Tac Toe</div>
                     <div class="start-menu-item" data-appid="memory"><span class="icon-placeholder">🧠</span>Memory Game</div>
                     <div class="start-menu-item" data-appid="chess"><span class="icon-placeholder">♚</span>Chess</div>
-                    <div class="start-menu-item" data-appid="whackamole"><span class="icon-placeholder">🔨</span>Whack-a-Mole</div>
                 </div>
                 <div class="start-menu-side-column">
                     <div class="start-menu-item" data-appid="calc"><span class="icon-placeholder">🧮</span>Calculator</div>
