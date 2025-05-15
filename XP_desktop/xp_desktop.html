@@ -44,8 +44,7 @@
         #mycomputer-icon { top: 30px; left: 300px; } #mycomputer-icon::before { content: '💻'; background-color: #e0e0e0; font-size: 38px; }
         #hangman-icon { top: 130px; left: 300px; } #hangman-icon::before { content: '🤔'; background-color: #f5deb3; font-size: 38px; }
         #tetris-icon {top: 230px; left: 300px; } #tetris-icon::before { content: '🧱'; background-color: #cc66cc; font-size: 38px;}
-        /* Add Whack-a-Mole icon style if you added the icon */
-        #whackamole-icon { top: 330px; left: 210px; } 
+        #whackamole-icon { top: 330px; left: 210px; } /* Position for Whack-a-Mole desktop icon */
         #whackamole-icon::before { content: '🔨'; background-color: #DAA520; font-size: 38px; }
 
 
@@ -97,8 +96,8 @@
             position: absolute;
             bottom: 30px;
             left: 0;
-            width: 280px;
-            max-height: 480px; /* Adjusted for more items */
+            width: 320px; /* UPDATED width */
+            max-height: 540px; /* UPDATED max-height */
             background-color: #c6d8f0;
             border: 1px outset #FFFFFF;
             border-top: 2px solid #FFFFFF;
@@ -123,7 +122,7 @@
         .start-menu-columns { 
             display: flex;
             flex-grow: 1;      
-            overflow-x: hidden; /* Prevent horizontal scroll, vertical scroll removed */
+            overflow-x: hidden; 
         }
         .start-menu-main-column {
             width: 55%; padding: 5px 0;
@@ -165,14 +164,13 @@
             border-radius: 5px 5px 0 0;
             min-width: 200px; 
             min-height: 150px;
-            top: 50px; left: 150px; /* Default initial position, JS overrides */
+            top: 50px; left: 150px; 
 
-            /* Animation properties */
             opacity: 0;
             transform: scale(0.95);
             transform-origin: center center; 
             transition: opacity 0.15s ease-out, transform 0.15s ease-out;
-            display: none; /* Start hidden, JS will set to block before animating */
+            display: none; 
         }
         .window.open {
             opacity: 1;
