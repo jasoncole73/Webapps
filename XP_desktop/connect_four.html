@@ -174,7 +174,6 @@
                     droppingPiece = null; // Animation finished
 
                     if (!gameHasEnded && currentPlayer === AI_PLAYER_NUMBER) {
-                        // It's AI's turn after the human piece (or previous AI piece) has landed
                         setTimeout(aiMakeMove, AI_THINKING_TIME);
                     }
                 }
@@ -195,30 +194,22 @@
                 restartButton.style.display = 'block';
                 return true;
             }
-            // Switch player if game not ended
             currentPlayer = (player === 1) ? 2 : 1;
             updateTurnDisplay();
             return false;
         }
 
-
-        function dropPiece(col, playerNum) { // Added playerNum parameter
+        function dropPiece(col, playerNum) { 
             if (gameOver || droppingPiece) return false; 
-
             for (let r = ROWS - 1; r >= 0; r--) {
                 if (board[r][col] === 0) {
-                    // console.log(`Dropping piece for player ${playerNum} in col ${col}, targetRow ${r}`); 
                     droppingPiece = {
-                        col: col,
-                        targetRow: r,
-                        player: playerNum, // Use passed playerNum
-                        y: SQUARE_SIZE / 2 - PIECE_RADIUS - 10, 
-                        speed: 1 
+                        col: col, targetRow: r, player: playerNum, 
+                        y: SQUARE_SIZE / 2 - PIECE_RADIUS - 10, speed: 1 
                     };
                     return true; 
                 }
             }
-            // console.log(`Column ${col} is full.`); 
             return false; 
         }
 
@@ -248,10 +239,6 @@
             return false;
         }
         
-        // highlightWinningPieces can be called if desired, but it's simplified
-        // function highlightWinningPieces(r_win, c_win, player_win) { ... }
-
-
         function isBoardFull() {
             for (let r = 0; r < ROWS; r++) {
                 for (let c = 0; c < COLS; c++) {
@@ -280,205 +267,85 @@
         function gameLoop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawBoard(); 
-
             if (droppingPiece) {
-                updateDroppingPiece(); // This will handle player switching after animation
-                drawDroppingPiece(); 
-            }
-            
-            if (gameOver && droppingPiece === null) {
-                // Game over logic is handled in checkEndConditions
-            }
-
-            if (!gameOver || droppingPiece) { // Continue loop if not game over OR if a piece is still dropping
-                animationFrameId = requestAnimationFrame(gameLoop);
-            } else {
-                console.log("Game Over. Loop stopped."); 
-            }
-        }
-
-        function startGame() {
-            initializeBoard();
-            currentPlayer = 1; // Human always starts
-            gameOver = false;
-            droppingPiece = null; 
-            updateTurnDisplay();
-            updateScoreDisplay(); 
-            messageArea.textContent = '';
-            restartButton.style.display = 'none';
-            
-            if (animationFrameId) { 
-                cancelAnimationFrame(animationFrameId);
-            }
-            animationFrameId = requestAnimationFrame(gameLoop); 
-        }
-
-        // --- AI Logic ---
-        function aiMakeMove() {
-            if (gameOver || currentPlayer !== AI_PLAYER_NUMBER || droppingPiece) return;
-            console.log("AI is making a move..."); // DEBUG
-
-            let chosenColumn = -1;
-
-            // 1. Check if AI can win
-            for (let c = 0; c < COLS; c++) {
-                const r = getLowestEmptyRow(c);
-                if (r !== -1) {
-                    board[r][c] = AI_PLAYER_NUMBER; // Temporarily place piece
-                    if (checkWin(r, c, AI_PLAYER_NUMBER)) {
-                        chosenColumn = c;
-                        board[r][c] = 0; // Undo test
-                        break;
-                    }
-                    board[r][c] = 0; // Undo test
-                }
-            }
-
-            // 2. Check if Player 1 can win and block
-            if (chosenColumn === -1) {
-                for (let c = 0; c < COLS; c++) {
-                    const r = getLowestEmptyRow(c);
-                    if (r !== -1) {
-                        board[r][c] = 1; // Temporarily place opponent's piece
-                        if (checkWin(r, c, 1)) {
-                            chosenColumn = c;
-                            board[r][c] = 0; // Undo test
-                            break;
-                        }
-                        board[r][c] = 0; // Undo test
-                    }
-                }
-            }
-
-            // 3. Prefer center columns if no immediate win/block
-            if (chosenColumn === -1) {
-                const centerCols = [3, 2, 4, 1, 5, 0, 6]; // Order of preference
-                for (let c of centerCols) {
-                    if (getLowestEmptyRow(c) !== -1) {
-                        chosenColumn = c;
-                        break;
-                    }
-                }
-            }
-            
-            // 4. Fallback to random available column
-            if (chosenColumn === -1) {
-                let availableCols = [];
-                for (let c = 0; c < COLS; c++) {
-                    if (getLowestEmptyRow(c) !== -1) {
-                        availableCols.push(c);
-                    }
-                }
-                if (availableCols.length > 0) {
-                    chosenColumn = availableCols[Math.floor(Math.random() * availableCols.length)];
-                }
-            }
-
-            if (chosenColumn !== -1) {
-                dropPiece(chosenColumn, AI_PLAYER_NUMBER);
-            } else {
-                // This should ideally not happen if board is not full
-                console.log("AI could not find a valid move (board might be full or error).");
-            }
-        }
-
-        function getLowestEmptyRow(col) {
-            for (let r = ROWS - 1; r >= 0; r--) {
-                if (board[r][col] === 0) {
-                    return r;
-                }
-            }
-            return -1; // Column is full
-        }
-
-
-        canvas.addEventListener('click', (event) => {
-            if (gameOver || droppingPiece || currentPlayer !== 1) { // Only allow human player to click
-                // console.log("Click ignored: gameOver, piece dropping, or not player 1's turn"); 
-                return;
-            }
-
-            const rect = canvas.getBoundingClientRect();
-            const x = event.clientX - rect.left;
-            const col = Math.floor(x / SQUARE_SIZE);
-
-            if (col >= 0 && col < COLS) {
-                // console.log("Canvas clicked by Player 1, column:", col); 
-                if (getLowestEmptyRow(col) !== -1) { // Check if column is not full
-                    dropPiece(col, 1); // Player 1 drops piece
-                }
-            }
-        });
-        
-        // Mousemove for hover indicator (simplified, can be enhanced)
-        let hoverCol = -1;
-        canvas.addEventListener('mousemove', (event) => {
-            if (gameOver || droppingPiece || currentPlayer !== 1) {
-                if(hoverCol !== -1) { // Clear previous hover if it existed
-                    hoverCol = -1;
-                    // The gameLoop will redraw and clear it
-                }
-                return;
-            }
-            const rect = canvas.getBoundingClientRect();
-            const x = event.clientX - rect.left;
-            const newHoverCol = Math.floor(x / SQUARE_SIZE);
-
-            if (newHoverCol !== hoverCol) {
-                hoverCol = newHoverCol;
-                // The gameLoop will now use hoverCol to draw the indicator
-            }
-        });
-         canvas.addEventListener('mouseleave', () => {
-            hoverCol = -1; // Clear hover when mouse leaves
-        });
-
-        // Modified gameLoop to include hover indicator drawing
-        function gameLoop() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawBoard(); 
-
-            if (droppingPiece) {
-                updateDroppingPiece();
+                updateDroppingPiece(); 
                 drawDroppingPiece(); 
             } else if (!gameOver && currentPlayer === 1 && hoverCol >= 0 && hoverCol < COLS && board[0][hoverCol] === 0) {
-                // Draw hover indicator for human player
                 ctx.beginPath();
                 ctx.arc(hoverCol * SQUARE_SIZE + SQUARE_SIZE / 2, 
-                        SQUARE_SIZE / 2 - PIECE_RADIUS / 2 , // Position at the top
+                        SQUARE_SIZE / 2 - PIECE_RADIUS / 2 , 
                         PIECE_RADIUS, 0, Math.PI * 2);
                 ctx.fillStyle = PLAYER1_COLOR;
                 ctx.globalAlpha = 0.5; 
                 ctx.fill();
                 ctx.globalAlpha = 1.0; 
             }
-            
-            if (gameOver && droppingPiece === null) {
-                // Final win highlight can be added here if needed, by re-checking win
-            }
-
             if (!gameOver || droppingPiece) { 
                 animationFrameId = requestAnimationFrame(gameLoop);
-            } else {
-                // console.log("Game Over. Loop stopped."); 
             }
         }
 
+        function startGame() {
+            initializeBoard();
+            currentPlayer = 1; 
+            gameOver = false;
+            droppingPiece = null; 
+            updateTurnDisplay();
+            updateScoreDisplay(); 
+            messageArea.textContent = '';
+            restartButton.style.display = 'none';
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            animationFrameId = requestAnimationFrame(gameLoop); 
+        }
+
+        function aiMakeMove() {
+            if (gameOver || currentPlayer !== AI_PLAYER_NUMBER || droppingPiece) return;
+            let chosenColumn = -1;
+            for (let c = 0; c < COLS; c++) { // Check AI win
+                const r = getLowestEmptyRow(c);
+                if (r !== -1) { board[r][c] = AI_PLAYER_NUMBER; if (checkWin(r, c, AI_PLAYER_NUMBER)) { chosenColumn = c; board[r][c] = 0; break; } board[r][c] = 0; }
+            }
+            if (chosenColumn === -1) { // Check block player win
+                for (let c = 0; c < COLS; c++) {
+                    const r = getLowestEmptyRow(c);
+                    if (r !== -1) { board[r][c] = 1; if (checkWin(r, c, 1)) { chosenColumn = c; board[r][c] = 0; break; } board[r][c] = 0; }
+                }
+            }
+            if (chosenColumn === -1) { // Prefer center
+                const centerCols = [3, 2, 4, 1, 5, 0, 6]; 
+                for (let c of centerCols) { if (getLowestEmptyRow(c) !== -1) { chosenColumn = c; break; } }
+            }
+            if (chosenColumn === -1) { // Random
+                let availableCols = [];
+                for (let c = 0; c < COLS; c++) { if (getLowestEmptyRow(c) !== -1) availableCols.push(c); }
+                if (availableCols.length > 0) chosenColumn = availableCols[Math.floor(Math.random() * availableCols.length)];
+            }
+            if (chosenColumn !== -1) dropPiece(chosenColumn, AI_PLAYER_NUMBER);
+        }
+
+        function getLowestEmptyRow(col) {
+            for (let r = ROWS - 1; r >= 0; r--) { if (board[r][col] === 0) return r; } return -1; 
+        }
+
+        canvas.addEventListener('click', (event) => {
+            if (gameOver || droppingPiece || currentPlayer !== 1) return;
+            const rect = canvas.getBoundingClientRect(); const x = event.clientX - rect.left;
+            const col = Math.floor(x / SQUARE_SIZE);
+            if (col >= 0 && col < COLS && getLowestEmptyRow(col) !== -1) dropPiece(col, 1); 
+        });
+        
+        let hoverCol = -1;
+        canvas.addEventListener('mousemove', (event) => {
+            if (gameOver || droppingPiece || currentPlayer !== 1) { if(hoverCol !== -1) hoverCol = -1; return; }
+            const rect = canvas.getBoundingClientRect(); const x = event.clientX - rect.left;
+            const newHoverCol = Math.floor(x / SQUARE_SIZE);
+            if (newHoverCol !== hoverCol) hoverCol = newHoverCol;
+        });
+         canvas.addEventListener('mouseleave', () => { hoverCol = -1; });
 
         restartButton.addEventListener('click', startGame);
-        
-        window.cleanupGame = () => {
-            console.log("Connect Four cleanup called.");
-            gameOver = true; 
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-                animationFrameId = null;
-            }
-        };
-
-        // Initial setup
+        window.cleanupGame = () => { gameOver = true; if (animationFrameId) cancelAnimationFrame(animationFrameId);};
         startGame();
-
     </script>
 </body>
 </html>
