@@ -31,6 +31,8 @@
             background-color: #000;
             border: 2px solid #0F0; /* Green retro border */
             box-shadow: 0 0 10px #0F0;
+            /* Ensure canvas can receive focus for keyboard events if needed directly */
+            outline: none; /* Remove default focus outline if not desired */
         }
         #controls-info {
             margin-top: 15px;
@@ -45,16 +47,16 @@
             text-align: center;
             font-size: 24px;
             color: #0F0;
-            background-color: rgba(0,0,0,0.7);
+            background-color: rgba(0,0,0,0.8); /* Slightly more opaque */
             padding: 20px;
             border-radius: 10px;
             border: 1px solid #0F0;
             z-index: 100;
-            cursor: pointer; /* Make start message clickable */
+            cursor: pointer; 
         }
         #gameOverMessage {
-            display: none; /* Hidden initially */
-            cursor: default; /* Game over message isn't directly clickable to restart */
+            display: none; 
+            cursor: default; 
         }
         #gameOverMessage button {
             display: block;
@@ -77,14 +79,13 @@
         <div>Score: <span id="score">0</span></div>
         <div>Lives: <span id="lives">3</span></div>
     </div>
-    <canvas id="gameCanvas"></canvas>
-    <div id="controls-info">
+    <canvas id="gameCanvas" tabindex="0"></canvas> <div id="controls-info">
         Controls: Left/Right Arrows = Rotate, Up Arrow = Thrust, Space = Shoot
     </div>
 
     <div id="startMessage">
         <p>ASTEROIDS</p>
-        <p style="font-size: 16px;">Press ENTER or Click Here to Start</p>
+        <p style="font-size: 16px;">Click Here or Press ENTER to Start</p>
     </div>
     <div id="gameOverMessage">
         <p>GAME OVER</p>
@@ -128,7 +129,7 @@
         let lives = 3;
         let gameRunning = false;
         let keys = {}; 
-        let ASTEROID_NUM_CURRENT_LEVEL = 3; // Changed from const to let, and renamed for clarity
+        let ASTEROID_NUM_CURRENT_LEVEL = 3; 
 
         // --- Setup Canvas ---
         function setupCanvas() {
@@ -227,7 +228,7 @@
             };
 
             this.shoot = function() {
-                if (this.canShoot && bullets.length < BULLET_MAX) {
+                if (this.canShoot && bullets.length < BULLET_MAX && gameRunning) { // Ensure game is running
                     bullets.push(new Bullet(this.x, this.y, this.angle));
                     this.canShoot = false;
                     setTimeout(() => { this.canShoot = true; }, 250); 
@@ -339,13 +340,16 @@
             bullets = [];
             score = 0;
             lives = 3;
-            ASTEROID_NUM_CURRENT_LEVEL = 3; // Reset asteroid count for new game
+            ASTEROID_NUM_CURRENT_LEVEL = 3; 
             updateScoreDisplay();
             updateLivesDisplay();
             createAsteroids(ASTEROID_NUM_CURRENT_LEVEL);
             startMessage.style.display = 'none';
             gameOverMessage.style.display = 'none';
             gameRunning = true;
+            
+            canvas.focus(); // Explicitly focus the canvas
+
             if (!animationFrameId) { 
                 gameLoop();
             }
@@ -377,7 +381,7 @@
         }
         
         function levelUp() {
-            ASTEROID_NUM_CURRENT_LEVEL++; // Increment for next level
+            ASTEROID_NUM_CURRENT_LEVEL++; 
             createAsteroids(ASTEROID_NUM_CURRENT_LEVEL);
         }
 
@@ -395,12 +399,13 @@
                 do {
                     x = Math.random() * canvas.width;
                     y = Math.random() * canvas.height;
-                } while (distBetweenPoints(ship.x, ship.y, x, y) < ASTEROID_SIZE_LARGE * 2 + ship.radius);
+                } while (ship && distBetweenPoints(ship.x, ship.y, x, y) < ASTEROID_SIZE_LARGE * 2 + ship.radius); // Check ship exists
                 asteroids.push(new Asteroid(x, y, ASTEROID_SIZE_LARGE));
             }
         }
 
         function handleInput() {
+            if (!ship) return; // Ensure ship exists
             ship.thrusting = keys['ArrowUp'] || keys['w'];
             if (keys['ArrowLeft'] || keys['a']) ship.rotation = -SHIP_TURN_SPEED;
             else if (keys['ArrowRight'] || keys['d']) ship.rotation = SHIP_TURN_SPEED;
@@ -414,6 +419,8 @@
         }
 
         function checkCollisions() {
+            if (!ship) return; // Ensure ship exists
+            // Bullets vs Asteroids
             for (let i = bullets.length - 1; i >= 0; i--) {
                 for (let j = asteroids.length - 1; j >= 0; j--) {
                     if (distBetweenPoints(bullets[i].x, bullets[i].y, asteroids[j].x, asteroids[j].y) < asteroids[j].radius + bullets[i].radius) {
@@ -425,6 +432,7 @@
                 }
             }
 
+            // Ship vs Asteroids
             if (!ship.invincible) {
                 for (let i = asteroids.length - 1; i >= 0; i--) {
                     if (distBetweenPoints(ship.x, ship.y, asteroids[i].x, asteroids[i].y) < asteroids[i].radius + ship.radius * 0.7) { 
@@ -457,7 +465,8 @@
 
         // Event Listeners
         window.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !gameRunning && gameOverMessage.style.display === 'none') {
+            // Only allow Enter to start if the start message is visible
+            if (e.key === 'Enter' && !gameRunning && startMessage.style.display !== 'none') {
                 initGame();
             }
             keys[e.key] = true;
@@ -469,8 +478,8 @@
             keys[e.key] = false;
         });
         
-        startMessage.addEventListener('click', () => { // ADDED: Click listener for start message
-            if (!gameRunning && gameOverMessage.style.display === 'none') {
+        startMessage.addEventListener('click', () => { 
+            if (!gameRunning && startMessage.style.display !== 'none') { // Check if start message is visible
                 initGame();
             }
         });
