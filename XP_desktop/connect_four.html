@@ -38,7 +38,7 @@
         .ai-thinking { background-color: #777; } /* Grey for AI thinking */
 
         #gameCanvas {
-            background-color: #0074D9; 
+            background-color: #0074D9; /* Fallback, but JS draws over this */
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             cursor: pointer;
@@ -95,7 +95,7 @@
         const EMPTY_SLOT_COLOR = '#0056a3'; 
         const PLAYER1_COLOR = '#FF4136'; // Human
         const PLAYER2_COLOR = '#FFDC00'; // AI
-        const WINNING_PIECE_HIGHLIGHT = 'rgba(57, 204, 204, 0.7)'; // Teal with higher alpha for highlight
+        const WINNING_PIECE_HIGHLIGHT = 'rgba(57, 204, 204, 0.7)';
 
         canvas.width = COLS * SQUARE_SIZE;
         canvas.height = ROWS * SQUARE_SIZE;
@@ -112,6 +112,7 @@
         let winningPieces = []; 
 
         function initializeBoard() {
+            console.log("Initializing board array..."); // DEBUG
             board = [];
             for (let r = 0; r < ROWS; r++) {
                 board[r] = [];
@@ -120,9 +121,11 @@
                 }
             }
             winningPieces = []; 
+            console.log("Board initialized."); // DEBUG
         }
 
         function drawBoard() {
+            // console.log("drawBoard called. gameOver:", gameOver); // DEBUG
             ctx.fillStyle = BOARD_COLOR;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -180,13 +183,12 @@
                     const c_dropped = droppingPiece.col;
                     
                     const gameHasEnded = checkEndConditions(r_dropped, c_dropped, playerWhoDropped);
-                    droppingPiece = null; // Set to null AFTER checkEndConditions
+                    droppingPiece = null; 
 
                     if (gameHasEnded) {
-                        // Force a final draw to ensure the winning piece and highlights are shown
-                        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear first
-                        drawBoard(); // This will include highlights if winningPieces is populated
-                        console.log("Game ended, forced final draw from updateDroppingPiece.");
+                        ctx.clearRect(0, 0, canvas.width, canvas.height); 
+                        drawBoard(); 
+                        // console.log("Game ended, forced final draw from updateDroppingPiece.");
                     } else if (playerWhoDropped === 1 && currentPlayer === AI_PLAYER_NUMBER) { 
                         setTimeout(aiMakeMove, AI_THINKING_TIME);
                     }
@@ -219,6 +221,7 @@
             if (gameOver || droppingPiece) return false; 
             for (let r = ROWS - 1; r >= 0; r--) {
                 if (board[r][col] === 0) {
+                    console.log(`Dropping piece for player ${playerNum} in col ${col}, targetRow ${r}`); // DEBUG
                     droppingPiece = {
                         col: col, targetRow: r, player: playerNum, 
                         y: SQUARE_SIZE / 2 - PIECE_RADIUS - 10, speed: 1 
@@ -230,22 +233,24 @@
         }
 
         function checkWin(r_check, c_check, player_check) {
+            // console.log(`--- checkWin(r=${r_check}, c=${c_check}, player=${player_check}) ---`); // DEBUG
             winningPieces = []; 
-            // Check horizontal
+            let count;
+            // Horizontal
             for (let c_start = 0; c_start <= COLS - 4; c_start++) {
                 if (board[r_check][c_start] === player_check && board[r_check][c_start + 1] === player_check &&
                     board[r_check][c_start + 2] === player_check && board[r_check][c_start + 3] === player_check) {
                     for(let i=0; i<4; i++) winningPieces.push({r: r_check, c: c_start + i}); return true;
                 }
             }
-            // Check vertical
+            // Vertical
             for (let r_start = 0; r_start <= ROWS - 4; r_start++) {
                 if (board[r_start][c_check] === player_check && board[r_start + 1][c_check] === player_check &&
                     board[r_start + 2][c_check] === player_check && board[r_start + 3][c_check] === player_check) {
                     for(let i=0; i<4; i++) winningPieces.push({r: r_start + i, c: c_check}); return true;
                 }
             }
-            // Check diagonal (bottom-left to top-right \)
+            // Diagonal (bottom-left to top-right \)
             for (let r_start = 3; r_start < ROWS; r_start++) {
                 for (let c_start = 0; c_start <= COLS - 4; c_start++) {
                     if (board[r_start][c_start] === player_check && board[r_start - 1][c_start + 1] === player_check &&
@@ -254,7 +259,7 @@
                     }
                 }
             }
-            // Check diagonal (top-left to bottom-right /)
+            // Diagonal (top-left to bottom-right /)
             for (let r_start = 0; r_start <= ROWS - 4; r_start++) {
                 for (let c_start = 0; c_start <= COLS - 4; c_start++) {
                     if (board[r_start][c_start] === player_check && board[r_start + 1][c_start + 1] === player_check &&
@@ -306,20 +311,13 @@
         }
 
         function gameLoop() {
-            if (!gameRunning && !droppingPiece) { 
-                console.log("Game loop stopping: game over and no piece dropping.");
-                cancelAnimationFrame(animationFrameId);
-                animationFrameId = null;
-                // If game ended, ensure final board is drawn (already handled in updateDroppingPiece)
-                return;
-            }
-
+            // console.log("gameLoop - Top. gameOver:", gameOver, "droppingPiece:", !!droppingPiece); // DEBUG
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawBoard(); 
 
             if (droppingPiece) {
                 updateDroppingPiece(); 
-                if(droppingPiece) { // Check if still dropping after update
+                if(droppingPiece) { 
                     drawDroppingPiece(); 
                 }
             } else if (!gameOver && currentPlayer === 1 && hoverCol >= 0 && hoverCol < COLS && board[0][hoverCol] === 0) {
@@ -333,10 +331,18 @@
                 ctx.globalAlpha = 1.0; 
             }
             
-            animationFrameId = requestAnimationFrame(gameLoop);
+            // Continue the loop if the game is not over OR if a piece is still in the process of dropping
+            if (!gameOver || droppingPiece) { 
+                animationFrameId = requestAnimationFrame(gameLoop);
+            } else {
+                console.log("Game Over and no piece dropping. Loop definitively stopped."); // DEBUG
+                 // Ensure final board state with highlights is drawn if game just ended
+                drawBoard();
+            }
         }
 
         function startGame() {
+            console.log("startGame called"); // DEBUG
             initializeBoard();
             currentPlayer = 1; 
             gameOver = false;
@@ -345,7 +351,17 @@
             updateScoreDisplay(); 
             messageArea.textContent = '';
             restartButton.style.display = 'none';
-            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            
+            // Force an initial draw of the empty board
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBoard();
+            console.log("Initial board drawn in startGame"); // DEBUG
+            
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                console.log("Cleared previous animation frame in startGame"); // DEBUG
+            }
+            console.log("Requesting initial animation frame in startGame"); // DEBUG
             animationFrameId = requestAnimationFrame(gameLoop); 
         }
 
@@ -401,7 +417,10 @@
 
         restartButton.addEventListener('click', startGame);
         window.cleanupGame = () => { gameOver = true; if (animationFrameId) cancelAnimationFrame(animationFrameId);};
+        
+        // Initial setup call
         startGame();
+
     </script>
 </body>
 </html>
