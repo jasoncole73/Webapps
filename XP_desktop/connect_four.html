@@ -95,7 +95,7 @@
         const EMPTY_SLOT_COLOR = '#0056a3'; 
         const PLAYER1_COLOR = '#FF4136'; // Human
         const PLAYER2_COLOR = '#FFDC00'; // AI
-        const WINNING_PIECE_HIGHLIGHT = 'rgba(57, 204, 204, 0.5)'; // Teal with alpha for highlight
+        const WINNING_PIECE_HIGHLIGHT = 'rgba(57, 204, 204, 0.7)'; // Teal with higher alpha for highlight
 
         canvas.width = COLS * SQUARE_SIZE;
         canvas.height = ROWS * SQUARE_SIZE;
@@ -109,7 +109,7 @@
         let animationFrameId = null; 
         const AI_PLAYER_NUMBER = 2; 
         const AI_THINKING_TIME = 700; 
-        let winningPieces = []; // To store coordinates of winning pieces for highlighting
+        let winningPieces = []; 
 
         function initializeBoard() {
             board = [];
@@ -119,7 +119,7 @@
                     board[r][c] = 0; 
                 }
             }
-            winningPieces = []; // Clear winning pieces
+            winningPieces = []; 
         }
 
         function drawBoard() {
@@ -146,7 +146,6 @@
                     ctx.stroke();
                 }
             }
-            // Draw winning pieces highlight if game is over
             if (gameOver && winningPieces.length > 0) {
                 highlightWinningPiecesOnBoard();
             }
@@ -174,20 +173,20 @@
                 const targetY = droppingPiece.targetRow * SQUARE_SIZE + SQUARE_SIZE / 2;
                 if (droppingPiece.y >= targetY) {
                     droppingPiece.y = targetY; 
-                    board[droppingPiece.targetRow][droppingPiece.col] = droppingPiece.player;
+                    board[droppingPiece.targetRow][droppingPiece.col] = droppingPiece.player; 
                     
                     const playerWhoDropped = droppingPiece.player;
                     const r_dropped = droppingPiece.targetRow;
                     const c_dropped = droppingPiece.col;
                     
-                    droppingPiece = null; // Piece has landed, stop its animation.
-
                     const gameHasEnded = checkEndConditions(r_dropped, c_dropped, playerWhoDropped);
+                    droppingPiece = null; // Set to null AFTER checkEndConditions
 
                     if (gameHasEnded) {
-                        // The gameLoop will handle the final draw because gameOver is true and droppingPiece is null.
-                        // highlightWinningPieces was called within checkWin if a win occurred.
-                        console.log("Game ended. Final state will be drawn by gameLoop.");
+                        // Force a final draw to ensure the winning piece and highlights are shown
+                        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear first
+                        drawBoard(); // This will include highlights if winningPieces is populated
+                        console.log("Game ended, forced final draw from updateDroppingPiece.");
                     } else if (playerWhoDropped === 1 && currentPlayer === AI_PLAYER_NUMBER) { 
                         setTimeout(aiMakeMove, AI_THINKING_TIME);
                     }
@@ -202,7 +201,6 @@
                 if (player === 1) player1Score++; else player2Score++;
                 updateScoreDisplay();
                 restartButton.style.display = 'block';
-                // Note: highlightWinningPieces is now called from checkWin to store pieces
                 return true;
             } else if (isBoardFull()) {
                 gameOver = true;
@@ -232,49 +230,36 @@
         }
 
         function checkWin(r_check, c_check, player_check) {
-            winningPieces = []; // Reset before checking
-
+            winningPieces = []; 
             // Check horizontal
             for (let c_start = 0; c_start <= COLS - 4; c_start++) {
-                if (board[r_check][c_start] === player_check &&
-                    board[r_check][c_start + 1] === player_check &&
-                    board[r_check][c_start + 2] === player_check &&
-                    board[r_check][c_start + 3] === player_check) {
-                    for(let i=0; i<4; i++) winningPieces.push({r: r_check, c: c_start + i});
-                    return true;
+                if (board[r_check][c_start] === player_check && board[r_check][c_start + 1] === player_check &&
+                    board[r_check][c_start + 2] === player_check && board[r_check][c_start + 3] === player_check) {
+                    for(let i=0; i<4; i++) winningPieces.push({r: r_check, c: c_start + i}); return true;
                 }
             }
             // Check vertical
             for (let r_start = 0; r_start <= ROWS - 4; r_start++) {
-                if (board[r_start][c_check] === player_check &&
-                    board[r_start + 1][c_check] === player_check &&
-                    board[r_start + 2][c_check] === player_check &&
-                    board[r_start + 3][c_check] === player_check) {
-                    for(let i=0; i<4; i++) winningPieces.push({r: r_start + i, c: c_check});
-                    return true;
+                if (board[r_start][c_check] === player_check && board[r_start + 1][c_check] === player_check &&
+                    board[r_start + 2][c_check] === player_check && board[r_start + 3][c_check] === player_check) {
+                    for(let i=0; i<4; i++) winningPieces.push({r: r_start + i, c: c_check}); return true;
                 }
             }
             // Check diagonal (bottom-left to top-right \)
             for (let r_start = 3; r_start < ROWS; r_start++) {
                 for (let c_start = 0; c_start <= COLS - 4; c_start++) {
-                    if (board[r_start][c_start] === player_check &&
-                        board[r_start - 1][c_start + 1] === player_check &&
-                        board[r_start - 2][c_start + 2] === player_check &&
-                        board[r_start - 3][c_start + 3] === player_check) {
-                        for(let i=0; i<4; i++) winningPieces.push({r: r_start - i, c: c_start + i});
-                        return true;
+                    if (board[r_start][c_start] === player_check && board[r_start - 1][c_start + 1] === player_check &&
+                        board[r_start - 2][c_start + 2] === player_check && board[r_start - 3][c_start + 3] === player_check) {
+                        for(let i=0; i<4; i++) winningPieces.push({r: r_start - i, c: c_start + i}); return true;
                     }
                 }
             }
             // Check diagonal (top-left to bottom-right /)
             for (let r_start = 0; r_start <= ROWS - 4; r_start++) {
                 for (let c_start = 0; c_start <= COLS - 4; c_start++) {
-                    if (board[r_start][c_start] === player_check &&
-                        board[r_start + 1][c_start + 1] === player_check &&
-                        board[r_start + 2][c_start + 2] === player_check &&
-                        board[r_start + 3][c_start + 3] === player_check) {
-                        for(let i=0; i<4; i++) winningPieces.push({r: r_start + i, c: c_start + i});
-                        return true;
+                    if (board[r_start][c_start] === player_check && board[r_start + 1][c_start + 1] === player_check &&
+                        board[r_start + 2][c_start + 2] === player_check && board[r_start + 3][c_start + 3] === player_check) {
+                        for(let i=0; i<4; i++) winningPieces.push({r: r_start + i, c: c_start + i}); return true;
                     }
                 }
             }
@@ -284,12 +269,12 @@
         function highlightWinningPiecesOnBoard() {
             if (winningPieces.length > 0) {
                 ctx.strokeStyle = WINNING_PIECE_HIGHLIGHT;
-                ctx.lineWidth = 5; // Make highlight thicker
+                ctx.lineWidth = 5; 
                 winningPieces.forEach(p => {
                     ctx.beginPath();
                     ctx.arc(p.c * SQUARE_SIZE + SQUARE_SIZE / 2, 
                             p.r * SQUARE_SIZE + SQUARE_SIZE / 2, 
-                            PIECE_RADIUS + 1, 0, Math.PI * 2); // Slightly larger arc for highlight
+                            PIECE_RADIUS + 1, 0, Math.PI * 2); 
                     ctx.stroke();
                 });
             }
@@ -321,12 +306,22 @@
         }
 
         function gameLoop() {
+            if (!gameRunning && !droppingPiece) { 
+                console.log("Game loop stopping: game over and no piece dropping.");
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+                // If game ended, ensure final board is drawn (already handled in updateDroppingPiece)
+                return;
+            }
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawBoard(); // This will now also draw highlights if gameOver and winningPieces exist
+            drawBoard(); 
 
             if (droppingPiece) {
                 updateDroppingPiece(); 
-                drawDroppingPiece(); 
+                if(droppingPiece) { // Check if still dropping after update
+                    drawDroppingPiece(); 
+                }
             } else if (!gameOver && currentPlayer === 1 && hoverCol >= 0 && hoverCol < COLS && board[0][hoverCol] === 0) {
                 ctx.beginPath();
                 ctx.arc(hoverCol * SQUARE_SIZE + SQUARE_SIZE / 2, 
@@ -338,13 +333,7 @@
                 ctx.globalAlpha = 1.0; 
             }
             
-            if (!gameOver || droppingPiece) { 
-                animationFrameId = requestAnimationFrame(gameLoop);
-            } else {
-                // Game is over and no piece is dropping.
-                // The final board with highlights (if any) is drawn by drawBoard().
-                console.log("Game Over. Loop stopped."); 
-            }
+            animationFrameId = requestAnimationFrame(gameLoop);
         }
 
         function startGame() {
