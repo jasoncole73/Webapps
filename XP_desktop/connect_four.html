@@ -8,7 +8,7 @@
     <style>
         body {
             font-family: 'Roboto', sans-serif;
-            background-color: #f0f0f0; /* Light grey background */
+            background-color: #f0f0f0; 
             margin: 0;
             padding: 10px;
             display: flex;
@@ -23,7 +23,7 @@
             display: flex;
             justify-content: space-between;
             width: 100%;
-            max-width: 560px; /* Canvas width */
+            max-width: 560px; 
             margin-bottom: 15px;
             font-size: 1.2em;
             font-weight: bold;
@@ -35,9 +35,10 @@
         }
         .player1-turn { background-color: #FF4136; /* Red */ }
         .player2-turn { background-color: #FFDC00; /* Yellow */ }
+        .ai-thinking { background-color: #777; } /* Grey for AI thinking */
 
         #gameCanvas {
-            background-color: #0074D9; /* Classic Connect 4 Blue */
+            background-color: #0074D9; 
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             cursor: pointer;
@@ -55,12 +56,12 @@
             font-size: 1em;
             font-weight: bold;
             color: white;
-            background-color: #2ECC40; /* Green */
+            background-color: #2ECC40; 
             border: none;
             border-radius: 5px;
             cursor: pointer;
             box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-            display: none; /* Hidden initially */
+            display: none; 
         }
         #restartButton:hover {
             background-color: #27ae60;
@@ -70,7 +71,7 @@
 <body>
     <div id="game-info">
         <span id="currentPlayerTurn"></span>
-        <div>Score: <span id="player1Score">0</span> - <span id="player2Score">0</span></div>
+        <div>Score: <span id="player1Score">0</span> (Red) - <span id="player2Score">0</span> (Yellow)</div>
     </div>
     <canvas id="gameCanvas"></canvas>
     <div id="message-area"></div>
@@ -92,8 +93,8 @@
         const PIECE_RADIUS = SQUARE_SIZE / 2 - 8; 
         const BOARD_COLOR = '#0074D9';
         const EMPTY_SLOT_COLOR = '#0056a3'; 
-        const PLAYER1_COLOR = '#FF4136'; 
-        const PLAYER2_COLOR = '#FFDC00'; 
+        const PLAYER1_COLOR = '#FF4136'; // Human
+        const PLAYER2_COLOR = '#FFDC00'; // AI
         const WINNING_PIECE_HIGHLIGHT = '#39CCCC'; 
 
         canvas.width = COLS * SQUARE_SIZE;
@@ -105,7 +106,9 @@
         let player1Score = 0;
         let player2Score = 0;
         let droppingPiece = null; 
-        let animationFrameId = null; // Added to manage animation frame
+        let animationFrameId = null; 
+        const AI_PLAYER_NUMBER = 2; // AI is Player 2
+        const AI_THINKING_TIME = 700; // milliseconds
 
         function initializeBoard() {
             board = [];
@@ -145,7 +148,6 @@
         
         function drawDroppingPiece() {
             if (droppingPiece) {
-                // console.log("drawDroppingPiece at y:", droppingPiece.y); // DEBUG
                 ctx.beginPath();
                 ctx.arc(droppingPiece.col * SQUARE_SIZE + SQUARE_SIZE / 2, 
                         droppingPiece.y, 
@@ -160,55 +162,63 @@
 
         function updateDroppingPiece() {
             if (droppingPiece) {
-                // console.log("updateDroppingPiece. Current y:", droppingPiece.y, "speed:", droppingPiece.speed, "targetY:", droppingPiece.targetRow * SQUARE_SIZE + SQUARE_SIZE / 2); // DEBUG
                 droppingPiece.y += droppingPiece.speed;
-                droppingPiece.speed += 0.8; // Adjusted gravity for potentially smoother feel
+                droppingPiece.speed += 0.8; 
 
                 const targetY = droppingPiece.targetRow * SQUARE_SIZE + SQUARE_SIZE / 2;
                 if (droppingPiece.y >= targetY) {
-                    // console.log("Target reached. Snapping piece. DroppingPiece will be null."); // DEBUG
                     droppingPiece.y = targetY; 
                     board[droppingPiece.targetRow][droppingPiece.col] = droppingPiece.player;
                     
-                    if (checkWin(droppingPiece.targetRow, droppingPiece.col, droppingPiece.player)) {
-                        gameOver = true;
-                        messageArea.textContent = `Player ${droppingPiece.player} Wins!`;
-                        // highlightWinningPieces(droppingPiece.targetRow, droppingPiece.col, droppingPiece.player); // Call this after board is drawn with final piece
-                        if (droppingPiece.player === 1) player1Score++; else player2Score++;
-                        updateScoreDisplay();
-                        restartButton.style.display = 'block';
-                    } else if (isBoardFull()) {
-                        gameOver = true;
-                        messageArea.textContent = "It's a Draw!";
-                        restartButton.style.display = 'block';
-                    } else {
-                        currentPlayer = (droppingPiece.player === 1) ? 2 : 1;
-                        updateTurnDisplay();
+                    const gameHasEnded = checkEndConditions(droppingPiece.targetRow, droppingPiece.col, droppingPiece.player);
+                    droppingPiece = null; // Animation finished
+
+                    if (!gameHasEnded && currentPlayer === AI_PLAYER_NUMBER) {
+                        // It's AI's turn after the human piece (or previous AI piece) has landed
+                        setTimeout(aiMakeMove, AI_THINKING_TIME);
                     }
-                    droppingPiece = null; 
                 }
             }
         }
 
+        function checkEndConditions(r, c, player) {
+            if (checkWin(r, c, player)) {
+                gameOver = true;
+                messageArea.textContent = (player === AI_PLAYER_NUMBER ? "Computer" : `Player ${player}`) + " Wins!";
+                if (player === 1) player1Score++; else player2Score++;
+                updateScoreDisplay();
+                restartButton.style.display = 'block';
+                return true;
+            } else if (isBoardFull()) {
+                gameOver = true;
+                messageArea.textContent = "It's a Draw!";
+                restartButton.style.display = 'block';
+                return true;
+            }
+            // Switch player if game not ended
+            currentPlayer = (player === 1) ? 2 : 1;
+            updateTurnDisplay();
+            return false;
+        }
 
-        function dropPiece(col) {
+
+        function dropPiece(col, playerNum) { // Added playerNum parameter
             if (gameOver || droppingPiece) return false; 
 
             for (let r = ROWS - 1; r >= 0; r--) {
                 if (board[r][col] === 0) {
-                    console.log(`Dropping piece for player ${currentPlayer} in col ${col}, targetRow ${r}`); // DEBUG
+                    // console.log(`Dropping piece for player ${playerNum} in col ${col}, targetRow ${r}`); 
                     droppingPiece = {
                         col: col,
                         targetRow: r,
-                        player: currentPlayer,
-                        y: SQUARE_SIZE / 2 - PIECE_RADIUS - 10, // Start slightly higher
-                        speed: 1 // Initial speed
+                        player: playerNum, // Use passed playerNum
+                        y: SQUARE_SIZE / 2 - PIECE_RADIUS - 10, 
+                        speed: 1 
                     };
-                    // Do not change currentPlayer here; it changes after animation
                     return true; 
                 }
             }
-            console.log(`Column ${col} is full.`); // DEBUG
+            // console.log(`Column ${col} is full.`); 
             return false; 
         }
 
@@ -238,21 +248,8 @@
             return false;
         }
         
-        function highlightWinningPieces(r_win, c_win, player_win) {
-            // Simplified: just make the winning pieces slightly larger or add a glow
-            // This function would need to identify all 4 winning pieces.
-            // For now, we'll just make the last dropped piece pulse if it was a winning move.
-            // This should be called after the final board draw in gameLoop if gameOver.
-            // A more robust solution would store the winning pieces and draw them differently.
-            // console.log("Highlighting attempt for piece at:", r_win, c_win); // DEBUG
-             ctx.strokeStyle = WINNING_PIECE_HIGHLIGHT;
-             ctx.lineWidth = 5; // Thicker highlight
-             ctx.beginPath();
-             ctx.arc(c_win * SQUARE_SIZE + SQUARE_SIZE / 2, 
-                     r_win * SQUARE_SIZE + SQUARE_SIZE / 2, 
-                     PIECE_RADIUS + 3, 0, Math.PI * 2); // Slightly larger arc
-             ctx.stroke();
-        }
+        // highlightWinningPieces can be called if desired, but it's simplified
+        // function highlightWinningPieces(r_win, c_win, player_win) { ... }
 
 
         function isBoardFull() {
@@ -265,8 +262,14 @@
         }
 
         function updateTurnDisplay() {
-            currentPlayerTurnDisplay.textContent = `Player ${currentPlayer}'s Turn`;
-            currentPlayerTurnDisplay.className = currentPlayer === 1 ? 'player1-turn' : 'player2-turn';
+            if (gameOver) return;
+            if (currentPlayer === AI_PLAYER_NUMBER) {
+                currentPlayerTurnDisplay.textContent = `Computer is thinking...`;
+                currentPlayerTurnDisplay.className = 'ai-thinking';
+            } else {
+                currentPlayerTurnDisplay.textContent = `Player ${currentPlayer}'s Turn`;
+                currentPlayerTurnDisplay.className = currentPlayer === 1 ? 'player1-turn' : 'player2-turn';
+            }
         }
         
         function updateScoreDisplay() {
@@ -274,72 +277,124 @@
             player2ScoreDisplay.textContent = player2Score;
         }
 
-
         function gameLoop() {
-            // console.log("gameLoop running. droppingPiece:", droppingPiece, "gameOver:", gameOver); // DEBUG
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawBoard(); 
 
             if (droppingPiece) {
-                updateDroppingPiece();
+                updateDroppingPiece(); // This will handle player switching after animation
                 drawDroppingPiece(); 
-            } else if (!gameOver) {
-                // Logic for hover indicator (needs current mouse position, handled in mousemove)
             }
             
-            if (gameOver && droppingPiece === null) { // Ensure piece has landed before highlighting
-                // Attempt to find and highlight the winning line after the board is drawn
-                // This is a simplified approach, a full solution would store the winning line
-                for (let r = 0; r < ROWS; r++) {
-                    for (let c = 0; c < COLS; c++) {
-                        if (board[r][c] !== 0 && checkWin(r,c, board[r][c])) {
-                           // This checkWin here is to re-verify, ideally highlight is called once
-                           // highlightWinningPieces(r,c, board[r][c]); // Might highlight multiple if not careful
-                           // For simplicity, the highlight is called when win is first detected.
-                           // We just need to ensure the final board state is drawn.
-                           break; // Found a win, no need to check further for highlighting
-                        }
-                    }
-                     if (gameOver) break; 
-                }
+            if (gameOver && droppingPiece === null) {
+                // Game over logic is handled in checkEndConditions
             }
 
-
-            if (!gameOver) { 
+            if (!gameOver || droppingPiece) { // Continue loop if not game over OR if a piece is still dropping
                 animationFrameId = requestAnimationFrame(gameLoop);
             } else {
-                 // Final draw to ensure winning highlight is visible if not already drawn
-                drawBoard(); // Draw board with all pieces in place
-                // The highlightWinningPieces was called when gameOver was set.
-                // A better approach would be to store the winning line and draw it here.
-                // For now, we rely on it being called once.
-                console.log("Game Over. Loop stopped."); // DEBUG
+                console.log("Game Over. Loop stopped."); 
             }
         }
 
         function startGame() {
-            console.log("startGame called"); // DEBUG
             initializeBoard();
-            currentPlayer = 1;
+            currentPlayer = 1; // Human always starts
             gameOver = false;
             droppingPiece = null; 
             updateTurnDisplay();
-            updateScoreDisplay(); // Update scores at start too
+            updateScoreDisplay(); 
             messageArea.textContent = '';
             restartButton.style.display = 'none';
             
             if (animationFrameId) { 
                 cancelAnimationFrame(animationFrameId);
-                console.log("Cleared previous animation frame in startGame"); // DEBUG
             }
-            // Start the game loop using requestAnimationFrame
-            console.log("Requesting initial animation frame in startGame"); // DEBUG
             animationFrameId = requestAnimationFrame(gameLoop); 
         }
 
+        // --- AI Logic ---
+        function aiMakeMove() {
+            if (gameOver || currentPlayer !== AI_PLAYER_NUMBER || droppingPiece) return;
+            console.log("AI is making a move..."); // DEBUG
+
+            let chosenColumn = -1;
+
+            // 1. Check if AI can win
+            for (let c = 0; c < COLS; c++) {
+                const r = getLowestEmptyRow(c);
+                if (r !== -1) {
+                    board[r][c] = AI_PLAYER_NUMBER; // Temporarily place piece
+                    if (checkWin(r, c, AI_PLAYER_NUMBER)) {
+                        chosenColumn = c;
+                        board[r][c] = 0; // Undo test
+                        break;
+                    }
+                    board[r][c] = 0; // Undo test
+                }
+            }
+
+            // 2. Check if Player 1 can win and block
+            if (chosenColumn === -1) {
+                for (let c = 0; c < COLS; c++) {
+                    const r = getLowestEmptyRow(c);
+                    if (r !== -1) {
+                        board[r][c] = 1; // Temporarily place opponent's piece
+                        if (checkWin(r, c, 1)) {
+                            chosenColumn = c;
+                            board[r][c] = 0; // Undo test
+                            break;
+                        }
+                        board[r][c] = 0; // Undo test
+                    }
+                }
+            }
+
+            // 3. Prefer center columns if no immediate win/block
+            if (chosenColumn === -1) {
+                const centerCols = [3, 2, 4, 1, 5, 0, 6]; // Order of preference
+                for (let c of centerCols) {
+                    if (getLowestEmptyRow(c) !== -1) {
+                        chosenColumn = c;
+                        break;
+                    }
+                }
+            }
+            
+            // 4. Fallback to random available column
+            if (chosenColumn === -1) {
+                let availableCols = [];
+                for (let c = 0; c < COLS; c++) {
+                    if (getLowestEmptyRow(c) !== -1) {
+                        availableCols.push(c);
+                    }
+                }
+                if (availableCols.length > 0) {
+                    chosenColumn = availableCols[Math.floor(Math.random() * availableCols.length)];
+                }
+            }
+
+            if (chosenColumn !== -1) {
+                dropPiece(chosenColumn, AI_PLAYER_NUMBER);
+            } else {
+                // This should ideally not happen if board is not full
+                console.log("AI could not find a valid move (board might be full or error).");
+            }
+        }
+
+        function getLowestEmptyRow(col) {
+            for (let r = ROWS - 1; r >= 0; r--) {
+                if (board[r][col] === 0) {
+                    return r;
+                }
+            }
+            return -1; // Column is full
+        }
+
+
         canvas.addEventListener('click', (event) => {
-            if (gameOver || droppingPiece) {
-                console.log("Click ignored: gameOver or piece dropping"); // DEBUG
+            if (gameOver || droppingPiece || currentPlayer !== 1) { // Only allow human player to click
+                // console.log("Click ignored: gameOver, piece dropping, or not player 1's turn"); 
                 return;
             }
 
@@ -348,40 +403,66 @@
             const col = Math.floor(x / SQUARE_SIZE);
 
             if (col >= 0 && col < COLS) {
-                console.log("Canvas clicked, column:", col); // DEBUG
-                dropPiece(col);
+                // console.log("Canvas clicked by Player 1, column:", col); 
+                if (getLowestEmptyRow(col) !== -1) { // Check if column is not full
+                    dropPiece(col, 1); // Player 1 drops piece
+                }
             }
         });
         
+        // Mousemove for hover indicator (simplified, can be enhanced)
+        let hoverCol = -1;
         canvas.addEventListener('mousemove', (event) => {
-            if (gameOver || droppingPiece) return; 
+            if (gameOver || droppingPiece || currentPlayer !== 1) {
+                if(hoverCol !== -1) { // Clear previous hover if it existed
+                    hoverCol = -1;
+                    // The gameLoop will redraw and clear it
+                }
+                return;
+            }
             const rect = canvas.getBoundingClientRect();
             const x = event.clientX - rect.left;
-            const col = Math.floor(x / SQUARE_SIZE);
+            const newHoverCol = Math.floor(x / SQUARE_SIZE);
 
-            // Redraw is handled by gameLoop, mousemove only needs to draw the hover indicator
-            // To do this without full redraw, we'd need to save/restore part of the canvas
-            // For simplicity, let's trigger a full draw but only if needed.
-            // The gameLoop already redraws continuously. This hover might be better
-            // drawn directly in the gameLoop based on stored mouse coordinates.
-            // For now, let's keep it simple: the gameLoop will handle drawing.
-            // We can add a specific hover drawing function called by gameLoop.
-            // Let's remove the drawBoard() from here to avoid conflicts with animation.
-            // The gameLoop will handle drawing the board and pieces.
-            // The hover effect will be drawn on top by the gameLoop if we add it there.
-            // For now, let's disable the hover redraw to ensure it's not the cause.
+            if (newHoverCol !== hoverCol) {
+                hoverCol = newHoverCol;
+                // The gameLoop will now use hoverCol to draw the indicator
+            }
+        });
+         canvas.addEventListener('mouseleave', () => {
+            hoverCol = -1; // Clear hover when mouse leaves
+        });
+
+        // Modified gameLoop to include hover indicator drawing
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBoard(); 
+
+            if (droppingPiece) {
+                updateDroppingPiece();
+                drawDroppingPiece(); 
+            } else if (!gameOver && currentPlayer === 1 && hoverCol >= 0 && hoverCol < COLS && board[0][hoverCol] === 0) {
+                // Draw hover indicator for human player
+                ctx.beginPath();
+                ctx.arc(hoverCol * SQUARE_SIZE + SQUARE_SIZE / 2, 
+                        SQUARE_SIZE / 2 - PIECE_RADIUS / 2 , // Position at the top
+                        PIECE_RADIUS, 0, Math.PI * 2);
+                ctx.fillStyle = PLAYER1_COLOR;
+                ctx.globalAlpha = 0.5; 
+                ctx.fill();
+                ctx.globalAlpha = 1.0; 
+            }
             
-            // To implement hover properly without conflicting with animation:
-            // 1. Store mouseCol in a global variable.
-            // 2. In gameLoop, after drawBoard() and drawDroppingPiece(), draw the hover indicator at mouseCol.
-            // This is a more advanced change. Let's first fix the dropping.
-        });
-        
-        canvas.addEventListener('mouseleave', () => {
-            if (gameOver || droppingPiece) return;
-            // Similar to mousemove, the gameLoop should handle clearing any hover effects.
-            // For now, do nothing here to avoid conflicts.
-        });
+            if (gameOver && droppingPiece === null) {
+                // Final win highlight can be added here if needed, by re-checking win
+            }
+
+            if (!gameOver || droppingPiece) { 
+                animationFrameId = requestAnimationFrame(gameLoop);
+            } else {
+                // console.log("Game Over. Loop stopped."); 
+            }
+        }
 
 
         restartButton.addEventListener('click', startGame);
