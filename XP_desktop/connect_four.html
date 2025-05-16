@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Connect Four</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f0f0; /* Light grey background */
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            color: #333;
+        }
+        #game-info {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 560px; /* Canvas width */
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        #currentPlayerTurn {
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: white;
+        }
+        .player1-turn { background-color: #FF4136; /* Red */ }
+        .player2-turn { background-color: #FFDC00; /* Yellow */ }
+
+        #gameCanvas {
+            background-color: #0074D9; /* Classic Connect 4 Blue */
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            cursor: pointer;
+        }
+        #message-area {
+            margin-top: 20px;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #0074D9;
+            min-height: 30px;
+        }
+        #restartButton {
+            margin-top: 10px;
+            padding: 10px 25px;
+            font-size: 1em;
+            font-weight: bold;
+            color: white;
+            background-color: #2ECC40; /* Green */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            display: none; /* Hidden initially */
+        }
+        #restartButton:hover {
+            background-color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-info">
+        <span id="currentPlayerTurn"></span>
+        <div>Score: <span id="player1Score">0</span> - <span id="player2Score">0</span></div>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+    <div id="message-area"></div>
+    <button id="restartButton">Play Again</button>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const currentPlayerTurnDisplay = document.getElementById('currentPlayerTurn');
+        const player1ScoreDisplay = document.getElementById('player1Score');
+        const player2ScoreDisplay = document.getElementById('player2Score');
+        const messageArea = document.getElementById('message-area');
+        const restartButton = document.getElementById('restartButton');
+
+        const ROWS = 6;
+        const COLS = 7;
+        const SQUARE_SIZE = 80; // Size of each cell including padding
+        const PIECE_RADIUS = SQUARE_SIZE / 2 - 8; // Radius of the game pieces
+        const BOARD_COLOR = '#0074D9';
+        const EMPTY_SLOT_COLOR = '#0056a3'; // Darker blue for empty slots
+        const PLAYER1_COLOR = '#FF4136'; // Red
+        const PLAYER2_COLOR = '#FFDC00'; // Yellow
+        const WINNING_PIECE_HIGHLIGHT = '#39CCCC'; // Teal for highlighting winning pieces
+
+        canvas.width = COLS * SQUARE_SIZE;
+        canvas.height = ROWS * SQUARE_SIZE;
+
+        let board = [];
+        let currentPlayer = 1; // Player 1 starts
+        let gameOver = false;
+        let player1Score = 0;
+        let player2Score = 0;
+        let droppingPiece = null; // For animation { col, row, targetRow, player, y, speed }
+
+        function initializeBoard() {
+            board = [];
+            for (let r = 0; r < ROWS; r++) {
+                board[r] = [];
+                for (let c = 0; c < COLS; c++) {
+                    board[r][c] = 0; // 0 for empty, 1 for player 1, 2 for player 2
+                }
+            }
+        }
+
+        function drawBoard() {
+            ctx.fillStyle = BOARD_COLOR;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    ctx.beginPath();
+                    ctx.arc(c * SQUARE_SIZE + SQUARE_SIZE / 2, 
+                            r * SQUARE_SIZE + SQUARE_SIZE / 2, 
+                            PIECE_RADIUS, 0, Math.PI * 2);
+                    
+                    if (board[r][c] === 1) {
+                        ctx.fillStyle = PLAYER1_COLOR;
+                    } else if (board[r][c] === 2) {
+                        ctx.fillStyle = PLAYER2_COLOR;
+                    } else {
+                        ctx.fillStyle = EMPTY_SLOT_COLOR;
+                    }
+                    ctx.fill();
+                    // Optional: Add a slight border to the holes
+                    ctx.strokeStyle = '#004080'; 
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            }
+        }
+        
+        function drawDroppingPiece() {
+            if (droppingPiece) {
+                ctx.beginPath();
+                ctx.arc(droppingPiece.col * SQUARE_SIZE + SQUARE_SIZE / 2, 
+                        droppingPiece.y, 
+                        PIECE_RADIUS, 0, Math.PI * 2);
+                ctx.fillStyle = droppingPiece.player === 1 ? PLAYER1_COLOR : PLAYER2_COLOR;
+                ctx.fill();
+                ctx.strokeStyle = '#004080';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+
+        function updateDroppingPiece() {
+            if (droppingPiece) {
+                droppingPiece.y += droppingPiece.speed;
+                droppingPiece.speed += 1; // Gravity effect
+
+                const targetY = droppingPiece.targetRow * SQUARE_SIZE + SQUARE_SIZE / 2;
+                if (droppingPiece.y >= targetY) {
+                    droppingPiece.y = targetY; // Snap to position
+                    board[droppingPiece.targetRow][droppingPiece.col] = droppingPiece.player;
+                    
+                    if (checkWin(droppingPiece.targetRow, droppingPiece.col, droppingPiece.player)) {
+                        gameOver = true;
+                        messageArea.textContent = `Player ${droppingPiece.player} Wins!`;
+                        highlightWinningPieces(droppingPiece.targetRow, droppingPiece.col, droppingPiece.player);
+                        if (droppingPiece.player === 1) player1Score++; else player2Score++;
+                        updateScoreDisplay();
+                        restartButton.style.display = 'block';
+                    } else if (isBoardFull()) {
+                        gameOver = true;
+                        messageArea.textContent = "It's a Draw!";
+                        restartButton.style.display = 'block';
+                    } else {
+                        currentPlayer = (droppingPiece.player === 1) ? 2 : 1;
+                        updateTurnDisplay();
+                    }
+                    droppingPiece = null; // Animation finished
+                }
+            }
+        }
+
+
+        function dropPiece(col) {
+            if (gameOver || droppingPiece) return false; // Don't allow drop if game over or piece already dropping
+
+            for (let r = ROWS - 1; r >= 0; r--) {
+                if (board[r][col] === 0) {
+                    // board[r][col] = currentPlayer; // Set piece after animation
+                    droppingPiece = {
+                        col: col,
+                        row: -1, // Start above the board for animation
+                        targetRow: r,
+                        player: currentPlayer,
+                        y: SQUARE_SIZE / 2 - PIECE_RADIUS - 5, // Start y position
+                        speed: 2
+                    };
+                    return true; // Piece successfully started dropping
+                }
+            }
+            return false; // Column is full
+        }
+
+        function checkWin(r, c, player) {
+            // Check horizontal
+            let count = 0;
+            for (let i = Math.max(0, c - 3); i <= Math.min(COLS - 1, c + 3); i++) {
+                if (board[r][i] === player) count++; else count = 0;
+                if (count >= 4) return true;
+            }
+            // Check vertical
+            count = 0;
+            for (let i = Math.max(0, r - 3); i <= Math.min(ROWS - 1, r + 3); i++) {
+                if (board[i][c] === player) count++; else count = 0;
+                if (count >= 4) return true;
+            }
+            // Check diagonal (bottom-left to top-right)
+            count = 0;
+            for (let i = -3; i <= 3; i++) {
+                const row = r + i;
+                const col = c + i;
+                if (row >= 0 && row < ROWS && col >= 0 && col < COLS && board[row][col] === player) {
+                    count++;
+                } else {
+                    count = 0;
+                }
+                if (count >= 4) return true;
+            }
+            // Check diagonal (top-left to bottom-right)
+            count = 0;
+            for (let i = -3; i <= 3; i++) {
+                const row = r + i;
+                const col = c - i; // Note the minus for the other diagonal
+                if (row >= 0 && row < ROWS && col >= 0 && col < COLS && board[row][col] === player) {
+                    count++;
+                } else {
+                    count = 0;
+                }
+                if (count >= 4) return true;
+            }
+            return false;
+        }
+        
+        function highlightWinningPieces(r, c, player) {
+            // This is a simplified highlight; a more robust one would find all 4 pieces.
+            // For now, just highlight the last placed piece if it's part of a win.
+            // A full implementation would trace back the winning line.
+            
+            // Horizontal
+            let winningLine = [];
+            for (let i = 0; i < COLS; i++) {
+                if (board[r][i] === player) winningLine.push({r, c:i}); else winningLine = [];
+                if (winningLine.length >= 4) break;
+            }
+            if (winningLine.length < 4) { // Vertical
+                winningLine = [];
+                for (let i = 0; i < ROWS; i++) {
+                    if (board[i][c] === player) winningLine.push({r:i, c}); else winningLine = [];
+                    if (winningLine.length >= 4) break;
+                }
+            }
+            // Diagonals are more complex to trace back simply, so we'll skip detailed highlighting for them in this version for brevity
+            // but a full game would trace them.
+
+            if (winningLine.length >= 4) {
+                winningLine.forEach(p => {
+                    ctx.strokeStyle = WINNING_PIECE_HIGHLIGHT;
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    ctx.arc(p.c * SQUARE_SIZE + SQUARE_SIZE / 2, p.r * SQUARE_SIZE + SQUARE_SIZE / 2, PIECE_RADIUS + 2, 0, Math.PI * 2);
+                    ctx.stroke();
+                });
+            }
+        }
+
+
+        function isBoardFull() {
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (board[r][c] === 0) return false;
+                }
+            }
+            return true;
+        }
+
+        function updateTurnDisplay() {
+            currentPlayerTurnDisplay.textContent = `Player ${currentPlayer}'s Turn`;
+            currentPlayerTurnDisplay.className = currentPlayer === 1 ? 'player1-turn' : 'player2-turn';
+        }
+        
+        function updateScoreDisplay() {
+            player1ScoreDisplay.textContent = player1Score;
+            player2ScoreDisplay.textContent = player2Score;
+        }
+
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBoard();
+            if (droppingPiece) {
+                updateDroppingPiece();
+                drawDroppingPiece();
+            }
+            if (!gameOver) {
+                 requestAnimationFrame(gameLoop);
+            } else {
+                // Final draw after game over to show winning pieces if any
+                drawBoard(); 
+                if (droppingPiece) drawDroppingPiece(); // Draw if it was the winning piece mid-animation
+                // Re-call highlight if needed, or ensure it's drawn on the final board state
+            }
+        }
+
+        function startGame() {
+            initializeBoard();
+            currentPlayer = 1;
+            gameOver = false;
+            droppingPiece = null;
+            updateTurnDisplay();
+            messageArea.textContent = '';
+            restartButton.style.display = 'none';
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
+            gameLoop();
+        }
+
+        canvas.addEventListener('click', (event) => {
+            if (gameOver || droppingPiece) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const col = Math.floor(x / SQUARE_SIZE);
+
+            if (col >= 0 && col < COLS) {
+                dropPiece(col);
+            }
+        });
+        
+        canvas.addEventListener('mousemove', (event) => {
+            if (gameOver || droppingPiece) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const col = Math.floor(x / SQUARE_SIZE);
+
+            // Redraw board to clear previous hover indicator
+            drawBoard(); 
+            // Draw current pieces
+             for (let r_draw = 0; r_draw < ROWS; r_draw++) {
+                for (let c_draw = 0; c_draw < COLS; c_draw++) {
+                    if (board[r_draw][c_draw] !== 0) {
+                         ctx.beginPath();
+                         ctx.arc(c_draw * SQUARE_SIZE + SQUARE_SIZE / 2, 
+                                 r_draw * SQUARE_SIZE + SQUARE_SIZE / 2, 
+                                 PIECE_RADIUS, 0, Math.PI * 2);
+                         ctx.fillStyle = board[r_draw][c_draw] === 1 ? PLAYER1_COLOR : PLAYER2_COLOR;
+                         ctx.fill();
+                         ctx.strokeStyle = '#004080'; 
+                         ctx.lineWidth = 2;
+                         ctx.stroke();
+                    }
+                }
+            }
+
+
+            // Draw hover indicator if column is valid and not full
+            if (col >= 0 && col < COLS && board[0][col] === 0) {
+                ctx.beginPath();
+                ctx.arc(col * SQUARE_SIZE + SQUARE_SIZE / 2, 
+                        SQUARE_SIZE / 2 - PIECE_RADIUS / 2 , // Position at the top of the column
+                        PIECE_RADIUS, 0, Math.PI * 2);
+                ctx.fillStyle = currentPlayer === 1 ? PLAYER1_COLOR : PLAYER2_COLOR;
+                ctx.globalAlpha = 0.5; // Make it semi-transparent
+                ctx.fill();
+                ctx.globalAlpha = 1.0; // Reset alpha
+            }
+        });
+        
+        canvas.addEventListener('mouseleave', () => {
+            if (gameOver || droppingPiece) return;
+            // Redraw board to clear hover indicator when mouse leaves canvas
+            drawBoard();
+            // Draw current pieces
+             for (let r_draw = 0; r_draw < ROWS; r_draw++) {
+                for (let c_draw = 0; c_draw < COLS; c_draw++) {
+                    if (board[r_draw][c_draw] !== 0) {
+                         ctx.beginPath();
+                         ctx.arc(c_draw * SQUARE_SIZE + SQUARE_SIZE / 2, 
+                                 r_draw * SQUARE_SIZE + SQUARE_SIZE / 2, 
+                                 PIECE_RADIUS, 0, Math.PI * 2);
+                         ctx.fillStyle = board[r_draw][c_draw] === 1 ? PLAYER1_COLOR : PLAYER2_COLOR;
+                         ctx.fill();
+                         ctx.strokeStyle = '#004080'; 
+                         ctx.lineWidth = 2;
+                         ctx.stroke();
+                    }
+                }
+            }
+        });
+
+
+        restartButton.addEventListener('click', startGame);
+        
+        // Cleanup for parent iframe
+        window.cleanupGame = () => {
+            console.log("Connect Four cleanup called.");
+            gameOver = true; // Stop game loop
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+        };
+
+        // Initial setup
+        startGame();
+
+    </script>
+</body>
+</html>
