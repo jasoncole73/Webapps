@@ -50,9 +50,11 @@
             border-radius: 10px;
             border: 1px solid #0F0;
             z-index: 100;
+            cursor: pointer; /* Make start message clickable */
         }
         #gameOverMessage {
             display: none; /* Hidden initially */
+            cursor: default; /* Game over message isn't directly clickable to restart */
         }
         #gameOverMessage button {
             display: block;
@@ -82,7 +84,7 @@
 
     <div id="startMessage">
         <p>ASTEROIDS</p>
-        <p style="font-size: 16px;">Press ENTER to Start</p>
+        <p style="font-size: 16px;">Press ENTER or Click Here to Start</p>
     </div>
     <div id="gameOverMessage">
         <p>GAME OVER</p>
@@ -102,13 +104,12 @@
         const restartButton = document.getElementById('restartButton');
 
         // Game constants
-        const SHIP_SIZE = 30; // Height of the triangle
+        const SHIP_SIZE = 30; 
         const SHIP_THRUST = 5;
-        const SHIP_TURN_SPEED = 0.1; // Radians per frame
-        const FRICTION = 0.99; // Slows down the ship
+        const SHIP_TURN_SPEED = 0.1; 
+        const FRICTION = 0.99; 
         const BULLET_SPEED = 7;
-        const BULLET_MAX = 5; // Max bullets on screen
-        const ASTEROID_NUM_START = 3;
+        const BULLET_MAX = 5; 
         const ASTEROID_SPEED = 1;
         const ASTEROID_SIZE_LARGE = 80;
         const ASTEROID_SIZE_MEDIUM = 40;
@@ -116,8 +117,8 @@
         const ASTEROID_POINTS_LARGE = 20;
         const ASTEROID_POINTS_MEDIUM = 50;
         const ASTEROID_POINTS_SMALL = 100;
-        const SHIP_INVINCIBILITY_DUR = 2; // seconds
-        const SHIP_BLINK_DUR = 0.1; // seconds
+        const SHIP_INVINCIBILITY_DUR = 2; 
+        const SHIP_BLINK_DUR = 0.1; 
 
         // Game variables
         let ship;
@@ -126,7 +127,8 @@
         let score = 0;
         let lives = 3;
         let gameRunning = false;
-        let keys = {}; // To store pressed keys
+        let keys = {}; 
+        let ASTEROID_NUM_CURRENT_LEVEL = 3; // Changed from const to let, and renamed for clarity
 
         // --- Setup Canvas ---
         function setupCanvas() {
@@ -139,7 +141,7 @@
             this.x = canvas.width / 2;
             this.y = canvas.height / 2;
             this.radius = SHIP_SIZE / 2;
-            this.angle = 0; // Radians (0 = facing right)
+            this.angle = 0; 
             this.rotation = 0;
             this.thrusting = false;
             this.thrust = { x: 0, y: 0 };
@@ -150,22 +152,19 @@
             this.visible = true;
 
             this.draw = function() {
-                if (!this.visible && this.invincible) return; // Blinking effect
+                if (!this.visible && this.invincible) return; 
 
                 ctx.strokeStyle = '#FFF';
                 ctx.lineWidth = SHIP_SIZE / 20;
                 ctx.beginPath();
-                // Nose of the ship
                 ctx.moveTo(
                     this.x + this.radius * Math.cos(this.angle),
-                    this.y - this.radius * Math.sin(this.angle) // In canvas, y is inverted
+                    this.y - this.radius * Math.sin(this.angle) 
                 );
-                // Rear left
                 ctx.lineTo(
                     this.x - this.radius * (Math.cos(this.angle) + Math.sin(this.angle)),
                     this.y + this.radius * (Math.sin(this.angle) - Math.cos(this.angle))
                 );
-                // Rear right
                 ctx.lineTo(
                     this.x - this.radius * (Math.cos(this.angle) - Math.sin(this.angle)),
                     this.y + this.radius * (Math.sin(this.angle) + Math.cos(this.angle))
@@ -173,23 +172,19 @@
                 ctx.closePath();
                 ctx.stroke();
 
-                // Draw thruster
                 if (this.thrusting && this.visible) {
                     ctx.fillStyle = 'red';
                     ctx.strokeStyle = 'yellow';
                     ctx.lineWidth = SHIP_SIZE / 10;
                     ctx.beginPath();
-                     // Rear center
                     ctx.moveTo( 
                         this.x - this.radius * (Math.cos(this.angle) * 0.7),
                         this.y + this.radius * (Math.sin(this.angle) * 0.7)
                     );
-                    // Thruster flame point 1
                     ctx.lineTo(
                         this.x - this.radius * (Math.cos(this.angle) + 0.5 * Math.sin(this.angle)) * 1.5,
                         this.y + this.radius * (Math.sin(this.angle) - 0.5 * Math.cos(this.angle)) * 1.5
                     );
-                     // Thruster flame point 2
                     ctx.lineTo(
                         this.x - this.radius * (Math.cos(this.angle) - 0.5 * Math.sin(this.angle)) * 1.5,
                         this.y + this.radius * (Math.sin(this.angle) + 0.5 * Math.cos(this.angle)) * 1.5
@@ -201,32 +196,24 @@
             };
 
             this.update = function() {
-                // Rotate ship
                 this.angle += this.rotation;
-
-                // Apply thrust
                 if (this.thrusting) {
-                    this.thrust.x += SHIP_THRUST * Math.cos(this.angle) / 60; // 60 FPS adjustment
+                    this.thrust.x += SHIP_THRUST * Math.cos(this.angle) / 60; 
                     this.thrust.y -= SHIP_THRUST * Math.sin(this.angle) / 60;
                 } else {
-                    // Apply friction
                     this.thrust.x *= FRICTION;
                     this.thrust.y *= FRICTION;
                 }
-
-                // Move ship
                 this.x += this.thrust.x;
                 this.y += this.thrust.y;
 
-                // Screen wrapping
                 if (this.x < 0 - this.radius) this.x = canvas.width + this.radius;
                 else if (this.x > canvas.width + this.radius) this.x = 0 - this.radius;
                 if (this.y < 0 - this.radius) this.y = canvas.height + this.radius;
                 else if (this.y > canvas.height + this.radius) this.y = 0 - this.radius;
 
-                // Invincibility and blinking
                 if (this.invincibilityTimer > 0) {
-                    this.invincibilityTimer -= 1/60; // Assuming 60 FPS
+                    this.invincibilityTimer -= 1/60; 
                     this.blinkTimer -= 1/60;
                     if (this.blinkTimer <= 0) {
                         this.visible = !this.visible;
@@ -243,7 +230,7 @@
                 if (this.canShoot && bullets.length < BULLET_MAX) {
                     bullets.push(new Bullet(this.x, this.y, this.angle));
                     this.canShoot = false;
-                    setTimeout(() => { this.canShoot = true; }, 250); // Cooldown
+                    setTimeout(() => { this.canShoot = true; }, 250); 
                 }
             };
 
@@ -253,25 +240,24 @@
                 if (lives <= 0) {
                     gameOver();
                 } else {
-                    // Reset ship position and make invincible
                     this.x = canvas.width / 2;
                     this.y = canvas.height / 2;
                     this.thrust = { x: 0, y: 0 };
                     this.angle = 0;
                     this.invincible = true;
                     this.invincibilityTimer = SHIP_INVINCIBILITY_DUR;
-                    this.visible = true; // Start visible during invincibility
+                    this.visible = true; 
                 }
             };
         }
 
         // --- Bullet Object ---
         function Bullet(x, y, angle) {
-            this.x = x + (SHIP_SIZE / 2 + 5) * Math.cos(angle); // Start slightly ahead of ship nose
+            this.x = x + (SHIP_SIZE / 2 + 5) * Math.cos(angle); 
             this.y = y - (SHIP_SIZE / 2 + 5) * Math.sin(angle);
             this.radius = 2;
             this.velX = BULLET_SPEED * Math.cos(angle);
-            this.velY = -BULLET_SPEED * Math.sin(angle); // Negative for upward movement
+            this.velY = -BULLET_SPEED * Math.sin(angle); 
 
             this.draw = function() {
                 ctx.fillStyle = '#FFF';
@@ -292,18 +278,17 @@
             this.y = y || Math.random() * canvas.height;
             this.size = size || ASTEROID_SIZE_LARGE;
             this.radius = this.size / 2;
-            this.angle = Math.random() * Math.PI * 2; // Random direction
+            this.angle = Math.random() * Math.PI * 2; 
             this.velX = Math.random() * ASTEROID_SPEED * (Math.random() < 0.5 ? 1 : -1);
             this.velY = Math.random() * ASTEROID_SPEED * (Math.random() < 0.5 ? 1 : -1);
-            this.sides = Math.floor(Math.random() * 5) + 7; // 7-12 sides
+            this.sides = Math.floor(Math.random() * 5) + 7; 
             this.offsets = [];
             for (let i = 0; i < this.sides; i++) {
                 this.offsets.push(Math.random() * this.radius * 0.6 - this.radius * 0.3);
             }
 
-
             this.draw = function() {
-                ctx.strokeStyle = '#AAA'; // Grey asteroids
+                ctx.strokeStyle = '#AAA'; 
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 for (let i = 0; i < this.sides; i++) {
@@ -325,7 +310,6 @@
                 this.x += this.velX;
                 this.y += this.velY;
 
-                // Screen wrapping
                 if (this.x < 0 - this.radius) this.x = canvas.width + this.radius;
                 else if (this.x > canvas.width + this.radius) this.x = 0 - this.radius;
                 if (this.y < 0 - this.radius) this.y = canvas.height + this.radius;
@@ -341,7 +325,7 @@
                     asteroids.push(new Asteroid(this.x, this.y, ASTEROID_SIZE_SMALL));
                     asteroids.push(new Asteroid(this.x, this.y, ASTEROID_SIZE_SMALL));
                     score += ASTEROID_POINTS_MEDIUM;
-                } else { // ASTEROID_SIZE_SMALL
+                } else { 
                     score += ASTEROID_POINTS_SMALL;
                 }
                 updateScoreDisplay();
@@ -355,18 +339,19 @@
             bullets = [];
             score = 0;
             lives = 3;
+            ASTEROID_NUM_CURRENT_LEVEL = 3; // Reset asteroid count for new game
             updateScoreDisplay();
             updateLivesDisplay();
-            createAsteroids(ASTEROID_NUM_START);
+            createAsteroids(ASTEROID_NUM_CURRENT_LEVEL);
             startMessage.style.display = 'none';
             gameOverMessage.style.display = 'none';
             gameRunning = true;
-            if (!animationFrameId) { // Prevent multiple loops if restarting
+            if (!animationFrameId) { 
                 gameLoop();
             }
         }
         
-        let animationFrameId = null; // To store the request ID
+        let animationFrameId = null; 
 
         function gameLoop() {
             if (!gameRunning) {
@@ -374,61 +359,39 @@
                 animationFrameId = null;
                 return;
             }
-
-            // Handle input
             handleInput();
-
-            // Update game objects
             ship.update();
             bullets.forEach((bullet, index) => {
                 bullet.update();
-                // Remove off-screen bullets
                 if (bullet.x < 0 || bullet.x > canvas.width || bullet.y < 0 || bullet.y > canvas.height) {
                     bullets.splice(index, 1);
                 }
             });
             asteroids.forEach(asteroid => asteroid.update());
-
-            // Check collisions
             checkCollisions();
-            
-            // Draw everything
             draw();
-
-            if (asteroids.length === 0 && gameRunning) { // Check for level clear
+            if (asteroids.length === 0 && gameRunning) { 
                 levelUp();
             }
-
             animationFrameId = requestAnimationFrame(gameLoop);
         }
         
         function levelUp() {
-            // Increase difficulty slightly or just add more asteroids
-            ASTEROID_NUM_START++;
-            createAsteroids(ASTEROID_NUM_START);
-            // Optionally, brief message or effect
+            ASTEROID_NUM_CURRENT_LEVEL++; // Increment for next level
+            createAsteroids(ASTEROID_NUM_CURRENT_LEVEL);
         }
 
-
         function draw() {
-            // Clear canvas
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Draw ship
             ship.draw();
-
-            // Draw bullets
             bullets.forEach(bullet => bullet.draw());
-
-            // Draw asteroids
             asteroids.forEach(asteroid => asteroid.draw());
         }
 
         function createAsteroids(num) {
             for (let i = 0; i < num; i++) {
                 let x, y;
-                // Ensure asteroids don't spawn too close to the ship initially
                 do {
                     x = Math.random() * canvas.width;
                     y = Math.random() * canvas.height;
@@ -443,34 +406,32 @@
             else if (keys['ArrowRight'] || keys['d']) ship.rotation = SHIP_TURN_SPEED;
             else ship.rotation = 0;
 
-            if (keys[' '] || keys['Spacebar']) { // Spacebar for shooting
+            if (keys[' '] || keys['Spacebar']) { 
                 ship.shoot();
-                keys[' '] = false; // Prevent continuous fire if key held
+                keys[' '] = false; 
                 keys['Spacebar'] = false;
             }
         }
 
         function checkCollisions() {
-            // Bullets vs Asteroids
             for (let i = bullets.length - 1; i >= 0; i--) {
                 for (let j = asteroids.length - 1; j >= 0; j--) {
                     if (distBetweenPoints(bullets[i].x, bullets[i].y, asteroids[j].x, asteroids[j].y) < asteroids[j].radius + bullets[i].radius) {
                         asteroids[j].breakUp();
                         asteroids.splice(j, 1);
                         bullets.splice(i, 1);
-                        break; // Bullet can only hit one asteroid
+                        break; 
                     }
                 }
             }
 
-            // Ship vs Asteroids
             if (!ship.invincible) {
                 for (let i = asteroids.length - 1; i >= 0; i--) {
-                    if (distBetweenPoints(ship.x, ship.y, asteroids[i].x, asteroids[i].y) < asteroids[i].radius + ship.radius * 0.7) { // 0.7 for closer collision feel
+                    if (distBetweenPoints(ship.x, ship.y, asteroids[i].x, asteroids[i].y) < asteroids[i].radius + ship.radius * 0.7) { 
                         ship.explode();
                         asteroids[i].breakUp();
                         asteroids.splice(i, 1);
-                        break; // Ship hit, process one collision
+                        break; 
                     }
                 }
             }
@@ -494,14 +455,12 @@
             startMessage.style.display = 'none';
         }
 
-
         // Event Listeners
         window.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !gameRunning && gameOverMessage.style.display === 'none') {
                 initGame();
             }
             keys[e.key] = true;
-            // Prevent page scroll for arrow keys and space
             if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
                 e.preventDefault();
             }
@@ -510,17 +469,21 @@
             keys[e.key] = false;
         });
         
+        startMessage.addEventListener('click', () => { // ADDED: Click listener for start message
+            if (!gameRunning && gameOverMessage.style.display === 'none') {
+                initGame();
+            }
+        });
+
         restartButton.addEventListener('click', () => {
             gameOverMessage.style.display = 'none';
-            startMessage.style.display = 'block'; // Show start message again
-            // Reset ASTEROID_NUM_START if it was incremented
-            // ASTEROID_NUM_START = 3; // Or manage this in initGame if preferred
+            startMessage.style.display = 'block'; 
+            // ASTEROID_NUM_CURRENT_LEVEL will be reset in initGame()
         });
 
         // Initial call
         window.addEventListener('resize', setupCanvas);
-        setupCanvas(); // Initial canvas setup
-        // Don't start gameLoop here, wait for Enter press
+        setupCanvas(); 
 
         // Cleanup for parent iframe
         window.cleanupGame = () => {
@@ -530,7 +493,6 @@
                 cancelAnimationFrame(animationFrameId);
                 animationFrameId = null;
             }
-            // Any other specific cleanup for this game
         };
 
     </script>
