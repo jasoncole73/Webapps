@@ -79,7 +79,8 @@
 <body>
     <div id="game-header">
         <div>SCORE: <span id="score">0</span></div>
-        <div>LIVES: <span id="lives">3</span></div> </div>
+        <div>LIVES: <span id="lives">3</span></div> 
+    </div>
     <canvas id="gameCanvas" tabindex="0"></canvas>
     <div id="controls-info">
         Use Arrow Keys to Move
@@ -131,10 +132,10 @@
 
         // Game state
         let score = 0;
-        let lives = 3; // Initial lives
+        let lives = 3; 
         let gameRunning = false;
         let animationFrameId;
-        let goalsReached = [false, false, false, false, false]; 
+        let goalsReached = Array(MAX_GOALS).fill(false); // Initialize based on MAX_GOALS
         const MAX_GOALS = 3; 
 
         function Player(x, y) {
@@ -287,10 +288,10 @@
 
         function initGame() {
             score = 0;
-            lives = 3; // Reset lives here
-            updateDisplay(); // Update display immediately
+            lives = 3; 
+            updateDisplay(); 
             initializeLanes(); 
-            player = new Player(canvas.width / 2, (NUM_ROWS - 1.5) * GRID_SIZE); 
+            player = new Player(canvas.width / 2, (NUM_ROWS - 0.5) * GRID_SIZE); // CORRECTED starting Y
 
             startMessage.style.display = 'none';
             gameOverMessage.style.display = 'none';
@@ -505,7 +506,7 @@
                         goal.reached = true;
                         score += 100;
                         player.x = canvas.width / 2;
-                        player.y = (NUM_ROWS - 1.5) * GRID_SIZE; 
+                        player.y = (NUM_ROWS - 0.5) * GRID_SIZE; // CORRECTED reset Y
                         player.onLog = null;
                         checkLevelComplete();
                     }
@@ -519,7 +520,7 @@
                 score += 500; 
                 updateDisplay();
                 alert("YOU MADE IT! Next Round!"); 
-                initGame(); // This will reset lives to 3 for the "next level"
+                initGame(); 
             }
         }
 
@@ -530,7 +531,7 @@
                 gameOver();
             } else {
                 player.x = canvas.width / 2;
-                player.y = (NUM_ROWS - 1.5) * GRID_SIZE;
+                player.y = (NUM_ROWS - 0.5) * GRID_SIZE; // CORRECTED reset Y to be on the starting grass
                 player.onLog = null;
                 player.facing = 'up'; 
             }
@@ -609,10 +610,9 @@
 
         restartButton.addEventListener('click', () => {
             gameOverMessage.style.display = 'none';
-            // Reset lives and score for the display before showing start message
-            lives = 3;
-            score = 0;
-            updateDisplay();
+            lives = 3; // Reset lives
+            score = 0; // Reset score
+            updateDisplay(); // Update display before showing start message
             startMessage.style.display = 'block'; 
         });
 
