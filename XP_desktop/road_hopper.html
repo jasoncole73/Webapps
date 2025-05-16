@@ -120,6 +120,8 @@
         const PLAYER_COLOR_BODY = '#34A853'; 
         const PLAYER_COLOR_EYES = '#FFFFFF';
         const PLAYER_COLOR_PUPILS = '#000000';
+        const PLAYER_INVINCIBILITY_DURATION = 1.5; // seconds
+        const PLAYER_BLINK_INTERVAL = 0.1; // seconds for blinking
 
 
         let lanes = [];
@@ -135,7 +137,7 @@
         let lives = 3; 
         let gameRunning = false;
         let animationFrameId;
-        let goalsReached = Array(MAX_GOALS).fill(false); // Initialize based on MAX_GOALS
+        let goalsReached = Array(MAX_GOALS).fill(false);
         const MAX_GOALS = 3; 
 
         function Player(x, y) {
@@ -145,8 +147,16 @@
             this.height = GRID_SIZE * 0.7;
             this.onLog = null; 
             this.facing = 'up'; 
+            this.invincible = false;
+            this.invincibilityTimer = 0;
+            this.blinkOn = true; // For blinking effect
+            this.blinkCycleTimer = 0;
 
             this.draw = function() {
+                if (this.invincible && !this.blinkOn) {
+                    return; // Don't draw if blinking off during invincibility
+                }
+
                 ctx.fillStyle = PLAYER_COLOR_BODY;
                 ctx.beginPath();
                 ctx.ellipse(this.x, this.y, this.width / 2, this.height / 2.2, 0, 0, Math.PI * 2);
@@ -185,6 +195,24 @@
                 ctx.fill();
             };
 
+            this.update = function(deltaTime) { // deltaTime in seconds
+                if (this.invincibilityTimer > 0) {
+                    this.invincibilityTimer -= deltaTime;
+                    this.blinkCycleTimer += deltaTime;
+                    if (this.blinkCycleTimer >= PLAYER_BLINK_INTERVAL) {
+                        this.blinkOn = !this.blinkOn;
+                        this.blinkCycleTimer = 0;
+                    }
+                    if (this.invincibilityTimer <= 0) {
+                        this.invincible = false;
+                        this.blinkOn = true; // Ensure player is visible when invincibility ends
+                    }
+                } else {
+                    this.invincible = false;
+                    this.blinkOn = true;
+                }
+            };
+
             this.move = function(dx, dy) { 
                 if (!gameRunning) return;
                 
@@ -204,6 +232,13 @@
                 this.y = targetY; 
                 this.onLog = null; 
                 checkLaneInteraction(); 
+            };
+
+            this.activateInvincibility = function(duration) {
+                this.invincible = true;
+                this.invincibilityTimer = duration;
+                this.blinkOn = true;
+                this.blinkCycleTimer = 0;
             };
         }
 
@@ -286,17 +321,20 @@
             return goalItems;
         }
 
+        let lastFrameTime = 0;
         function initGame() {
             score = 0;
             lives = 3; 
             updateDisplay(); 
             initializeLanes(); 
-            player = new Player(canvas.width / 2, (NUM_ROWS - 0.5) * GRID_SIZE); // CORRECTED starting Y
+            player = new Player(canvas.width / 2, (NUM_ROWS - 0.5) * GRID_SIZE); 
+            player.activateInvincibility(PLAYER_INVINCIBILITY_DURATION); // Invincible at start
 
             startMessage.style.display = 'none';
             gameOverMessage.style.display = 'none';
             gameRunning = true;
             canvas.focus();
+            lastFrameTime = performance.now(); // For deltaTime calculation
             if(animationFrameId) cancelAnimationFrame(animationFrameId);
             gameLoop();
         }
@@ -470,7 +508,7 @@
             if (!player) return;
             const playerLaneIndex = Math.floor(player.y / GRID_SIZE);
             if (playerLaneIndex < 0 || playerLaneIndex >= lanes.length) {
-                playerDeath(); 
+                if (!player.invincible) playerDeath(); 
                 return;
             }
             const currentLane = lanes[playerLaneIndex];
@@ -482,7 +520,7 @@
                         player.x - player.width/2 < vehicle.x + vehicle.width &&
                         player.y + player.height/2 > currentLane.y + GRID_SIZE * 0.1 && 
                         player.y - player.height/2 < currentLane.y + GRID_SIZE * 0.9) {
-                        playerDeath();
+                        if (!player.invincible) playerDeath();
                     }
                 });
             } else if (currentLane.type === 'river') {
@@ -496,7 +534,7 @@
                         player.onLog = platform; 
                     }
                 });
-                if (!onSafety) {
+                if (!onSafety && !player.invincible) {
                     playerDeath();
                 }
             } else if (currentLane.type === 'goal') {
@@ -506,8 +544,9 @@
                         goal.reached = true;
                         score += 100;
                         player.x = canvas.width / 2;
-                        player.y = (NUM_ROWS - 0.5) * GRID_SIZE; // CORRECTED reset Y
+                        player.y = (NUM_ROWS - 0.5) * GRID_SIZE; 
                         player.onLog = null;
+                        player.activateInvincibility(PLAYER_INVINCIBILITY_DURATION * 0.5); // Shorter invincibility after scoring
                         checkLevelComplete();
                     }
                 });
@@ -525,15 +564,18 @@
         }
 
         function playerDeath() {
+            if (player.invincible && lives > 0) return; // Already handled in checkLaneInteraction, but good safeguard
+
             lives--;
             updateDisplay();
             if (lives <= 0) {
                 gameOver();
             } else {
                 player.x = canvas.width / 2;
-                player.y = (NUM_ROWS - 0.5) * GRID_SIZE; // CORRECTED reset Y to be on the starting grass
+                player.y = (NUM_ROWS - 0.5) * GRID_SIZE; 
                 player.onLog = null;
                 player.facing = 'up'; 
+                player.activateInvincibility(PLAYER_INVINCIBILITY_DURATION);
             }
         }
         
@@ -543,21 +585,30 @@
                 if (logLane && logLane.type === 'river') {
                     player.x += logLane.speed * logLane.direction;
                     if (player.x + player.width / 2 < 0 || player.x - player.width / 2 > canvas.width) {
-                        playerDeath();
+                        if (!player.invincible) playerDeath(); // Only die if not invincible
+                        else { // If invincible and pushed off, reset to center of that log/platform
+                           player.x = player.onLog.x + player.onLog.width / 2;
+                        }
                     }
                 }
             }
         }
 
-        function gameLoop() {
+        function gameLoop(currentTime) {
             if (!gameRunning) {
                 cancelAnimationFrame(animationFrameId);
                 animationFrameId = null;
                 return;
             }
+            const deltaTime = (currentTime - lastFrameTime) / 1000; // Delta time in seconds
+            lastFrameTime = currentTime;
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if(player) player.update(deltaTime); // Pass deltaTime to player update
             updateLanes(); 
             updatePlayerPositionWithLog(); 
+            // checkLaneInteraction(); // Called within player.move and after log movement potentially
             
             drawLanes();
             if(player) player.draw();
@@ -610,16 +661,16 @@
 
         restartButton.addEventListener('click', () => {
             gameOverMessage.style.display = 'none';
-            lives = 3; // Reset lives
-            score = 0; // Reset score
-            updateDisplay(); // Update display before showing start message
+            lives = 3; 
+            score = 0; 
+            updateDisplay(); 
             startMessage.style.display = 'block'; 
         });
 
         // Initial Call
         window.addEventListener('resize', () => { /* Canvas size is fixed */ });
         setupCanvas(); 
-        updateDisplay(); // Call to set initial lives and score display
+        updateDisplay(); 
 
         // Cleanup for parent iframe
         window.cleanupGame = () => {
