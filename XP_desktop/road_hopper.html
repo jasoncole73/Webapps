@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Road Hopper</title>
+    <title>Road Hopper - Debug Movement</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body {
@@ -135,8 +135,8 @@
         let lives = 3;
         let gameRunning = false;
         let animationFrameId;
-        let goalsReached = [false, false, false, false, false]; // Assuming 5 goal spots, adjust MAX_GOALS if different
-        const MAX_GOALS = 3; // Number of active goal spots per level
+        let goalsReached = [false, false, false, false, false]; 
+        const MAX_GOALS = 3; 
 
         function Player(x, y) {
             this.x = x; // Center X
@@ -144,7 +144,7 @@
             this.width = GRID_SIZE * 0.7;
             this.height = GRID_SIZE * 0.7;
             this.onLog = null; 
-            this.facing = 'up'; // 'up', 'down', 'left', 'right'
+            this.facing = 'up'; 
 
             this.draw = function() {
                 ctx.fillStyle = PLAYER_COLOR_BODY;
@@ -154,13 +154,11 @@
 
                 const eyeRadius = this.width * 0.15;
                 const eyeOffsetX = this.width * 0.25;
-                let eyeOffsetY = -this.height * 0.2; // Default for up/side facing
+                let eyeOffsetY = -this.height * 0.2; 
 
-                // Adjust eye position based on facing for a bit more character
                 if (this.facing === 'down') {
                     eyeOffsetY = this.height * 0.15;
                 }
-
 
                 ctx.fillStyle = PLAYER_COLOR_EYES;
                 ctx.beginPath();
@@ -178,8 +176,7 @@
                 if(this.facing === 'left') pupilDirectionX = -pupilRadius * 0.5;
                 if(this.facing === 'right') pupilDirectionX = pupilRadius * 0.5;
                 if(this.facing === 'up' && this.facing !== 'down') pupilDirectionY = -pupilRadius * 0.5;
-                 // if(this.facing === 'down') pupilDirectionY = pupilRadius * 0.5; // Pupils might look odd if always looking down
-
+                
                 ctx.beginPath();
                 ctx.arc(this.x - eyeOffsetX + pupilDirectionX, this.y + eyeOffsetY + pupilDirectionY, pupilRadius, 0, Math.PI * 2);
                 ctx.fill();
@@ -188,7 +185,7 @@
                 ctx.fill();
             };
 
-            this.move = function(dx, dy) { // Reverted to accept dx and dy
+            this.move = function(dx, dy) { 
                 if (!gameRunning) return;
                 
                 if (dx === 1) this.facing = 'right';
@@ -199,7 +196,6 @@
                 const targetX = this.x + dx * GRID_SIZE;
                 const targetY = this.y + dy * GRID_SIZE;
 
-                // Boundary checks
                 if (targetX - this.width / 2 < 0 || targetX + this.width / 2 > canvas.width ||
                     targetY - this.height / 2 < 0 || targetY + this.height / 2 > canvas.height) {
                     return; 
@@ -230,413 +226,4 @@
                     itemType: config.itemType, 
                     bodyColor: config.bodyColor || config.color, 
                     cabinColor: config.cabinColor,
-                    wheelColor: config.wheelColor || '#333'
-                });
-                currentX = (direction === 1) ? currentX + itemWidth : currentX - itemWidth;
-            });
-            return lane;
-        }
-        
-        function initializeLanes() {
-            lanes = [];
-            // Reset goalsReached for the current MAX_GOALS
-            goalsReached = Array(MAX_GOALS).fill(false);
-
-
-            lanes.push({ y: (NUM_ROWS - 1) * GRID_SIZE, height: GRID_SIZE, type: 'grass', items: [] });
-
-            // Road Lanes
-            lanes.push(createLane(NUM_ROWS - 2, 'road', 1.5, 1, [
-                {widthRatio: 1.8, spacingRatio: 3, color: '#C0C0C0', itemType: 'car', wheelColor: '#222'}, 
-                {widthRatio: 2.2, spacingRatio: 4, color: '#B22222', itemType: 'truck', bodyColor: '#B22222', cabinColor: '#8B0000', wheelColor: '#111'}
-            ]));
-            lanes.push(createLane(NUM_ROWS - 3, 'road', 2, -1, [
-                {widthRatio: 1.5, spacingRatio: 2.5, color: '#FFD700', itemType: 'car', wheelColor: '#222'}, 
-                {widthRatio: 1.6, spacingRatio: 3, color: '#4682B4', itemType: 'car', wheelColor: '#222'}
-            ]));
-            lanes.push(createLane(NUM_ROWS - 4, 'road', 1, 1, [
-                {widthRatio: 2.8, spacingRatio: 3.5, color: '#228B22', itemType: 'truck', bodyColor: '#228B22', cabinColor: '#006400', wheelColor: '#111'}, 
-                {widthRatio: 1.7, spacingRatio: 4, color: '#8A2BE2', itemType: 'car', wheelColor: '#222'}
-            ]));
-            lanes.push(createLane(NUM_ROWS - 5, 'road', 2.5, -1, [
-                {widthRatio: 1.6, spacingRatio: 2, color: '#FF69B4', itemType: 'car', wheelColor: '#222'}, 
-                {widthRatio: 1.5, spacingRatio: 2.5, color: '#FFA500', itemType: 'car', wheelColor: '#222'}
-            ]));
-            lanes.push(createLane(NUM_ROWS - 6, 'road', 1.8, 1, [
-                {widthRatio: 1.9, spacingRatio: 3, color: '#D2B48C', itemType: 'car', wheelColor: '#222'}
-            ]));
-            
-            lanes.push({ y: (NUM_ROWS - 7) * GRID_SIZE, height: GRID_SIZE, type: 'grass', items: [] });
-
-            // River Lanes
-            lanes.push(createLane(NUM_ROWS - 8, 'river', 1.2, -1, [{widthRatio: 3, spacingRatio: 2, color: '#8B4513', itemType: 'log'}, {widthRatio: 4, spacingRatio: 2.5, color: '#A0522D', itemType: 'log'}]));
-            lanes.push(createLane(NUM_ROWS - 9, 'river', 1.8, 1, [{widthRatio: 1.8, spacingRatio: 1.5, color: '#2E8B57', itemType: 'turtle'}, {widthRatio: 1.8, spacingRatio: 1.5, color: '#2E8B57', itemType: 'turtle'}]));
-            lanes.push(createLane(NUM_ROWS - 10, 'river', 1.5, -1, [{widthRatio: 5, spacingRatio: 2, color: '#8B4513', itemType: 'log'}]));
-            lanes.push(createLane(NUM_ROWS - 11, 'river', 2, 1, [{widthRatio: 2.2, spacingRatio: 2, color: '#2E8B57', itemType: 'turtle'}, {widthRatio: 2.2, spacingRatio: 2, color: '#2E8B57', itemType: 'turtle'}]));
-            lanes.push(createLane(NUM_ROWS - 12, 'river', 1, -1, [{widthRatio: 3.5, spacingRatio: 1.5, color: '#A0522D', itemType: 'log'}, {widthRatio: 2.5, spacingRatio: 2, color: '#8B4513', itemType: 'log'}]));
-            
-            lanes.push({ y: 0 * GRID_SIZE, height: GRID_SIZE, type: 'goal', items: createGoalItems() });
-        }
-        
-        function createGoalItems() {
-            const goalItems = [];
-            const goalWidth = GRID_SIZE * 1.2; 
-            const spacing = (canvas.width - (MAX_GOALS * goalWidth)) / (MAX_GOALS + 1);
-            for (let i = 0; i < MAX_GOALS; i++) {
-                goalItems.push({
-                    x: spacing * (i + 1) + goalWidth * i + goalWidth / 2, 
-                    y: GRID_SIZE / 2, 
-                    radius: goalWidth * 0.4,
-                    reached: false,
-                    id: i 
-                });
-            }
-            return goalItems;
-        }
-
-
-        function initGame() {
-            score = 0;
-            lives = 3;
-            updateDisplay();
-            initializeLanes(); // This will reset goalsReached based on MAX_GOALS
-            player = new Player(canvas.width / 2, (NUM_ROWS - 1.5) * GRID_SIZE); 
-
-            startMessage.style.display = 'none';
-            gameOverMessage.style.display = 'none';
-            gameRunning = true;
-            canvas.focus();
-            if(animationFrameId) cancelAnimationFrame(animationFrameId);
-            gameLoop();
-        }
-
-        function drawLanes() {
-            lanes.forEach(lane => {
-                let laneColor = '#000'; 
-                if (lane.type === 'grass') laneColor = SAFE_COLOR;
-                else if (lane.type === 'road') laneColor = ROAD_COLOR;
-                else if (lane.type === 'river') laneColor = WATER_COLOR;
-                else if (lane.type === 'goal') laneColor = SAFE_COLOR; 
-
-                ctx.fillStyle = laneColor;
-                ctx.fillRect(0, lane.y, canvas.width, lane.height);
-
-                if (lane.type === 'river') {
-                    ctx.strokeStyle = WATER_HIGHLIGHT_COLOR;
-                    ctx.lineWidth = 2;
-                    for (let i = 0; i < 5; i++) {
-                        const yOffset = lane.y + (i * GRID_SIZE / 5) + Math.sin(Date.now() / 200 + i) * 2;
-                        ctx.beginPath();
-                        ctx.moveTo(0, yOffset);
-                        ctx.lineTo(canvas.width, yOffset);
-                        ctx.stroke();
-                    }
-                }
-
-                lane.items.forEach(item => {
-                    if (lane.type === 'goal') { 
-                         ctx.fillStyle = item.reached ? GOAL_REACHED_COLOR : GOAL_COLOR;
-                         ctx.beginPath();
-                         ctx.arc(item.x, lane.y + lane.height / 2, item.radius, 0, Math.PI * 2);
-                         ctx.fill();
-                         if (!item.reached) {
-                             ctx.fillStyle = '#FFC0CB'; 
-                             ctx.beginPath();
-                             ctx.arc(item.x, lane.y + lane.height / 2, item.radius * 0.3, 0, Math.PI*2);
-                             ctx.fill();
-                         }
-                    } else if (item.itemType === 'car') {
-                        drawCar(item.x, lane.y + GRID_SIZE * 0.1, item.width, GRID_SIZE * 0.8, item.color, item.wheelColor);
-                    } else if (item.itemType === 'truck') {
-                        drawTruck(item.x, lane.y + GRID_SIZE * 0.05, item.width, GRID_SIZE * 0.9, item.bodyColor, item.cabinColor, item.wheelColor);
-                    } else if (item.itemType === 'log') {
-                        drawLog(item.x, lane.y + GRID_SIZE * 0.2, item.width, GRID_SIZE * 0.6, item.color);
-                    } else if (item.itemType === 'turtle') {
-                        drawTurtle(item.x + item.width/2, lane.y + GRID_SIZE/2, item.width*0.4, item.color);
-                    }
-                });
-            });
-        }
-
-        function drawCar(x, y, width, height, color, wheelColor) {
-            const bodyHeight = height * 0.6;
-            const roofHeight = height * 0.4;
-            const wheelRadius = height * 0.15;
-            ctx.fillStyle = color;
-            ctx.fillRect(x, y + roofHeight, width, bodyHeight);
-            ctx.beginPath();
-            ctx.moveTo(x + width * 0.1, y + roofHeight);
-            ctx.lineTo(x + width * 0.2, y);
-            ctx.lineTo(x + width * 0.8, y);
-            ctx.lineTo(x + width * 0.9, y + roofHeight);
-            ctx.closePath();
-            ctx.fill();
-            ctx.fillStyle = "rgba(0,0,0,0.3)";
-            ctx.fillRect(x + width * 0.22, y + height*0.05, width * 0.25, height*0.25); 
-            ctx.fillRect(x + width * 0.53, y + height*0.05, width * 0.25, height*0.25); 
-            ctx.fillStyle = wheelColor;
-            ctx.beginPath();
-            ctx.arc(x + width * 0.25, y + roofHeight + bodyHeight - wheelRadius, wheelRadius, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(x + width * 0.75, y + roofHeight + bodyHeight - wheelRadius, wheelRadius, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        function drawTruck(x, y, width, height, bodyColor, cabinColor, wheelColor) {
-            const cabinWidth = width * 0.3;
-            const trailerWidth = width * 0.65;
-            const cabinHeight = height * 0.7;
-            const trailerHeight = height * 0.8;
-            const wheelRadius = height * 0.12;
-            ctx.fillStyle = bodyColor;
-            ctx.fillRect(x + cabinWidth + width * 0.05, y + (height - trailerHeight), trailerWidth, trailerHeight);
-            ctx.fillStyle = cabinColor;
-            ctx.fillRect(x, y + (height - cabinHeight), cabinWidth, cabinHeight);
-            ctx.beginPath();
-            ctx.moveTo(x, y + (height - cabinHeight));
-            ctx.lineTo(x + cabinWidth * 0.1, y + (height - cabinHeight) - height * 0.1);
-            ctx.lineTo(x + cabinWidth * 0.9, y + (height - cabinHeight) - height * 0.1);
-            ctx.lineTo(x + cabinWidth, y + (height - cabinHeight));
-            ctx.closePath();
-            ctx.fill();
-            ctx.fillStyle = "rgba(0,0,0,0.3)";
-            ctx.fillRect(x + cabinWidth * 0.15, y + (height - cabinHeight) + cabinHeight*0.1, cabinWidth*0.7, cabinHeight*0.3);
-            ctx.fillStyle = wheelColor;
-            ctx.beginPath();
-            ctx.arc(x + cabinWidth * 0.3, y + height - wheelRadius, wheelRadius, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(x + cabinWidth + width * 0.15, y + height - wheelRadius, wheelRadius, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(x + cabinWidth + width * 0.45, y + height - wheelRadius, wheelRadius, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        function drawLog(x, y, width, height, color) {
-            ctx.fillStyle = color;
-            const radius = height / 2;
-            ctx.beginPath();
-            ctx.moveTo(x + radius, y);
-            ctx.lineTo(x + width - radius, y);
-            ctx.arcTo(x + width, y, x + width, y + radius, radius);
-            ctx.lineTo(x + width, y + height - radius);
-            ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
-            ctx.lineTo(x + radius, y + height);
-            ctx.arcTo(x, y + height, x, y + height - radius, radius);
-            ctx.lineTo(x, y + radius);
-            ctx.arcTo(x, y, x + radius, y, radius);
-            ctx.closePath();
-            ctx.fill();
-            ctx.strokeStyle = 'rgba(0,0,0,0.2)';
-            ctx.lineWidth = 1;
-            for(let i=0; i < 5; i++) {
-                ctx.beginPath();
-                ctx.moveTo(x + Math.random()*width, y);
-                ctx.lineTo(x + Math.random()*width, y + height);
-                ctx.stroke();
-            }
-        }
-        
-        function drawTurtle(centerX, centerY, radius, color) {
-            ctx.fillStyle = color; 
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = '#004000'; 
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius * 0.8, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(centerX - radius * 0.8, centerY); ctx.lineTo(centerX + radius * 0.8, centerY);
-            ctx.moveTo(centerX, centerY - radius * 0.8); ctx.lineTo(centerX, centerY + radius * 0.8);
-            ctx.stroke();
-            ctx.fillStyle = '#6B8E23'; 
-            ctx.beginPath();
-            ctx.arc(centerX + radius * 0.8, centerY, radius * 0.4, 0, Math.PI * 2); 
-            ctx.fill();
-        }
-
-
-        function updateLanes() {
-            lanes.forEach(lane => {
-                if (lane.type === 'road' || lane.type === 'river') {
-                    lane.items.forEach(item => {
-                        item.x += lane.speed * lane.direction;
-                        if (lane.direction === 1 && item.x > canvas.width + GRID_SIZE) { 
-                            item.x = -item.width - Math.random() * GRID_SIZE * 3 - GRID_SIZE * 2; 
-                        } else if (lane.direction === -1 && item.x + item.width < -GRID_SIZE) { 
-                            item.x = canvas.width + Math.random() * GRID_SIZE * 3 + GRID_SIZE; 
-                        }
-                    });
-                }
-            });
-        }
-        
-        function checkLaneInteraction() {
-            if (!player) return;
-            const playerLaneIndex = Math.floor(player.y / GRID_SIZE);
-            if (playerLaneIndex < 0 || playerLaneIndex >= lanes.length) {
-                playerDeath(); 
-                return;
-            }
-            const currentLane = lanes[playerLaneIndex];
-            player.onLog = null; 
-
-            if (currentLane.type === 'road') {
-                currentLane.items.forEach(vehicle => {
-                    if (player.x + player.width/2 > vehicle.x &&
-                        player.x - player.width/2 < vehicle.x + vehicle.width &&
-                        player.y + player.height/2 > currentLane.y + GRID_SIZE * 0.1 && // Vehicle is roughly centered in lane
-                        player.y - player.height/2 < currentLane.y + GRID_SIZE * 0.9) {
-                        playerDeath();
-                    }
-                });
-            } else if (currentLane.type === 'river') {
-                let onSafety = false;
-                currentLane.items.forEach(platform => {
-                     if (player.x + player.width/2 > platform.x &&
-                        player.x - player.width/2 < platform.x + platform.width &&
-                        player.y + player.height/2 > currentLane.y + GRID_SIZE * 0.1 && 
-                        player.y - player.height/2 < currentLane.y + GRID_SIZE * 0.9) {
-                        onSafety = true;
-                        player.onLog = platform; 
-                    }
-                });
-                if (!onSafety) {
-                    playerDeath();
-                }
-            } else if (currentLane.type === 'goal') {
-                 currentLane.items.forEach(goal => {
-                    if (!goal.reached && 
-                        distBetweenPoints(player.x, player.y, goal.x, currentLane.y + currentLane.height/2) < goal.radius + player.width/2) {
-                        goal.reached = true;
-                        // goalsReached[goal.id] = true; // Use the id to mark specific goal
-                        score += 100;
-                        player.x = canvas.width / 2;
-                        player.y = (NUM_ROWS - 1.5) * GRID_SIZE; 
-                        player.onLog = null;
-                        checkLevelComplete();
-                    }
-                });
-            }
-        }
-        
-        function checkLevelComplete() {
-            const allGoalsNowReached = lanes.find(l=>l.type==='goal').items.every(g => g.reached);
-            if (allGoalsNowReached) {
-                score += 500; 
-                updateDisplay();
-                alert("YOU MADE IT! Next Round!"); 
-                initGame(); 
-            }
-        }
-
-        function playerDeath() {
-            lives--;
-            updateDisplay();
-            if (lives <= 0) {
-                gameOver();
-            } else {
-                player.x = canvas.width / 2;
-                player.y = (NUM_ROWS - 1.5) * GRID_SIZE;
-                player.onLog = null;
-                player.facing = 'up'; // Reset facing direction
-            }
-        }
-        
-        function updatePlayerPositionWithLog() {
-            if (player && player.onLog && gameRunning) {
-                const logLane = lanes[Math.floor(player.y / GRID_SIZE)];
-                if (logLane && logLane.type === 'river') {
-                    player.x += logLane.speed * logLane.direction;
-                    if (player.x + player.width / 2 < 0 || player.x - player.width / 2 > canvas.width) {
-                        playerDeath();
-                    }
-                }
-            }
-        }
-
-        function gameLoop() {
-            if (!gameRunning) {
-                cancelAnimationFrame(animationFrameId);
-                animationFrameId = null;
-                return;
-            }
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            updateLanes(); 
-            updatePlayerPositionWithLog(); 
-            
-            drawLanes();
-            if(player) player.draw();
-            
-            updateDisplay();
-            animationFrameId = requestAnimationFrame(gameLoop);
-        }
-        
-        function updateDisplay() {
-            scoreDisplay.textContent = score;
-            livesDisplay.textContent = lives;
-        }
-
-        function gameOver() {
-            gameRunning = false;
-            finalScoreDisplay.textContent = score;
-            gameOverMessage.style.display = 'block';
-            startMessage.style.display = 'none';
-        }
-        
-        function distBetweenPoints(x1, y1, x2, y2) { 
-            return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-        }
-
-        // Event Listeners
-        window.addEventListener('keydown', (e) => {
-            if (!gameRunning && (e.key === 'Enter' || e.code === 'Space') && startMessage.style.display !== 'none') {
-                initGame();
-            }
-            if (!gameRunning || !player) return;
-
-            let dx = 0;
-            let dy = 0; // Re-introduce dy for vertical movement
-            switch(e.key) {
-                case 'ArrowUp': case 'w': dy = -1; e.preventDefault(); break; 
-                case 'ArrowDown': case 's': dy = 1; e.preventDefault(); break; 
-                case 'ArrowLeft': case 'a': dx = -1; e.preventDefault(); break;
-                case 'ArrowRight': case 'd': dx = 1; e.preventDefault(); break;
-            }
-            if (dx !== 0 || dy !== 0) { // Call move if there's any input
-                player.move(dx, dy);
-            }
-        });
-        
-        startMessage.addEventListener('click', () => { 
-            if (!gameRunning && startMessage.style.display !== 'none') {
-                initGame();
-            }
-        });
-
-        restartButton.addEventListener('click', () => {
-            gameOverMessage.style.display = 'none';
-            startMessage.style.display = 'block'; 
-        });
-
-        // Initial Call
-        window.addEventListener('resize', () => { /* Canvas size is fixed */ });
-        setupCanvas(); 
-        updateDisplay(); 
-
-        // Cleanup for parent iframe
-        window.cleanupGame = () => {
-            console.log("Road Hopper cleanup called.");
-            gameRunning = false;
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-                animationFrameId = null;
-            }
-        };
-    </script>
-</body>
-</html>
+                    wheelCol
