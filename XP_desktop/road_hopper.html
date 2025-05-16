@@ -253,7 +253,7 @@
         }
 
         function initGame() {
-            console.log("initGame called"); // DEBUG
+            console.log("Attempting to initialize game (initGame called)"); // DEBUG
             score = 0; lives = 3; 
             updateDisplay(); 
             initializeLanes(); 
@@ -262,13 +262,22 @@
 
             startMessage.style.display = 'none';
             gameOverMessage.style.display = 'none';
-            gameRunning = true;
+            
             canvas.focus(); // Explicitly focus the canvas
+            
+            gameRunning = true; // Set gameRunning to true *before* starting loop
+            console.log("Game running set to true"); // DEBUG
+
             lastFrameTime = performance.now(); 
-            if(animationFrameId) cancelAnimationFrame(animationFrameId);
-            animationFrameId = null; 
-            gameLoop();
-            console.log("initGame finished, gameRunning:", gameRunning); // DEBUG
+            if(animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                console.log("Cleared previous animation frame"); // DEBUG
+            }
+            animationFrameId = null; // Ensure it's null before new request
+            
+            console.log("Requesting new animation frame"); // DEBUG
+            animationFrameId = requestAnimationFrame(gameLoop);
+            console.log("initGame finished, animationFrameId:", animationFrameId); // DEBUG
         }
 
         function drawLanes() {
@@ -322,13 +331,25 @@
         function distBetweenPoints(x1,y1,x2,y2){return Math.sqrt(Math.pow(x2-x1,2)+Math.pow(y2-y1,2));}
 
         window.addEventListener('keydown',(e)=>{
-            console.log("Keydown:", e.key, "Game Running:", gameRunning, "Start Msg Display:", startMessage.style.display); // DEBUG
-            if(!gameRunning&&(e.key==='Enter'||e.code==='Space')&&startMessage.style.display!=='none'){console.log("Attempting to start (key)...");initGame();e.preventDefault();return;}
+            // console.log("Keydown:", e.key, "Game Running:", gameRunning, "Start Msg Display:", startMessage.style.display); // Original DEBUG
+            if (!gameRunning && (e.key === 'Enter' || e.code === 'Space') && startMessage.style.display !== 'none') {
+                console.log("Attempting to start game via keydown..."); // DEBUG
+                initGame();
+                e.preventDefault(); 
+                return; 
+            }
             if(!gameRunning||!player)return;let dx=0,dy=0;
             switch(e.key){case 'ArrowUp':case 'w':dy=-1;e.preventDefault();break;case 'ArrowDown':case 's':dy=1;e.preventDefault();break;case 'ArrowLeft':case 'a':dx=-1;e.preventDefault();break;case 'ArrowRight':case 'd':dx=1;e.preventDefault();break;}
             if(dx!==0||dy!==0){player.move(dx,dy);}});
         
-        startMessage.addEventListener('click',()=>{console.log("Start message clicked. Game Running:",gameRunning);if(!gameRunning&&startMessage.style.display!=='none'){console.log("Attempting to start (click)...");canvas.focus(); initGame();}});
+        startMessage.addEventListener('click',()=>{
+            console.log("Start message clicked. Game Running:", gameRunning, "Start Msg Display:", startMessage.style.display); // DEBUG
+            if(!gameRunning && startMessage.style.display !== 'none'){
+                console.log("Attempting to start game via click..."); // DEBUG
+                canvas.focus(); // Ensure canvas has focus on click start
+                initGame();
+            }
+        });
         restartButton.addEventListener('click',()=>{gameOverMessage.style.display='none';lives=3;score=0;updateDisplay();startMessage.style.display='block';});
 
         window.addEventListener('resize',()=>{/*Canvas size fixed*/});setupCanvas();updateDisplay();
