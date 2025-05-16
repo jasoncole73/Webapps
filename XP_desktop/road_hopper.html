@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Road Hopper - Realistic</title>
+    <title>Road Hopper</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body {
@@ -117,7 +117,7 @@
 
         // Player
         let player;
-        const PLAYER_COLOR_BODY = '#34A853'; // Green frog body
+        const PLAYER_COLOR_BODY = '#34A853'; 
         const PLAYER_COLOR_EYES = '#FFFFFF';
         const PLAYER_COLOR_PUPILS = '#000000';
 
@@ -125,18 +125,18 @@
         let lanes = [];
         const SAFE_COLOR = '#A0A0A0'; 
         const ROAD_COLOR = '#4A4A4A';
-        const WATER_COLOR = '#4682B4'; // Steel Blue for water
-        const WATER_HIGHLIGHT_COLOR = '#5F9EA0'; // Cadet Blue for water highlights
-        const GOAL_COLOR = '#90EE90'; // Light green for lily pads
-        const GOAL_REACHED_COLOR = '#3CB371'; // Medium Sea Green
+        const WATER_COLOR = '#4682B4'; 
+        const WATER_HIGHLIGHT_COLOR = '#5F9EA0'; 
+        const GOAL_COLOR = '#90EE90'; 
+        const GOAL_REACHED_COLOR = '#3CB371'; 
 
         // Game state
         let score = 0;
         let lives = 3;
         let gameRunning = false;
         let animationFrameId;
-        let goalsReached = [false, false, false, false, false]; 
-        const MAX_GOALS = 3; 
+        let goalsReached = [false, false, false, false, false]; // Assuming 5 goal spots, adjust MAX_GOALS if different
+        const MAX_GOALS = 3; // Number of active goal spots per level
 
         function Player(x, y) {
             this.x = x; // Center X
@@ -144,19 +144,23 @@
             this.width = GRID_SIZE * 0.7;
             this.height = GRID_SIZE * 0.7;
             this.onLog = null; 
-            this.facing = 'up'; // 'up', 'down', 'left', 'right' for drawing orientation
+            this.facing = 'up'; // 'up', 'down', 'left', 'right'
 
             this.draw = function() {
                 ctx.fillStyle = PLAYER_COLOR_BODY;
-                // Main body - slightly oval
                 ctx.beginPath();
                 ctx.ellipse(this.x, this.y, this.width / 2, this.height / 2.2, 0, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Simple eyes
                 const eyeRadius = this.width * 0.15;
                 const eyeOffsetX = this.width * 0.25;
-                const eyeOffsetY = -this.height * 0.2;
+                let eyeOffsetY = -this.height * 0.2; // Default for up/side facing
+
+                // Adjust eye position based on facing for a bit more character
+                if (this.facing === 'down') {
+                    eyeOffsetY = this.height * 0.15;
+                }
+
 
                 ctx.fillStyle = PLAYER_COLOR_EYES;
                 ctx.beginPath();
@@ -168,28 +172,25 @@
 
                 ctx.fillStyle = PLAYER_COLOR_PUPILS;
                 const pupilRadius = eyeRadius * 0.5;
-                ctx.beginPath();
-                ctx.arc(this.x - eyeOffsetX, this.y + eyeOffsetY, pupilRadius, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(this.x + eyeOffsetX, this.y + eyeOffsetY, pupilRadius, 0, Math.PI * 2);
-                ctx.fill();
+                let pupilDirectionX = 0;
+                let pupilDirectionY = 0;
 
-                // Simple representation of legs/feet based on facing direction (optional visual cue)
-                ctx.fillStyle = PLAYER_COLOR_BODY; // Same as body or slightly darker
-                const legWidth = this.width * 0.2;
-                const legHeight = this.height * 0.25;
-                if (this.facing === 'up') {
-                    ctx.fillRect(this.x - this.width*0.35, this.y + this.height*0.15, legWidth, legHeight);
-                    ctx.fillRect(this.x + this.width*0.15, this.y + this.height*0.15, legWidth, legHeight);
-                } else if (this.facing === 'down') {
-                     ctx.fillRect(this.x - this.width*0.35, this.y - this.height*0.4, legWidth, legHeight);
-                    ctx.fillRect(this.x + this.width*0.15, this.y - this.height*0.4, legWidth, legHeight);
-                }
+                if(this.facing === 'left') pupilDirectionX = -pupilRadius * 0.5;
+                if(this.facing === 'right') pupilDirectionX = pupilRadius * 0.5;
+                if(this.facing === 'up' && this.facing !== 'down') pupilDirectionY = -pupilRadius * 0.5;
+                 // if(this.facing === 'down') pupilDirectionY = pupilRadius * 0.5; // Pupils might look odd if always looking down
+
+                ctx.beginPath();
+                ctx.arc(this.x - eyeOffsetX + pupilDirectionX, this.y + eyeOffsetY + pupilDirectionY, pupilRadius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(this.x + eyeOffsetX + pupilDirectionX, this.y + eyeOffsetY + pupilDirectionY, pupilRadius, 0, Math.PI * 2);
+                ctx.fill();
             };
 
-            this.move = function(dx, dy) {
+            this.move = function(dx, dy) { // Reverted to accept dx and dy
                 if (!gameRunning) return;
+                
                 if (dx === 1) this.facing = 'right';
                 else if (dx === -1) this.facing = 'left';
                 else if (dy === 1) this.facing = 'down';
@@ -198,12 +199,13 @@
                 const targetX = this.x + dx * GRID_SIZE;
                 const targetY = this.y + dy * GRID_SIZE;
 
+                // Boundary checks
                 if (targetX - this.width / 2 < 0 || targetX + this.width / 2 > canvas.width ||
                     targetY - this.height / 2 < 0 || targetY + this.height / 2 > canvas.height) {
                     return; 
                 }
                 this.x = targetX;
-                this.y = targetY;
+                this.y = targetY; 
                 this.onLog = null; 
                 checkLaneInteraction(); 
             };
@@ -211,7 +213,7 @@
 
         function createLane(y, type, speed, direction, itemConfigs) {
             const lane = { y: y * GRID_SIZE, height: GRID_SIZE, type, speed, direction, items: [] };
-            let currentX = (direction === 1) ? -GRID_SIZE * 3 : canvas.width + GRID_SIZE * 2; // Start items further off-screen
+            let currentX = (direction === 1) ? -GRID_SIZE * 3 : canvas.width + GRID_SIZE * 2; 
 
             itemConfigs.forEach(config => {
                 const itemWidth = config.widthRatio * GRID_SIZE;
@@ -226,7 +228,7 @@
                     width: itemWidth,
                     color: config.color,
                     itemType: config.itemType, 
-                    bodyColor: config.bodyColor || config.color, // For multi-part items like trucks
+                    bodyColor: config.bodyColor || config.color, 
                     cabinColor: config.cabinColor,
                     wheelColor: config.wheelColor || '#333'
                 });
@@ -237,7 +239,9 @@
         
         function initializeLanes() {
             lanes = [];
-            goalsReached.fill(false);
+            // Reset goalsReached for the current MAX_GOALS
+            goalsReached = Array(MAX_GOALS).fill(false);
+
 
             lanes.push({ y: (NUM_ROWS - 1) * GRID_SIZE, height: GRID_SIZE, type: 'grass', items: [] });
 
@@ -276,12 +280,12 @@
         
         function createGoalItems() {
             const goalItems = [];
-            const goalWidth = GRID_SIZE * 1.2; // Slightly smaller lily pads
+            const goalWidth = GRID_SIZE * 1.2; 
             const spacing = (canvas.width - (MAX_GOALS * goalWidth)) / (MAX_GOALS + 1);
             for (let i = 0; i < MAX_GOALS; i++) {
                 goalItems.push({
-                    x: spacing * (i + 1) + goalWidth * i + goalWidth / 2, // Center X
-                    y: GRID_SIZE / 2, // Center Y within the goal lane
+                    x: spacing * (i + 1) + goalWidth * i + goalWidth / 2, 
+                    y: GRID_SIZE / 2, 
                     radius: goalWidth * 0.4,
                     reached: false,
                     id: i 
@@ -295,7 +299,7 @@
             score = 0;
             lives = 3;
             updateDisplay();
-            initializeLanes();
+            initializeLanes(); // This will reset goalsReached based on MAX_GOALS
             player = new Player(canvas.width / 2, (NUM_ROWS - 1.5) * GRID_SIZE); 
 
             startMessage.style.display = 'none';
@@ -317,7 +321,6 @@
                 ctx.fillStyle = laneColor;
                 ctx.fillRect(0, lane.y, canvas.width, lane.height);
 
-                // Draw water highlights for river
                 if (lane.type === 'river') {
                     ctx.strokeStyle = WATER_HIGHLIGHT_COLOR;
                     ctx.lineWidth = 2;
@@ -330,16 +333,14 @@
                     }
                 }
 
-
                 lane.items.forEach(item => {
                     if (lane.type === 'goal') { 
                          ctx.fillStyle = item.reached ? GOAL_REACHED_COLOR : GOAL_COLOR;
                          ctx.beginPath();
                          ctx.arc(item.x, lane.y + lane.height / 2, item.radius, 0, Math.PI * 2);
                          ctx.fill();
-                         // Optional: flower on lily pad
                          if (!item.reached) {
-                             ctx.fillStyle = '#FFC0CB'; // Pink
+                             ctx.fillStyle = '#FFC0CB'; 
                              ctx.beginPath();
                              ctx.arc(item.x, lane.y + lane.height / 2, item.radius * 0.3, 0, Math.PI*2);
                              ctx.fill();
@@ -357,18 +358,12 @@
             });
         }
 
-        // --- Drawing Helper Functions for Realistic Items ---
         function drawCar(x, y, width, height, color, wheelColor) {
             const bodyHeight = height * 0.6;
             const roofHeight = height * 0.4;
             const wheelRadius = height * 0.15;
-
-            // Body
             ctx.fillStyle = color;
             ctx.fillRect(x, y + roofHeight, width, bodyHeight);
-
-            // Roof
-            ctx.fillStyle = color; // Could be slightly different
             ctx.beginPath();
             ctx.moveTo(x + width * 0.1, y + roofHeight);
             ctx.lineTo(x + width * 0.2, y);
@@ -376,13 +371,9 @@
             ctx.lineTo(x + width * 0.9, y + roofHeight);
             ctx.closePath();
             ctx.fill();
-            
-            // Windows (simple darker overlay)
             ctx.fillStyle = "rgba(0,0,0,0.3)";
-            ctx.fillRect(x + width * 0.22, y + height*0.05, width * 0.25, height*0.25); // Front
-            ctx.fillRect(x + width * 0.53, y + height*0.05, width * 0.25, height*0.25); // Back
-
-            // Wheels
+            ctx.fillRect(x + width * 0.22, y + height*0.05, width * 0.25, height*0.25); 
+            ctx.fillRect(x + width * 0.53, y + height*0.05, width * 0.25, height*0.25); 
             ctx.fillStyle = wheelColor;
             ctx.beginPath();
             ctx.arc(x + width * 0.25, y + roofHeight + bodyHeight - wheelRadius, wheelRadius, 0, Math.PI * 2);
@@ -398,15 +389,10 @@
             const cabinHeight = height * 0.7;
             const trailerHeight = height * 0.8;
             const wheelRadius = height * 0.12;
-
-            // Trailer
             ctx.fillStyle = bodyColor;
             ctx.fillRect(x + cabinWidth + width * 0.05, y + (height - trailerHeight), trailerWidth, trailerHeight);
-
-            // Cabin
             ctx.fillStyle = cabinColor;
             ctx.fillRect(x, y + (height - cabinHeight), cabinWidth, cabinHeight);
-             // Cabin Roof (slight slant)
             ctx.beginPath();
             ctx.moveTo(x, y + (height - cabinHeight));
             ctx.lineTo(x + cabinWidth * 0.1, y + (height - cabinHeight) - height * 0.1);
@@ -414,19 +400,12 @@
             ctx.lineTo(x + cabinWidth, y + (height - cabinHeight));
             ctx.closePath();
             ctx.fill();
-            
-            // Window
             ctx.fillStyle = "rgba(0,0,0,0.3)";
             ctx.fillRect(x + cabinWidth * 0.15, y + (height - cabinHeight) + cabinHeight*0.1, cabinWidth*0.7, cabinHeight*0.3);
-
-
-            // Wheels
             ctx.fillStyle = wheelColor;
-            // Front wheels (under cabin)
             ctx.beginPath();
             ctx.arc(x + cabinWidth * 0.3, y + height - wheelRadius, wheelRadius, 0, Math.PI * 2);
             ctx.fill();
-            // Rear wheels (under trailer)
             ctx.beginPath();
             ctx.arc(x + cabinWidth + width * 0.15, y + height - wheelRadius, wheelRadius, 0, Math.PI * 2);
             ctx.fill();
@@ -437,7 +416,6 @@
 
         function drawLog(x, y, width, height, color) {
             ctx.fillStyle = color;
-            // Rounded rectangle for log
             const radius = height / 2;
             ctx.beginPath();
             ctx.moveTo(x + radius, y);
@@ -451,8 +429,6 @@
             ctx.arcTo(x, y, x + radius, y, radius);
             ctx.closePath();
             ctx.fill();
-
-            // Simple bark texture
             ctx.strokeStyle = 'rgba(0,0,0,0.2)';
             ctx.lineWidth = 1;
             for(let i=0; i < 5; i++) {
@@ -464,13 +440,11 @@
         }
         
         function drawTurtle(centerX, centerY, radius, color) {
-            // Shell
-            ctx.fillStyle = color; // Dark green for shell
+            ctx.fillStyle = color; 
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
             ctx.fill();
-            // Shell pattern
-            ctx.strokeStyle = '#004000'; // Darker green for pattern
+            ctx.strokeStyle = '#004000'; 
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius * 0.8, 0, Math.PI * 2);
@@ -479,13 +453,8 @@
             ctx.moveTo(centerX - radius * 0.8, centerY); ctx.lineTo(centerX + radius * 0.8, centerY);
             ctx.moveTo(centerX, centerY - radius * 0.8); ctx.lineTo(centerX, centerY + radius * 0.8);
             ctx.stroke();
-
-
-            // Head
-            ctx.fillStyle = '#6B8E23'; // Olive drab for head/legs
+            ctx.fillStyle = '#6B8E23'; 
             ctx.beginPath();
-            // Assuming turtle is moving left/right, head points in direction of movement
-            // This is a simplification; actual head direction would depend on lane.direction
             ctx.arc(centerX + radius * 0.8, centerY, radius * 0.4, 0, Math.PI * 2); 
             ctx.fill();
         }
@@ -496,9 +465,9 @@
                 if (lane.type === 'road' || lane.type === 'river') {
                     lane.items.forEach(item => {
                         item.x += lane.speed * lane.direction;
-                        if (lane.direction === 1 && item.x > canvas.width + GRID_SIZE) { // Item fully off screen
+                        if (lane.direction === 1 && item.x > canvas.width + GRID_SIZE) { 
                             item.x = -item.width - Math.random() * GRID_SIZE * 3 - GRID_SIZE * 2; 
-                        } else if (lane.direction === -1 && item.x + item.width < -GRID_SIZE) { // Item fully off screen
+                        } else if (lane.direction === -1 && item.x + item.width < -GRID_SIZE) { 
                             item.x = canvas.width + Math.random() * GRID_SIZE * 3 + GRID_SIZE; 
                         }
                     });
@@ -508,32 +477,30 @@
         
         function checkLaneInteraction() {
             if (!player) return;
-            const playerGridY = Math.floor(player.y / GRID_SIZE);
-            // Ensure playerLaneIndex is valid
-            if (playerGridY < 0 || playerGridY >= lanes.length) {
-                playerDeath(); // Fell off top/bottom somehow
+            const playerLaneIndex = Math.floor(player.y / GRID_SIZE);
+            if (playerLaneIndex < 0 || playerLaneIndex >= lanes.length) {
+                playerDeath(); 
                 return;
             }
-            const currentLane = lanes[playerGridY];
+            const currentLane = lanes[playerLaneIndex];
             player.onLog = null; 
 
             if (currentLane.type === 'road') {
                 currentLane.items.forEach(vehicle => {
-                    // Simple AABB collision
-                    if (player.x - player.width/2 < vehicle.x + vehicle.width &&
-                        player.x + player.width/2 > vehicle.x &&
-                        player.y - player.height/2 < currentLane.y + GRID_SIZE * 0.9 && // vehicle y is lane.y + offset
-                        player.y + player.height/2 > currentLane.y + GRID_SIZE * 0.1) {
+                    if (player.x + player.width/2 > vehicle.x &&
+                        player.x - player.width/2 < vehicle.x + vehicle.width &&
+                        player.y + player.height/2 > currentLane.y + GRID_SIZE * 0.1 && // Vehicle is roughly centered in lane
+                        player.y - player.height/2 < currentLane.y + GRID_SIZE * 0.9) {
                         playerDeath();
                     }
                 });
             } else if (currentLane.type === 'river') {
                 let onSafety = false;
                 currentLane.items.forEach(platform => {
-                     if (player.x - player.width/2 < platform.x + platform.width &&
-                        player.x + player.width/2 > platform.x &&
-                        player.y - player.height/2 < currentLane.y + GRID_SIZE * 0.9 && 
-                        player.y + player.height/2 > currentLane.y + GRID_SIZE * 0.1) {
+                     if (player.x + player.width/2 > platform.x &&
+                        player.x - player.width/2 < platform.x + platform.width &&
+                        player.y + player.height/2 > currentLane.y + GRID_SIZE * 0.1 && 
+                        player.y - player.height/2 < currentLane.y + GRID_SIZE * 0.9) {
                         onSafety = true;
                         player.onLog = platform; 
                     }
@@ -546,6 +513,7 @@
                     if (!goal.reached && 
                         distBetweenPoints(player.x, player.y, goal.x, currentLane.y + currentLane.height/2) < goal.radius + player.width/2) {
                         goal.reached = true;
+                        // goalsReached[goal.id] = true; // Use the id to mark specific goal
                         score += 100;
                         player.x = canvas.width / 2;
                         player.y = (NUM_ROWS - 1.5) * GRID_SIZE; 
@@ -575,6 +543,7 @@
                 player.x = canvas.width / 2;
                 player.y = (NUM_ROWS - 1.5) * GRID_SIZE;
                 player.onLog = null;
+                player.facing = 'up'; // Reset facing direction
             }
         }
         
@@ -597,7 +566,7 @@
                 return;
             }
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            updateLanes();
+            updateLanes(); 
             updatePlayerPositionWithLog(); 
             
             drawLanes();
@@ -619,7 +588,7 @@
             startMessage.style.display = 'none';
         }
         
-        function distBetweenPoints(x1, y1, x2, y2) { // Helper for goal collision
+        function distBetweenPoints(x1, y1, x2, y2) { 
             return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
         }
 
@@ -630,14 +599,15 @@
             }
             if (!gameRunning || !player) return;
 
-            let dx = 0, dy = 0;
+            let dx = 0;
+            let dy = 0; // Re-introduce dy for vertical movement
             switch(e.key) {
-                case 'ArrowUp': case 'w': dy = -1; e.preventDefault(); break;
-                case 'ArrowDown': case 's': dy = 1; e.preventDefault(); break;
+                case 'ArrowUp': case 'w': dy = -1; e.preventDefault(); break; 
+                case 'ArrowDown': case 's': dy = 1; e.preventDefault(); break; 
                 case 'ArrowLeft': case 'a': dx = -1; e.preventDefault(); break;
                 case 'ArrowRight': case 'd': dx = 1; e.preventDefault(); break;
             }
-            if (dx !== 0 || dy !== 0) {
+            if (dx !== 0 || dy !== 0) { // Call move if there's any input
                 player.move(dx, dy);
             }
         });
