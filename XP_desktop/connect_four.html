@@ -107,8 +107,8 @@
         let player2Score = 0;
         let droppingPiece = null; 
         let animationFrameId = null; 
-        const AI_PLAYER_NUMBER = 2; // AI is Player 2
-        const AI_THINKING_TIME = 700; // milliseconds
+        const AI_PLAYER_NUMBER = 2; 
+        const AI_THINKING_TIME = 700; 
 
         function initializeBoard() {
             board = [];
@@ -170,10 +170,13 @@
                     droppingPiece.y = targetY; 
                     board[droppingPiece.targetRow][droppingPiece.col] = droppingPiece.player;
                     
+                    console.log(`Piece landed for player ${droppingPiece.player} at [${droppingPiece.targetRow}, ${droppingPiece.col}]`); // DEBUG
                     const gameHasEnded = checkEndConditions(droppingPiece.targetRow, droppingPiece.col, droppingPiece.player);
+                    const playerWhoDropped = droppingPiece.player; // Store before nullifying
                     droppingPiece = null; // Animation finished
 
-                    if (!gameHasEnded && currentPlayer === AI_PLAYER_NUMBER) {
+                    if (!gameHasEnded && playerWhoDropped === 1 && currentPlayer === AI_PLAYER_NUMBER) { // If human just played and it's now AI's turn
+                        console.log("Human turn ended, scheduling AI move."); // DEBUG
                         setTimeout(aiMakeMove, AI_THINKING_TIME);
                     }
                 }
@@ -181,7 +184,9 @@
         }
 
         function checkEndConditions(r, c, player) {
+            console.log(`Checking end conditions for player ${player} at [${r}, ${c}]`); // DEBUG
             if (checkWin(r, c, player)) {
+                console.log(`Player ${player} wins detected at [${r}, ${c}]`); // DEBUG
                 gameOver = true;
                 messageArea.textContent = (player === AI_PLAYER_NUMBER ? "Computer" : `Player ${player}`) + " Wins!";
                 if (player === 1) player1Score++; else player2Score++;
@@ -189,13 +194,17 @@
                 restartButton.style.display = 'block';
                 return true;
             } else if (isBoardFull()) {
+                console.log("Board is full, it's a draw."); // DEBUG
                 gameOver = true;
                 messageArea.textContent = "It's a Draw!";
                 restartButton.style.display = 'block';
                 return true;
             }
-            currentPlayer = (player === 1) ? 2 : 1;
-            updateTurnDisplay();
+            // Switch player only if game has not ended
+            if (!gameOver) {
+                currentPlayer = (player === 1) ? 2 : 1;
+                updateTurnDisplay();
+            }
             return false;
         }
 
@@ -214,27 +223,32 @@
         }
 
         function checkWin(r, c, player) {
+            console.log(`checkWin called for player ${player} at [${r}, ${c}]`); // DEBUG
+            // Check horizontal
             let count = 0;
             for (let i = Math.max(0, c - 3); i <= Math.min(COLS - 1, c + 3); i++) {
                 if (board[r][i] === player) count++; else count = 0;
-                if (count >= 4) return true;
+                if (count >= 4) { console.log(`Horizontal win for player ${player}`); return true; } // DEBUG
             }
+            // Check vertical
             count = 0;
             for (let i = Math.max(0, r - 3); i <= Math.min(ROWS - 1, r + 3); i++) {
                 if (board[i][c] === player) count++; else count = 0;
-                if (count >= 4) return true;
+                if (count >= 4) { console.log(`Vertical win for player ${player}`); return true; } // DEBUG
             }
+            // Check diagonal (bottom-left to top-right)
             count = 0;
             for (let i = -3; i <= 3; i++) {
                 const row = r + i; const col = c + i;
                 if (row >= 0 && row < ROWS && col >= 0 && col < COLS && board[row][col] === player) count++; else count = 0;
-                if (count >= 4) return true;
+                if (count >= 4) { console.log(`Diagonal (BL-TR) win for player ${player}`); return true; } // DEBUG
             }
+            // Check diagonal (top-left to bottom-right)
             count = 0;
             for (let i = -3; i <= 3; i++) {
                 const row = r + i; const col = c - i; 
                 if (row >= 0 && row < ROWS && col >= 0 && col < COLS && board[row][col] === player) count++; else count = 0;
-                if (count >= 4) return true;
+                if (count >= 4) { console.log(`Diagonal (TL-BR) win for player ${player}`); return true; } // DEBUG
             }
             return false;
         }
@@ -250,7 +264,7 @@
 
         function updateTurnDisplay() {
             if (gameOver) return;
-            if (currentPlayer === AI_PLAYER_NUMBER) {
+            if (currentPlayer === AI_PLAYER_NUMBER && !droppingPiece) { // Show thinking only if AI's turn and no piece is dropping
                 currentPlayerTurnDisplay.textContent = `Computer is thinking...`;
                 currentPlayerTurnDisplay.className = 'ai-thinking';
             } else {
@@ -301,26 +315,29 @@
         function aiMakeMove() {
             if (gameOver || currentPlayer !== AI_PLAYER_NUMBER || droppingPiece) return;
             let chosenColumn = -1;
-            for (let c = 0; c < COLS; c++) { // Check AI win
+            for (let c = 0; c < COLS; c++) { 
                 const r = getLowestEmptyRow(c);
                 if (r !== -1) { board[r][c] = AI_PLAYER_NUMBER; if (checkWin(r, c, AI_PLAYER_NUMBER)) { chosenColumn = c; board[r][c] = 0; break; } board[r][c] = 0; }
             }
-            if (chosenColumn === -1) { // Check block player win
+            if (chosenColumn === -1) { 
                 for (let c = 0; c < COLS; c++) {
                     const r = getLowestEmptyRow(c);
                     if (r !== -1) { board[r][c] = 1; if (checkWin(r, c, 1)) { chosenColumn = c; board[r][c] = 0; break; } board[r][c] = 0; }
                 }
             }
-            if (chosenColumn === -1) { // Prefer center
+            if (chosenColumn === -1) { 
                 const centerCols = [3, 2, 4, 1, 5, 0, 6]; 
                 for (let c of centerCols) { if (getLowestEmptyRow(c) !== -1) { chosenColumn = c; break; } }
             }
-            if (chosenColumn === -1) { // Random
+            if (chosenColumn === -1) { 
                 let availableCols = [];
                 for (let c = 0; c < COLS; c++) { if (getLowestEmptyRow(c) !== -1) availableCols.push(c); }
                 if (availableCols.length > 0) chosenColumn = availableCols[Math.floor(Math.random() * availableCols.length)];
             }
-            if (chosenColumn !== -1) dropPiece(chosenColumn, AI_PLAYER_NUMBER);
+            if (chosenColumn !== -1) {
+                dropPiece(chosenColumn, AI_PLAYER_NUMBER);
+                updateTurnDisplay(); // Update display to show AI has moved (or will move after animation)
+            }
         }
 
         function getLowestEmptyRow(col) {
@@ -331,7 +348,10 @@
             if (gameOver || droppingPiece || currentPlayer !== 1) return;
             const rect = canvas.getBoundingClientRect(); const x = event.clientX - rect.left;
             const col = Math.floor(x / SQUARE_SIZE);
-            if (col >= 0 && col < COLS && getLowestEmptyRow(col) !== -1) dropPiece(col, 1); 
+            if (col >= 0 && col < COLS && getLowestEmptyRow(col) !== -1) {
+                dropPiece(col, 1); 
+                // AI move will be triggered in updateDroppingPiece after human's piece lands
+            }
         });
         
         let hoverCol = -1;
