@@ -49,12 +49,15 @@
         #snake-icon { top: 230px; left: 210px; } #snake-icon::before { content: '🐍'; background-color: #90ee90; font-size: 38px;}
         #whackamole-icon { top: 330px; left: 210px; } 
         #whackamole-icon::before { content: '🔨'; background-color: #DAA520; font-size: 38px; }
+        /* Road Hopper icon CSS removed */
 
         #mycomputer-icon { top: 30px; left: 300px; } #mycomputer-icon::before { content: '💻'; background-color: #e0e0e0; font-size: 38px; }
         #hangman-icon { top: 130px; left: 300px; } #hangman-icon::before { content: '🤔'; background-color: #f5deb3; font-size: 38px; }
         #tetris-icon {top: 230px; left: 300px; } #tetris-icon::before { content: '🧱'; background-color: #cc66cc; font-size: 38px;}
         #spaceinvaders-icon { top: 330px; left: 300px; } 
         #spaceinvaders-icon::before { content: '👾'; background-color: #333; color: #00FF00; font-size: 38px; line-height: 48px; }
+        #connectfour-icon { top: 430px; left: 300px; } 
+        #connectfour-icon::before { content: '🔵'; background-color: #0074D9; color: #FFDC00; font-size: 38px; line-height: 48px; text-shadow: 1px 1px 1px #333;}
 
 
         /* Taskbar */
@@ -106,7 +109,7 @@
             bottom: 30px;
             left: 0;
             width: 320px; 
-            max-height: 540px; /* Kept this height, should be fine for current items */
+            max-height: 540px; 
             background-color: #c6d8f0;
             border: 1px outset #FFFFFF;
             border-top: 2px solid #FFFFFF;
@@ -230,10 +233,12 @@
         <div class="icon" id="memory-icon" data-appid="memory" data-title="Memory Game" data-url="memory.html" data-width="450" data-height="450"><span>Memory Game</span></div>
         <div class="icon" id="snake-icon" data-appid="snake" data-title="Snake" data-url="snake.html" data-width="430" data-height="480"><span>Snake</span></div>
         <div class="icon" id="whackamole-icon" data-appid="whackamole" data-title="Whack-a-Mole" data-url="whack_a_mole.html" data-width="350" data-height="480"><span>Whack-a-Mole</span></div>
+        
         <div class="icon" id="mycomputer-icon" data-appid="mycomputer" data-title="My Computer" data-url="my_computer.html" data-width="550" data-height="400"><span>My Computer</span></div>
         <div class="icon" id="hangman-icon" data-appid="hangman" data-title="Hangman" data-url="hangman.html" data-width="400" data-height="450"><span>Hangman</span></div>
         <div class="icon" id="tetris-icon" data-appid="tetris" data-title="Tetris" data-url="tetris.html" data-width="320" data-height="550"><span>Tetris</span></div>
         <div class="icon" id="spaceinvaders-icon" data-appid="spaceinvaders" data-title="Space Invaders" data-url="space_invaders.html" data-width="550" data-height="520"><span>Space Invaders</span></div>
+        <div class="icon" id="connectfour-icon" data-appid="connectfour" data-title="Connect Four" data-url="connect_four.html" data-width="580" data-height="580"><span>Connect Four</span></div>
 
 
         <div id="start-menu">
@@ -252,6 +257,7 @@
                     <div class="start-menu-item" data-appid="spaceinvaders"><span class="icon-placeholder">👾</span>Space Invaders</div>
                     <div class="start-menu-item" data-appid="asteroids"><span class="icon-placeholder">☄️</span>Asteroids</div>
                     <div class="start-menu-item" data-appid="breakout"><span class="icon-placeholder">🧱</span>Breakout</div>
+                    <div class="start-menu-item" data-appid="connectfour"><span class="icon-placeholder">🔵</span>Connect Four</div>
                     <div class="start-menu-separator"></div>
                     <div class="start-menu-item" data-appid="snake"><span class="icon-placeholder">🐍</span>Snake</div>
                     <div class="start-menu-item" data-appid="pong"><span class="icon-placeholder">||</span>Pong</div>
