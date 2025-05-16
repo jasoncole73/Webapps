@@ -49,9 +49,6 @@
         #snake-icon { top: 230px; left: 210px; } #snake-icon::before { content: '🐍'; background-color: #90ee90; font-size: 38px;}
         #whackamole-icon { top: 330px; left: 210px; } 
         #whackamole-icon::before { content: '🔨'; background-color: #DAA520; font-size: 38px; }
-        #roadhopper-icon { top: 430px; left: 210px; } 
-        #roadhopper-icon::before { content: '🐸'; background-color: #2E8B57; color: #FFF; font-size: 38px; line-height: 48px;}
-
 
         #mycomputer-icon { top: 30px; left: 300px; } #mycomputer-icon::before { content: '💻'; background-color: #e0e0e0; font-size: 38px; }
         #hangman-icon { top: 130px; left: 300px; } #hangman-icon::before { content: '🤔'; background-color: #f5deb3; font-size: 38px; }
@@ -109,7 +106,7 @@
             bottom: 30px;
             left: 0;
             width: 320px; 
-            max-height: 580px; /* Adjusted max-height for more items */
+            max-height: 540px; /* Kept this height, should be fine for current items */
             background-color: #c6d8f0;
             border: 1px outset #FFFFFF;
             border-top: 2px solid #FFFFFF;
@@ -233,9 +230,6 @@
         <div class="icon" id="memory-icon" data-appid="memory" data-title="Memory Game" data-url="memory.html" data-width="450" data-height="450"><span>Memory Game</span></div>
         <div class="icon" id="snake-icon" data-appid="snake" data-title="Snake" data-url="snake.html" data-width="430" data-height="480"><span>Snake</span></div>
         <div class="icon" id="whackamole-icon" data-appid="whackamole" data-title="Whack-a-Mole" data-url="whack_a_mole.html" data-width="350" data-height="480"><span>Whack-a-Mole</span></div>
-        <div class="icon" id="roadhopper-icon" data-appid="roadhopper" data-title="Road Hopper" data-url="road_hopper.html" data-width="410" data-height="550"><span>Road Hopper</span></div>
-
-
         <div class="icon" id="mycomputer-icon" data-appid="mycomputer" data-title="My Computer" data-url="my_computer.html" data-width="550" data-height="400"><span>My Computer</span></div>
         <div class="icon" id="hangman-icon" data-appid="hangman" data-title="Hangman" data-url="hangman.html" data-width="400" data-height="450"><span>Hangman</span></div>
         <div class="icon" id="tetris-icon" data-appid="tetris" data-title="Tetris" data-url="tetris.html" data-width="320" data-height="550"><span>Tetris</span></div>
@@ -258,7 +252,6 @@
                     <div class="start-menu-item" data-appid="spaceinvaders"><span class="icon-placeholder">👾</span>Space Invaders</div>
                     <div class="start-menu-item" data-appid="asteroids"><span class="icon-placeholder">☄️</span>Asteroids</div>
                     <div class="start-menu-item" data-appid="breakout"><span class="icon-placeholder">🧱</span>Breakout</div>
-                    <div class="start-menu-item" data-appid="roadhopper"><span class="icon-placeholder">🐸</span>Road Hopper</div>
                     <div class="start-menu-separator"></div>
                     <div class="start-menu-item" data-appid="snake"><span class="icon-placeholder">🐍</span>Snake</div>
                     <div class="start-menu-item" data-appid="pong"><span class="icon-placeholder">||</span>Pong</div>
@@ -449,20 +442,15 @@
         function openWindowAnimated(winElement) {
             if (!winElement) return;
 
-            // If it's already open and visible, just bring to front.
             if (winElement.style.display === 'block' && winElement.classList.contains('open')) {
                 bringToFront(winElement);
                 return;
             }
 
-            winElement.style.display = 'block'; // Make it part of the layout
-            
-            // Force a reflow to ensure the initial state (opacity 0, scale 0.95 from CSS) is applied
-            // before adding the 'open' class for the transition.
+            winElement.style.display = 'block'; 
             void winElement.offsetWidth; 
-
-            winElement.classList.add('open'); // Add class to trigger animation
-            bringToFront(winElement); // Always bring to front
+            winElement.classList.add('open'); 
+            bringToFront(winElement); 
         }
 
 
@@ -507,7 +495,6 @@
             if (callback && totalToClose > 0) {
                 setTimeout(() => {
                     if (closedCount < totalToClose) {
-                        // console.warn("Shutdown callback timeout, not all windows confirmed closed via transition.");
                         callback(); 
                     }
                 }, Math.max(300, totalToClose * 200)); 
@@ -528,7 +515,6 @@
                 if (targetWindow) {
                     if (targetWindow.style.display === 'none' || !targetWindow.classList.contains('open')) {
                         const iframe = targetWindow.querySelector('iframe');
-                        // Ensure the URL is correct if reopening
                         if (iframe && (iframe.getAttribute('src') === 'about:blank' || iframe.getAttribute('src') !== targetWindow.dataset.url)) {
                              iframe.setAttribute('src', targetWindow.dataset.url); 
                              setTimeout(() => tryFocusIframe(iframe), 50); 
@@ -581,27 +567,26 @@
 
             let win = openWindows[windowId];
 
-            if (win) { // Window already exists
+            if (win) { 
                 win.style.width = `${parsedWidth}px`; 
                 win.style.height = `${parsedHeight}px`;
-                win.dataset.url = url; // Update the stored URL if it changed
+                win.dataset.url = url; 
                 
                 const iframe = win.querySelector('iframe');
                 if (iframe && (iframe.getAttribute('src') === 'about:blank' || iframe.getAttribute('src') !== url)) {
                     iframe.setAttribute('src', url); 
                     setTimeout(() => tryFocusIframe(iframe), 50); 
                 }
-                openWindowAnimated(win); // Animate open if it was hidden
+                openWindowAnimated(win); 
 
                 appOpeningDebounce[appId] = false; 
                 return;
             }
 
-            // Create new window element
             win = document.createElement('div');
             win.className = 'window'; 
             win.id = windowId;
-            win.dataset.url = url; // Store the url on the window element
+            win.dataset.url = url; 
             win.style.width = `${parsedWidth}px`;
             win.style.height = `${parsedHeight}px`;
 
@@ -628,14 +613,13 @@
             
             const iframeElement = win.querySelector('iframe');
             if (iframeElement) {
-                // Set src *before* openWindowAnimated makes it visually appear and animate.
                 iframeElement.setAttribute('src', url); 
             }
             
-            openWindowAnimated(win); // Now make it visible and animate.
+            openWindowAnimated(win); 
 
             if (iframeElement) { 
-                 setTimeout(() => tryFocusIframe(iframeElement), 200); // Delay focus attempt
+                 setTimeout(() => tryFocusIframe(iframeElement), 200); 
             }
 
             const closeButton = win.querySelector('.close-button');
