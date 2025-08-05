@@ -1,85 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flip Clock - No Branding</title>
-  <link rel="stylesheet" href="https://unpkg.com/@pqina/flip/dist/flip.min.css" />
-  <style>
-    body {
-      margin: 0;
-      background: #000;
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      font-family: sans-serif;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <title>Flip Clock — Official Style</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://unpkg.com/@pqina/flip/dist/flip.min.css" />
+    <style>
+      body {
+        margin: 0;
+        background: #000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
 
-    .clock {
-      display: flex;
-      gap: 3rem;
-    }
+      .tick {
+        font-size: 6rem;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+          Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+      }
 
-    .unit {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+      .tick-label {
+        font-size: 0.25em;
+        color: #aaa;
+        text-align: center;
+      }
 
-    .label {
-      font-size: 1rem;
-      margin-top: 0.5rem;
-      color: #aaa;
-    }
+      .tick-group {
+        margin: 0 0.25em;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
 
-    .tick {
-      font-size: 4rem;
-    }
-  </style>
-</head>
-<body>
-
-  <div class="clock">
-    <div class="unit">
-      <div id="hours"></div>
-      <div class="label">Hours</div>
+    <div class="tick" data-did-init="initializeClock">
+      <div
+        data-repeat="true"
+        data-layout="horizontal center fit"
+        data-transform="preset(h, m, s)"
+      >
+        <div class="tick-group">
+          <div data-view="flip"></div>
+          <div data-view="text" class="tick-label">Hours</div>
+        </div>
+        <div class="tick-group">
+          <div data-view="flip"></div>
+          <div data-view="text" class="tick-label">Minutes</div>
+        </div>
+        <div class="tick-group">
+          <div data-view="flip"></div>
+          <div data-view="text" class="tick-label">Seconds</div>
+        </div>
+      </div>
     </div>
-    <div class="unit">
-      <div id="minutes"></div>
-      <div class="label">Minutes</div>
-    </div>
-    <div class="unit">
-      <div id="seconds"></div>
-      <div class="label">Seconds</div>
-    </div>
-  </div>
 
-  <script src="https://unpkg.com/@pqina/flip/dist/flip.min.js"></script>
-  <script>
-    // ✅ Proper structure to suppress branding
-    const createClockUnit = (el, initial) => {
-      return Tick.DOM.create(el, {
-        root: 'tick', // ✅ Use 'tick' as root to suppress branding
-        value: initial,
-        view: {
-          layout: 'horizontal center',
-          children: [{ view: 'flip' }]
-        }
-      });
-    };
-
-    const hourTick = createClockUnit(document.getElementById('hours'), '00');
-    const minuteTick = createClockUnit(document.getElementById('minutes'), '00');
-    const secondTick = createClockUnit(document.getElementById('seconds'), '00');
-
-    Tick.helper.interval(() => {
-      const now = new Date();
-      hourTick.value = String(now.getHours()).padStart(2, '0');
-      minuteTick.value = String(now.getMinutes()).padStart(2, '0');
-      secondTick.value = String(now.getSeconds()).padStart(2, '0');
-    }, 1000);
-  </script>
-</body>
+    <script src="https://unpkg.com/@pqina/flip/dist/flip.min.js"></script>
+    <script>
+      function initializeClock(tick) {
+        Tick.helper.interval(() => {
+          const now = new Date();
+          tick.value = [
+            String(now.getHours()).padStart(2, '0'),
+            String(now.getMinutes()).padStart(2, '0'),
+            String(now.getSeconds()).padStart(2, '0')
+          ];
+        }, 1000);
+      }
+    </script>
+  </body>
 </html>
