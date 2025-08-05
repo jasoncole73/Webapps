@@ -4,20 +4,17 @@
   <meta charset="UTF-8" />
   <title>Flip Clock</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- Flip Clock Styles -->
-  <link href="https://unpkg.com/@pqina/flip/dist/flip.min.css" rel="stylesheet" />
-
+  <link rel="stylesheet" href="https://unpkg.com/@pqina/flip/dist/flip.min.css" />
   <style>
     :root {
-      --tick-text: white;
-      --tick-panel: #222;
+      --tick-text: #ffffff;
+      --tick-panel: #111;
       --tick-shadow: none;
       --tick-font-size: 5rem;
     }
 
     body {
-      background: #111;
+      background: #000;
       color: var(--tick-text);
       display: flex;
       flex-direction: column;
@@ -62,14 +59,18 @@
     .control-group button:hover {
       background: #444;
     }
+
+    tick-flip {
+      --flip-digit-background: var(--tick-panel);
+      --flip-digit-color: var(--tick-text);
+      margin: 0 0.1em;
+    }
   </style>
 </head>
 <body>
 
-  <!-- Flip Clock -->
-  <div id="clock" class="tick" data-value="00:00:00"></div>
+  <tick-flip id="clock" data-repeat="true" data-transform="character"></tick-flip>
 
-  <!-- Controls -->
   <div class="controls">
     <div class="control-group">
       <button onclick="setTheme('neon')">Neon</button>
@@ -87,22 +88,21 @@
     </div>
   </div>
 
-  <!-- Flip Clock Script -->
   <script src="https://unpkg.com/@pqina/flip/dist/flip.min.js"></script>
   <script>
     const el = document.getElementById('clock');
-    const tick = Tick.DOM.create(el);
+    const flip = new Tick.Flip(el);
 
     function updateTime() {
       const now = new Date();
       const hh = String(now.getHours()).padStart(2, '0');
       const mm = String(now.getMinutes()).padStart(2, '0');
       const ss = String(now.getSeconds()).padStart(2, '0');
-      tick._tick.value = `${hh}:${mm}:${ss}`;
+      flip.value = hh + ':' + mm + ':' + ss;
     }
 
-    updateTime();
     setInterval(updateTime, 1000);
+    updateTime();
 
     function setVar(name, value) {
       document.documentElement.style.setProperty(name, value);
@@ -119,7 +119,7 @@
       setVar('--tick-panel', t.panel);
     }
 
-    // 🔒 Anti-copy protection
+    // 🔒 Basic anti-copy protection
     document.addEventListener('contextmenu', e => e.preventDefault());
     document.onkeydown = function(e) {
       if (e.key === "F12" ||
