@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flip Clock (Live Time)</title>
+  <title>Flip Clock</title>
 
-  <!-- ✅ Load Flip CSS from CDN -->
+  <!-- ✅ Flip CSS from CDN -->
   <link rel="stylesheet" href="https://unpkg.com/@pqina/flip/dist/flip.min.css" />
 
   <style>
     body {
       margin: 0;
-      background: #111;
+      background: #000;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -19,20 +19,8 @@
     }
 
     .tick {
-      font-size: 4rem;
+      font-size: 5rem;
       color: white;
-      font-family: 'Segoe UI', sans-serif;
-    }
-
-    .tick-label {
-      font-size: 0.25em;
-      color: #aaa;
-      text-align: center;
-    }
-
-    .tick-group {
-      margin: 0 0.5em;
-      text-align: center;
     }
   </style>
 </head>
@@ -44,20 +32,17 @@
     </div>
   </div>
 
-  <!-- ✅ Load Flip JS from CDN -->
+  <!-- ✅ Flip JS from CDN -->
   <script src="https://unpkg.com/@pqina/flip/dist/flip.min.js"></script>
 
-  <!-- ✅ Final fix for real-time clock -->
   <script>
     function handleTickInit(tick) {
-      Tick.helper.interval(function() {
+      Tick.helper.interval(() => {
         const now = new Date();
-        const h = now.getHours().toString().padStart(2, '0');
-        const m = now.getMinutes().toString().padStart(2, '0');
-        const s = now.getSeconds().toString().padStart(2, '0');
-
-        // ✅ Correct format passed as a string
-        tick.value = `${h}:${m}:${s}`;
+        const h = String(now.getHours()).padStart(2, '0');
+        const m = String(now.getMinutes()).padStart(2, '0');
+        const s = String(now.getSeconds()).padStart(2, '0');
+        tick.value = `${h}:${m}:${s}`; // ✅ Single string — required
       }, 1000);
     }
   </script>
