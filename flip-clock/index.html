@@ -16,17 +16,14 @@
       align-items: center;
       height: 100vh;
     }
-
     .tick {
       font-size: 4rem;
       font-family: 'Segoe UI', sans-serif;
     }
-
     .tick-group {
       margin: 0 0.25em;
       text-align: center;
     }
-
     .tick-label {
       font-size: 0.3em;
       color: #aaa;
@@ -36,7 +33,9 @@
 <body>
 
   <div class="tick" data-did-init="handleTickInit">
-    <div data-repeat="true" data-layout="horizontal center fit" data-transform="preset(d, h, m, s)">
+    <div data-repeat="true"
+         data-layout="horizontal center fit"
+         data-transform="preset(d, h, m, s)">
       <div class="tick-group">
         <div data-view="flip"></div>
         <div data-view="text" class="tick-label">Days</div>
@@ -56,15 +55,14 @@
     </div>
   </div>
 
-  <!-- ✅ Load Tick.js (local file assumed to be correct) -->
-  <script src="tick/tick.min.js"></script>
+  <!-- ✅ Load Tick.js—use CDN to avoid local file issues -->
+  <script src="https://unpkg.com/@pqina/flip/dist/flip.min.js"></script>
 
-  <!-- ✅ FIXED: Assign tick.value = value.value to avoid [object Object] -->
   <script>
     function handleTickInit(tick) {
       Tick.count.down('2030-01-01T00:00:00')
         .onupdate = function (value) {
-          tick.value = value.value; // ✅ This fixes the [object Object] issue
+          tick.value = value.value; // ✅ correct assignment
         };
     }
   </script>
