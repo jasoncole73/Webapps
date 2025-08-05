@@ -14,6 +14,7 @@
       align-items: center;
       height: 100vh;
     }
+
     .tick {
       font-size: 5rem;
       color: white;
@@ -31,17 +32,18 @@
   <script src="https://unpkg.com/@pqina/flip/dist/flip.min.js"></script>
 
   <script>
-    // ✅ Manually initialize Tick and update time
-    const el = document.getElementById('flipClock');
-    const tickInstance = new Tick.DOM(el);
+    window.onload = function () {
+      const el = document.getElementById('flipClock');
+      const tickInstance = new Tick.DOM(el);
 
-    Tick.helper.interval(() => {
-      const now = new Date();
-      const h = String(now.getHours()).padStart(2, '0');
-      const m = String(now.getMinutes()).padStart(2, '0');
-      const s = String(now.getSeconds()).padStart(2, '0');
-      tickInstance.value = `${h}:${m}:${s}`;
-    }, 1000);
+      Tick.helper.interval(() => {
+        const now = new Date();
+        const h = String(now.getHours()).padStart(2, '0');
+        const m = String(now.getMinutes()).padStart(2, '0');
+        const s = String(now.getSeconds()).padStart(2, '0');
+        tickInstance.value = `${h}:${m}:${s}`;
+      }, 1000);
+    };
   </script>
 </body>
 </html>
