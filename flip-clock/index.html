@@ -78,10 +78,12 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@pqina/flip@1.6.0/dist/flip.min.js"></script>
-  <script>
+  <!-- Load the flip clock module -->
+  <script type="module">
+    import { Flip } from "https://cdn.jsdelivr.net/npm/@pqina/flip@1.6.0/dist/flip.min.mjs";
+
     const el = document.getElementById('clock');
-    const flip = new Tick.Flip(el, { value: "00:00:00" });
+    const flip = new Flip(el, { value: "00:00:00" });
 
     setInterval(() => {
       const now = new Date();
@@ -91,7 +93,8 @@
       flip.value = `${hh}:${mm}:${ss}`;
     }, 1000);
 
-    function setTheme(theme) {
+    // Control functions
+    window.setTheme = function(theme) {
       const themes = {
         neon:     { text: '#0ff', panel: '#0ff' },
         sunset:   { text: '#f96', panel: '#700' },
@@ -102,13 +105,13 @@
       el.style.setProperty('--flip-digit-background', t.panel);
     }
 
-    function setShadow(state) {
+    window.setShadow = function(state) {
       el.style.filter = state === 'on'
         ? 'drop-shadow(0 0 10px rgba(255,255,255,0.3))'
         : 'none';
     }
 
-    function setSize(size) {
+    window.setSize = function(size) {
       el.style.fontSize = size;
     }
 
