@@ -1,127 +1,59 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Flip Clock</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@pqina/flip/dist/flip.min.css" />
-  <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      background: #000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      font-family: sans-serif;
-      color: white;
-    }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Standalone Flip Clock</title>
 
-    tick-flip {
-      --flip-digit-background: #111;
-      --flip-digit-color: white;
-      font-size: 5rem;
-      margin-bottom: 2rem;
-    }
+    <!-- Flip Clock Styles -->
+    <link rel="stylesheet" href="../dist/flip.min.css" />
+    <link rel="stylesheet" href="../dist/tick.view.flip.min.css" />
 
-    .controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      justify-content: center;
-    }
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans,
+            Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #f0f0f0;
+            margin: 0;
+        }
 
-    .control-group {
-      display: flex;
-      border: 1px solid #888;
-      border-radius: 1rem;
-      overflow: hidden;
-    }
+        .tick {
+            font-size: 4em;
+        }
 
-    .control-group button {
-      padding: 0.5rem 1rem;
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      color: white;
-      background-color: #222;
-    }
+        .tick-label {
+            font-size: 0.375em;
+            text-align: center;
+        }
 
-    .control-group button:hover {
-      background: #444;
-    }
-
-    .tick__watermark {
-      display: none !important;
-    }
-  </style>
+        .tick-group {
+            margin: 0 0.25em;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-
-  <tick-flip id="clock" data-repeat="true"></tick-flip>
-
-  <div class="controls">
-    <div class="control-group">
-      <button onclick="setTheme('neon')">Neon</button>
-      <button onclick="setTheme('sunset')">Sunset</button>
-      <button onclick="setTheme('midnight')">Midnight</button>
+    <div class="tick" data-did-init="handleTickInit">
+        <div data-repeat="true" data-layout="horizontal center fit">
+            <span data-view="flip" data-key="hours" data-transform="pad(00)"></span>
+            <span data-view="flip" data-key="minutes" data-transform="pad(00)"></span>
+            <span data-view="flip" data-key="seconds" data-transform="pad(00)"></span>
+        </div>
     </div>
-    <div class="control-group">
-      <button onclick="setShadow('on')">Shadow On</button>
-      <button onclick="setShadow('off')">Shadow Off</button>
-    </div>
-    <div class="control-group">
-      <button onclick="setSize('3rem')">Small</button>
-      <button onclick="setSize('5rem')">Medium</button>
-      <button onclick="setSize('7rem')">Large</button>
-    </div>
-  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@pqina/flip/dist/flip.min.js"></script>
-  <script>
-    const el = document.getElementById('clock');
-    const flip = new Tick.Flip(el, { value: "00:00:00" });
-
-    setInterval(() => {
-      const now = new Date();
-      const hh = String(now.getHours()).padStart(2, '0');
-      const mm = String(now.getMinutes()).padStart(2, '0');
-      const ss = String(now.getSeconds()).padStart(2, '0');
-      flip.value = `${hh}:${mm}:${ss}`;
-    }, 1000);
-
-    function setTheme(theme) {
-      const themes = {
-        neon:     { text: '#0ff', panel: '#0ff' },
-        sunset:   { text: '#f96', panel: '#700' },
-        midnight: { text: '#00FFFF', panel: '#003366' }
-      };
-      const t = themes[theme];
-      el.style.setProperty('--flip-digit-color', t.text);
-      el.style.setProperty('--flip-digit-background', t.panel);
-    }
-
-    function setShadow(state) {
-      el.style.filter = state === 'on'
-        ? 'drop-shadow(0 0 10px rgba(255,255,255,0.3))'
-        : 'none';
-    }
-
-    function setSize(size) {
-      el.style.fontSize = size;
-    }
-
-    // 🔒 Anti-copy protection
-    document.addEventListener('contextmenu', e => e.preventDefault());
-    document.onkeydown = function(e) {
-      if (e.key === "F12" ||
-          (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J")) ||
-          (e.ctrlKey && e.key === "U")) {
-        return false;
-      }
-    };
-  </script>
-
+    <!-- Flip Clock Scripts -->
+    <script src="../dist/flip.min.js"></script>
+    <script src="../dist/tick.view.flip.global.min.js"></script>
+    <script>
+        function handleTickInit(tick) {
+            tick.setTick(new Date());
+            tick.start();
+        }
+    </script>
 </body>
 </html>
