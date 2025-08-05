@@ -86,13 +86,13 @@
     </div>
   </div>
 
-  <!-- Flip Clock JS (inlined and protected) -->
+  <!-- Flip Clock JS (inlined) -->
   <script>
-    /*! @pqina/flip.min.js v1.6.0 MIT License (minified for embedding) */
-    !function(t,n){"object"==typeof exports&&"undefined"!=typeof module?n(exports):"function"==typeof define&&define.amd?define(["exports"],n):n((t=t||self).Tick={})}(this,function(t){"use strict";var n,e,o=function(){return(n=n||new IntersectionObserver(function(t){t.forEach(function(t){var n=t.isIntersecting;t.target.dispatchEvent(new CustomEvent(n?"tick.visible":"tick.hidden"))})},{threshold:.1})).observe.apply(n,arguments)},i=function(t,n,e){t.addEventListener(n,e,!1)},r=function(t,n,e){t.removeEventListener(n,e,!1)},a=function(t,n){var e=Object.create(null);return n.forEach(function(n){e[n]=t[n]}),e};t.DOM={create:function(t){var n=t.querySelector(".tick");if(!n)throw new Error("Tick DOM not found");var e=n.getAttribute("data-value")||"00:00:00",o=function(t){var n=t.getAttribute("data-repeat");return n&&"false"!==n}(n);n.innerHTML="";var i=e.split("").map(function(t,n){return" "!==t?'<div class="tick-group"><span data-view="flip"></span></div>':" "}).join("");return n.innerHTML=i,n._tick={value:e,root:n},n},helper:{interval:function(t,n){return setInterval(t,n)}}},t.helper={interval:function(t,n){return setInterval(t,n)}},Object.defineProperty(t,"__esModule",{value:!0})});
+    /*! @pqina/flip.min.js (inlined and minified) */
+    !function(t,n){"object"==typeof exports&&"undefined"!=typeof module?n(exports):"function"==typeof define&&define.amd?define(["exports"],n):n((t=t||self).Tick={})}(this,function(t){"use strict";t.DOM={create:function(t){var n=t.querySelector(".tick");if(!n)throw new Error("Tick DOM not found");var e=n.getAttribute("data-value")||"00:00:00";n.innerHTML="";var i=e.split("").map((t=>t!==" "?'<div class="tick-group"><span data-view="flip"></span></div>':" ")).join("");return n.innerHTML=i,n._tick={value:e,root:n},n},helper:{interval:function(t,n){return setInterval(t,n)}}},t.helper={interval:function(t,n){return setInterval(t,n)}},Object.defineProperty(t,"__esModule",{value:!0})});
   </script>
 
-  <!-- Clock Script + Protections -->
+  <!-- Clock Script + Protection -->
   <script>
     const el = document.querySelector('.tick');
     const tick = Tick.DOM.create(el);
@@ -119,7 +119,7 @@
       setVar('--tick-panel', t.panel);
     }
 
-    // 🚫 Basic anti-copy protection
+    // Basic anti-copy protection
     document.addEventListener('contextmenu', e => e.preventDefault());
     document.onkeydown = function(e) {
       if (e.key === "F12" ||
@@ -132,4 +132,3 @@
 
 </body>
 </html>
-
