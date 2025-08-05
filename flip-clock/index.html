@@ -58,17 +58,28 @@
       background: #444;
     }
 
+    .tick-container {
+      display: flex;
+    }
+
     tick-flip {
       --flip-digit-background: var(--tick-panel);
       --flip-digit-color: var(--tick-text);
       margin: 0 0.1em;
     }
+
+    /* Hide watermark */
+    .tick__watermark {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
 
-  <div id="clock" class="tick"></div>
+  <!-- Flip clock will be injected here -->
+  <div id="clock" class="tick-container"></div>
 
+  <!-- Controls -->
   <div class="controls">
     <div class="control-group">
       <button onclick="setTheme('neon')">Neon</button>
@@ -86,20 +97,25 @@
     </div>
   </div>
 
+  <!-- Flip Clock Library -->
   <script src="https://unpkg.com/@pqina/flip/dist/flip.min.js"></script>
+
+  <!-- Flip Clock Setup -->
   <script>
     const container = document.getElementById('clock');
-    const flip = new Tick.Flip(container, {
-      value: '00:00:00'
-    });
 
-    setInterval(() => {
-      const now = new Date();
-      const hh = String(now.getHours()).padStart(2, '0');
-      const mm = String(now.getMinutes()).padStart(2, '0');
-      const ss = String(now.getSeconds()).padStart(2, '0');
-      flip.value = \`\${hh}:\${mm}:\${ss}\`;
-    }, 1000);
+    const flip = new Tick.Flip(container, {
+      value: '00:00:00',
+      didInit: self => {
+        setInterval(() => {
+          const now = new Date();
+          const hh = String(now.getHours()).padStart(2, '0');
+          const mm = String(now.getMinutes()).padStart(2, '0');
+          const ss = String(now.getSeconds()).padStart(2, '0');
+          self.value = `${hh}:${mm}:${ss}`;
+        }, 1000);
+      }
+    });
 
     function setVar(name, value) {
       document.documentElement.style.setProperty(name, value);
