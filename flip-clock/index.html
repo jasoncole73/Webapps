@@ -56,10 +56,10 @@
     </div>
   </div>
 
-  <!-- ✅ Load Tick.js from official CDN for guaranteed success -->
-  <script src="https://unpkg.com/@pqina/flip/dist/flip.min.js"></script>
+  <!-- ✅ Load Tick.js from local file using RELATIVE path -->
+  <script src="tick/tick.min.js"></script>
 
-  <!-- ✅ Countdown setup -->
+  <!-- ✅ Initialize the countdown -->
   <script>
     function handleTickInit(tick) {
       Tick.count.down('2030-01-01T00:00:00')
