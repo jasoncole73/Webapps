@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,7 +6,6 @@
   <meta name="viewport" content="width=device-width" />
   <title>Flip Clock</title>
 
-  <!-- Flip clock styles -->
   <link rel="stylesheet" href="flip.min.css" />
   <link rel="stylesheet" href="tick.view.flip.min.css" />
 
@@ -54,19 +54,13 @@
     </div>
   </div>
 
-  <!-- Flip clock scripts -->
   <script src="flip.min.js"></script>
   <script src="tick.view.flip.global.min.js"></script>
   <script>
     function handleTickInit(tick) {
-      Tick.helper.interval(function () {
-        const now = new Date();
-        tick.value = {
-          hours: Number(now.getHours()),
-          minutes: Number(now.getMinutes()),
-          seconds: Number(now.getSeconds())
-        };
-      }, 1000);
+      // Use Tick.Date object to update the clock properly
+      tick.setTick(Tick.helper.date);
+      tick.start();
     }
   </script>
 </body>
