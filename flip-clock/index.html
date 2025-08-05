@@ -4,36 +4,18 @@
   <meta charset="UTF-8" />
   <title>Flip Clock</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://unpkg.com/@pqina/flip/dist/flip.min.css" rel="stylesheet" />
   <style>
-    /* Flip core styles (manually inlined) */
-    .tick {
-      display: flex;
-      justify-content: center;
-      gap: 0.5rem;
-      font-size: var(--tick-font-size, 5rem);
-      font-family: sans-serif;
+    :root {
+      --tick-text: white;
+      --tick-panel: #222;
+      --tick-shadow: none;
+      --tick-font-size: 5rem;
     }
 
-    .tick-group {
-      display: inline-block;
-      perspective: 1000px;
-    }
-
-    .tick-group span[data-view="flip"] {
-      display: inline-block;
-      background: var(--tick-panel-color, #222);
-      color: var(--tick-color, white);
-      padding: 0.3em 0.5em;
-      border-radius: 0.25em;
-      box-shadow: 0 0.1em 0.2em rgba(0, 0, 0, 0.5);
-      transition: transform 0.6s;
-      transform-style: preserve-3d;
-    }
-
-    /* Custom style controls */
     body {
       background: #111;
-      color: var(--tick-text, white);
+      color: var(--tick-text);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -41,7 +23,15 @@
       height: 100vh;
       margin: 0;
       gap: 2rem;
+      font-family: sans-serif;
       user-select: none;
+    }
+
+    .tick {
+      font-size: var(--tick-font-size);
+      --tick-color: var(--tick-text);
+      --tick-panel-color: var(--tick-panel);
+      filter: var(--tick-shadow);
     }
 
     .controls {
@@ -92,12 +82,8 @@
     </div>
   </div>
 
-  <!-- Flip Clock Script (inlined engine) -->
-  <script>
-    /*! Flip core engine */
-    !function(t,n){"object"==typeof exports&&"undefined"!=typeof module?n(exports):"function"==typeof define&&define.amd?define(["exports"],n):n((t=t||self).Tick={})}(this,function(t){"use strict";t.DOM={create:function(t){var n=t.getAttribute("data-value")||"00:00:00";t.innerHTML="";var e=n.split("").map((t=>t!==" "?'<div class="tick-group"><span data-view="flip"></span></div>':" ")).join("");return t.innerHTML=e,t._tick={value:n,root:t},t},helper:{interval:function(t,n){return setInterval(t,n)}}},t.helper={interval:function(t,n){return setInterval(t,n)}},Object.defineProperty(t,"__esModule",{value:!0})});
-  </script>
-
+  <!-- Flip Clock JS (external) -->
+  <script src="https://unpkg.com/@pqina/flip/dist/flip.min.js"></script>
   <script>
     const el = document.getElementById('clock');
     const tick = Tick.DOM.create(el);
