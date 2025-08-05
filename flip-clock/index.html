@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Flip Clock</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flip Clock (Safe + Stable)</title>
   <link rel="stylesheet" href="https://unpkg.com/@pqina/flip/dist/flip.min.css" />
   <style>
     body {
@@ -17,6 +17,8 @@
     .tick {
       font-size: 5rem;
       color: white;
+      display: flex;
+      gap: 1rem;
     }
     .tick-label {
       font-size: 0.25em;
@@ -24,42 +26,39 @@
       text-align: center;
     }
     .tick-group {
-      margin: 0 0.5em;
       text-align: center;
     }
   </style>
 </head>
 <body>
 
-  <div class="tick" data-did-init="initClock">
-    <div data-repeat="true" data-transform="preset(h, m, s)" data-layout="horizontal center fit">
-      <div class="tick-group">
-        <div data-view="flip"></div>
-        <div class="tick-label">Hours</div>
-      </div>
-      <div class="tick-group">
-        <div data-view="flip"></div>
-        <div class="tick-label">Minutes</div>
-      </div>
-      <div class="tick-group">
-        <div data-view="flip"></div>
-        <div class="tick-label">Seconds</div>
-      </div>
+  <div class="tick">
+    <div class="tick-group">
+      <div id="hour" data-view="flip" data-transform="pad(00)"></div>
+      <div class="tick-label">Hours</div>
+    </div>
+    <div class="tick-group">
+      <div id="minute" data-view="flip" data-transform="pad(00)"></div>
+      <div class="tick-label">Minutes</div>
+    </div>
+    <div class="tick-group">
+      <div id="second" data-view="flip" data-transform="pad(00)"></div>
+      <div class="tick-label">Seconds</div>
     </div>
   </div>
 
   <script src="https://unpkg.com/@pqina/flip/dist/flip.min.js"></script>
   <script>
-    function initClock(tick) {
-      Tick.helper.interval(() => {
-        const now = new Date();
-        tick.value = [
-          String(now.getHours()).padStart(2, '0'),
-          String(now.getMinutes()).padStart(2, '0'),
-          String(now.getSeconds()).padStart(2, '0')
-        ];
-      }, 1000);
-    }
+    const hourTick = new Tick.DOM(document.getElementById('hour'));
+    const minuteTick = new Tick.DOM(document.getElementById('minute'));
+    const secondTick = new Tick.DOM(document.getElementById('second'));
+
+    Tick.helper.interval(() => {
+      const now = new Date();
+      hourTick.value = now.getHours();
+      minuteTick.value = now.getMinutes();
+      secondTick.value = now.getSeconds();
+    }, 1000);
   </script>
 </body>
 </html>
