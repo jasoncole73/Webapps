@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flip Clock</title>
-  <!-- ✅ Load CSS from CDN -->
+  <title>Flip Clock (Live Time)</title>
+
+  <!-- ✅ Load Flip CSS from CDN -->
   <link rel="stylesheet" href="https://unpkg.com/@pqina/flip/dist/flip.min.css" />
+
   <style>
     body {
       margin: 0;
-      padding: 0;
       background: #111;
-      color: white;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -20,51 +20,53 @@
 
     .tick {
       font-size: 4rem;
+      color: white;
       font-family: 'Segoe UI', sans-serif;
     }
 
-    .tick-group {
-      margin: 0 0.25em;
+    .tick-label {
+      font-size: 0.25em;
+      color: #aaa;
       text-align: center;
     }
 
-    .tick-label {
-      font-size: 0.3em;
-      color: #aaa;
+    .tick-group {
+      margin: 0 0.5em;
+      text-align: center;
     }
   </style>
 </head>
 <body>
 
   <div class="tick" data-did-init="handleTickInit">
-    <div data-repeat="true" data-layout="horizontal center fit" data-transform="preset(h, m, s)">
+    <div data-repeat="true" data-transform="preset(h, m, s)" data-layout="horizontal center fit">
       <div class="tick-group">
         <div data-view="flip"></div>
-        <div data-view="text" class="tick-label">Hours</div>
+        <div class="tick-label">Hours</div>
       </div>
       <div class="tick-group">
         <div data-view="flip"></div>
-        <div data-view="text" class="tick-label">Minutes</div>
+        <div class="tick-label">Minutes</div>
       </div>
       <div class="tick-group">
         <div data-view="flip"></div>
-        <div data-view="text" class="tick-label">Seconds</div>
+        <div class="tick-label">Seconds</div>
       </div>
     </div>
   </div>
 
-  <!-- ✅ Load JS from CDN -->
+  <!-- ✅ Load Flip JS from CDN -->
   <script src="https://unpkg.com/@pqina/flip/dist/flip.min.js"></script>
 
-  <!-- ✅ Countdown init with debug -->
   <script>
     function handleTickInit(tick) {
-      console.log("Tick initialized", tick);
-      Tick.count.down('2030-01-01T00:00:00')
-        .onupdate = function (value) {
-          console.log("Countdown updated:", value);
-          tick.value = value.value;
-        };
+      Tick.helper.interval(function() {
+        const now = new Date();
+        const h = now.getHours().toString().padStart(2, '0');
+        const m = now.getMinutes().toString().padStart(2, '0');
+        const s = now.getSeconds().toString().padStart(2, '0');
+        tick.value = [h, m, s];
+      }, 1000);
     }
   </script>
 </body>
