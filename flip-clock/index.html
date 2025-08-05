@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flip Clock Final</title>
+  <title>Flip Clock</title>
   <link rel="stylesheet" href="https://unpkg.com/@pqina/flip/dist/flip.min.css" />
   <style>
     body {
@@ -14,11 +14,12 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
+      font-family: sans-serif;
     }
 
     .clock {
       display: flex;
-      gap: 2rem;
+      gap: 3rem;
     }
 
     .unit {
@@ -32,37 +33,50 @@
       margin-top: 0.5rem;
       color: #aaa;
     }
+
+    .tick {
+      font-size: 4rem;
+    }
   </style>
 </head>
 <body>
 
   <div class="clock">
     <div class="unit">
-      <div id="hours"></div>
+      <div class="tick" id="hourView"></div>
       <div class="label">Hours</div>
     </div>
     <div class="unit">
-      <div id="minutes"></div>
+      <div class="tick" id="minuteView"></div>
       <div class="label">Minutes</div>
     </div>
     <div class="unit">
-      <div id="seconds"></div>
+      <div class="tick" id="secondView"></div>
       <div class="label">Seconds</div>
     </div>
   </div>
 
   <script src="https://unpkg.com/@pqina/flip/dist/flip.min.js"></script>
   <script>
-    // Manually create each flip block
-    const hours = Tick.DOM.create(document.getElementById('hours'), { value: '00' });
-    const minutes = Tick.DOM.create(document.getElementById('minutes'), { value: '00' });
-    const seconds = Tick.DOM.create(document.getElementById('seconds'), { value: '00' });
+    function createFlip(viewId, initial) {
+      return Tick.DOM.create(document.getElementById(viewId), {
+        value: initial,
+        view: {
+          layout: "horizontal center",
+          children: [{ view: "flip" }]
+        }
+      });
+    }
+
+    const hourFlip = createFlip('hourView', '00');
+    const minuteFlip = createFlip('minuteView', '00');
+    const secondFlip = createFlip('secondView', '00');
 
     Tick.helper.interval(() => {
       const now = new Date();
-      hours.value = String(now.getHours()).padStart(2, '0');
-      minutes.value = String(now.getMinutes()).padStart(2, '0');
-      seconds.value = String(now.getSeconds()).padStart(2, '0');
+      hourFlip.value = String(now.getHours()).padStart(2, '0');
+      minuteFlip.value = String(now.getMinutes()).padStart(2, '0');
+      secondFlip.value = String(now.getSeconds()).padStart(2, '0');
     }, 1000);
   </script>
 </body>
