@@ -5,8 +5,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Flip Clock</title>
   <link rel="stylesheet" href="dist/flip.min.css" />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #111;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .tick {
+      font-size: 4rem;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .tick-group {
+      margin: 0 0.25em;
+      text-align: center;
+    }
+
+    .tick-label {
+      font-size: 0.3em;
+      color: #aaa;
+    }
+  </style>
 </head>
 <body>
+
   <div class="tick" data-did-init="handleTickInit">
     <div data-repeat="true" data-layout="horizontal center fit" data-transform="preset(d, h, m, s)">
       <div class="tick-group">
@@ -28,12 +56,14 @@
     </div>
   </div>
 
+  <!-- ✅ Load Tick.js from official CDN for guaranteed success -->
   <script src="https://unpkg.com/@pqina/flip/dist/flip.min.js"></script>
 
+  <!-- ✅ Countdown setup -->
   <script>
     function handleTickInit(tick) {
       Tick.count.down('2030-01-01T00:00:00')
-        .onupdate = function(value) {
+        .onupdate = function (value) {
           tick.value = value;
         };
     }
