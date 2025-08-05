@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <title>Flip Clock</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flip Clock (Smooth)</title>
   <link rel="stylesheet" href="https://unpkg.com/@pqina/flip/dist/flip.min.css" />
   <style>
     body {
@@ -18,19 +18,20 @@
       font-size: 5rem;
       color: white;
     }
-    .tick-group {
-      margin: 0 0.5em;
-      text-align: center;
-    }
     .tick-label {
       font-size: 0.25em;
       color: #aaa;
+      text-align: center;
+    }
+    .tick-group {
+      margin: 0 0.5em;
+      text-align: center;
     }
   </style>
 </head>
 <body>
 
-  <div class="tick" id="flipClock">
+  <div class="tick" data-did-init="initClock">
     <div data-repeat="true" data-transform="preset(h, m, s)" data-layout="horizontal center fit">
       <div class="tick-group">
         <div data-view="flip"></div>
@@ -49,10 +50,7 @@
 
   <script src="https://unpkg.com/@pqina/flip/dist/flip.min.js"></script>
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const el = document.getElementById("flipClock");
-      const tick = new Tick.DOM(el);
-
+    function initClock(tick) {
       Tick.helper.interval(() => {
         const now = new Date();
         tick.value = [
@@ -61,7 +59,7 @@
           String(now.getSeconds()).padStart(2, '0')
         ];
       }, 1000);
-    });
+    }
   </script>
 </body>
 </html>
