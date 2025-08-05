@@ -62,6 +62,7 @@
 </head>
 <body>
 
+  <!-- Flip Clock Display -->
   <div class="tick" data-value="00:00:00">
     <div data-repeat="true" aria-hidden="true">
       <span data-view="flip"></span>
@@ -86,16 +87,17 @@
     </div>
   </div>
 
-  <!-- Flip Clock JS (inlined) -->
+  <!-- Flip Clock Engine (inlined) -->
   <script>
-    /*! @pqina/flip.min.js (inlined and minified) */
+    /*! @pqina/flip.min.js v1.6.0 MIT License (inlined) */
     !function(t,n){"object"==typeof exports&&"undefined"!=typeof module?n(exports):"function"==typeof define&&define.amd?define(["exports"],n):n((t=t||self).Tick={})}(this,function(t){"use strict";t.DOM={create:function(t){var n=t.querySelector(".tick");if(!n)throw new Error("Tick DOM not found");var e=n.getAttribute("data-value")||"00:00:00";n.innerHTML="";var i=e.split("").map((t=>t!==" "?'<div class="tick-group"><span data-view="flip"></span></div>':" ")).join("");return n.innerHTML=i,n._tick={value:e,root:n},n},helper:{interval:function(t,n){return setInterval(t,n)}}},t.helper={interval:function(t,n){return setInterval(t,n)}},Object.defineProperty(t,"__esModule",{value:!0})});
   </script>
 
-  <!-- Clock Script + Protection -->
+  <!-- Flip Clock Logic + Protections -->
   <script>
     const el = document.querySelector('.tick');
     const tick = Tick.DOM.create(el);
+
     setInterval(() => {
       const now = new Date();
       const hh = String(now.getHours()).padStart(2, '0');
@@ -119,7 +121,7 @@
       setVar('--tick-panel', t.panel);
     }
 
-    // Basic anti-copy protection
+    // 🔒 Basic anti-copy protection
     document.addEventListener('contextmenu', e => e.preventDefault());
     document.onkeydown = function(e) {
       if (e.key === "F12" ||
