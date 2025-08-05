@@ -11,25 +11,45 @@
   <style>
     body {
       font-family: sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
       background: #f0f0f0;
       margin: 0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .tick {
       font-size: 4em;
+    }
+
+    .tick-label {
+      font-size: 0.3em;
+      text-align: center;
+      display: block;
+    }
+
+    .tick-group {
+      margin: 0 0.5em;
+      text-align: center;
     }
   </style>
 </head>
 <body>
   <div class="tick" data-did-init="handleTickInit">
     <div data-repeat="true" data-layout="horizontal center fit">
-      <span data-view="flip" data-key="hours" data-transform="pad(00)"></span>
-      <span data-view="flip" data-key="minutes" data-transform="pad(00)"></span>
-      <span data-view="flip" data-key="seconds" data-transform="pad(00)"></span>
+      <div class="tick-group">
+        <span data-view="flip" data-key="hours" data-transform="pad(00)"></span>
+        <span class="tick-label">Hours</span>
+      </div>
+      <div class="tick-group">
+        <span data-view="flip" data-key="minutes" data-transform="pad(00)"></span>
+        <span class="tick-label">Minutes</span>
+      </div>
+      <div class="tick-group">
+        <span data-view="flip" data-key="seconds" data-transform="pad(00)"></span>
+        <span class="tick-label">Seconds</span>
+      </div>
     </div>
   </div>
 
@@ -37,9 +57,12 @@
   <script src="tick.view.flip.global.min.js"></script>
   <script>
     function handleTickInit(tick) {
-      // Proper way to start the DOM-based Tick instance
       Tick.helper.interval(function(date) {
-        tick.value = date;
+        tick.value = {
+          hours: date.getHours(),
+          minutes: date.getMinutes(),
+          seconds: date.getSeconds()
+        };
       }, 1000);
     }
   </script>
