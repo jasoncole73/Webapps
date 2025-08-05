@@ -4,10 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Flip Clock</title>
-
-  <!-- ✅ Flip CSS from CDN -->
   <link rel="stylesheet" href="https://unpkg.com/@pqina/flip/dist/flip.min.css" />
-
   <style>
     body {
       margin: 0;
@@ -17,7 +14,6 @@
       align-items: center;
       height: 100vh;
     }
-
     .tick {
       font-size: 5rem;
       color: white;
@@ -26,25 +22,26 @@
 </head>
 <body>
 
-  <div class="tick" data-did-init="handleTickInit">
+  <div id="flipClock" class="tick">
     <div data-layout="horizontal center fit" data-transform="string(hh:mm:ss)">
       <div data-view="flip"></div>
     </div>
   </div>
 
-  <!-- ✅ Flip JS from CDN -->
   <script src="https://unpkg.com/@pqina/flip/dist/flip.min.js"></script>
 
   <script>
-    function handleTickInit(tick) {
-      Tick.helper.interval(() => {
-        const now = new Date();
-        const h = String(now.getHours()).padStart(2, '0');
-        const m = String(now.getMinutes()).padStart(2, '0');
-        const s = String(now.getSeconds()).padStart(2, '0');
-        tick.value = `${h}:${m}:${s}`; // ✅ Single string — required
-      }, 1000);
-    }
+    // ✅ Manually initialize Tick and update time
+    const el = document.getElementById('flipClock');
+    const tickInstance = new Tick.DOM(el);
+
+    Tick.helper.interval(() => {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const s = String(now.getSeconds()).padStart(2, '0');
+      tickInstance.value = `${h}:${m}:${s}`;
+    }, 1000);
   </script>
 </body>
 </html>
