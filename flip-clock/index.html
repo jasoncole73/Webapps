@@ -62,12 +62,8 @@
 </head>
 <body>
 
-  <!-- Flip Clock Display -->
-  <div class="tick" data-value="00:00:00">
-    <div data-repeat="true" aria-hidden="true">
-      <span data-view="flip"></span>
-    </div>
-  </div>
+  <!-- This is where the clock will be created -->
+  <div id="clock" class="tick" data-value="00:00:00"></div>
 
   <!-- Controls -->
   <div class="controls">
@@ -90,12 +86,12 @@
   <!-- Flip Clock Engine (inlined) -->
   <script>
     /*! @pqina/flip.min.js v1.6.0 MIT License (inlined) */
-    !function(t,n){"object"==typeof exports&&"undefined"!=typeof module?n(exports):"function"==typeof define&&define.amd?define(["exports"],n):n((t=t||self).Tick={})}(this,function(t){"use strict";t.DOM={create:function(t){var n=t.querySelector(".tick");if(!n)throw new Error("Tick DOM not found");var e=n.getAttribute("data-value")||"00:00:00";n.innerHTML="";var i=e.split("").map((t=>t!==" "?'<div class="tick-group"><span data-view="flip"></span></div>':" ")).join("");return n.innerHTML=i,n._tick={value:e,root:n},n},helper:{interval:function(t,n){return setInterval(t,n)}}},t.helper={interval:function(t,n){return setInterval(t,n)}},Object.defineProperty(t,"__esModule",{value:!0})});
+    !function(t,n){"object"==typeof exports&&"undefined"!=typeof module?n(exports):"function"==typeof define&&define.amd?define(["exports"],n):n((t=t||self).Tick={})}(this,function(t){"use strict";t.DOM={create:function(t){var n=t.getAttribute("data-value")||"00:00:00";t.innerHTML="";var e=n.split("").map((t=>t!==" "?'<div class="tick-group"><span data-view="flip"></span></div>':" ")).join("");return t.innerHTML=e,t._tick={value:n,root:t},t},helper:{interval:function(t,n){return setInterval(t,n)}}},t.helper={interval:function(t,n){return setInterval(t,n)}},Object.defineProperty(t,"__esModule",{value:!0})});
   </script>
 
   <!-- Flip Clock Logic + Protections -->
   <script>
-    const el = document.querySelector('.tick');
+    const el = document.getElementById('clock');
     const tick = Tick.DOM.create(el);
 
     setInterval(() => {
