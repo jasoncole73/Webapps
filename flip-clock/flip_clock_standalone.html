@@ -1,29 +1,32 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Flip Clock</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flip Clock</title>
+
+  <!-- Flip clock styles -->
   <link rel="stylesheet" href="flip.min.css" />
   <link rel="stylesheet" href="tick.view.flip.min.css" />
+
   <style>
     body {
       margin: 0;
       height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       background: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
+
     .tick {
       font-size: 4em;
-      color: #fff;
+      color: white;
     }
   </style>
 </head>
 <body>
-  <div class="tick" data-did-init="initFlipClock">
+  <div class="tick" data-did-init="handleTickInit">
     <div data-repeat="true" data-layout="horizontal center fit">
       <span data-view="flip" data-key="hours" data-transform="pad(00)"></span>
       <span data-view="flip" data-key="minutes" data-transform="pad(00)"></span>
@@ -31,16 +34,17 @@
     </div>
   </div>
 
+  <!-- Flip clock scripts -->
   <script src="flip.min.js"></script>
   <script src="tick.view.flip.global.min.js"></script>
   <script>
-    function initFlipClock(tick) {
-      Tick.helper.interval(() => {
+    function handleTickInit(tick) {
+      Tick.helper.interval(function () {
         const now = new Date();
         tick.value = {
-          hours: now.getHours().toString().padStart(2, '0'),
-          minutes: now.getMinutes().toString().padStart(2, '0'),
-          seconds: now.getSeconds().toString().padStart(2, '0')
+          hours: now.getHours(),
+          minutes: now.getMinutes(),
+          seconds: now.getSeconds()
         };
       }, 1000);
     }
