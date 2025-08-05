@@ -1,62 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flip Clock — Working</title>
-  <link rel="stylesheet" href="https://unpkg.com/@pqina/flip/dist/flip.min.css" />
-  <style>
-    body {
-      margin: 0;
-      background: #000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Flip Clock</title>
+    <link rel="stylesheet" href="https://unpkg.com/@pqina/flip@1.2.0/dist/flip.min.css" />
+    <style>
+      .tick {
+        padding-bottom: 1em;
+        font-size: 6rem;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans,
+          Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+      }
 
-    .tick {
-      font-size: 6rem;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-        Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-    }
+      .tick-label {
+        font-size: 0.375em;
+        text-align: center;
+        color: #aaa;
+      }
 
-    .tick-label {
-      font-size: 0.25em;
-      color: #aaa;
-      text-align: center;
-    }
-
-    .tick-group {
-      margin: 0 0.25em;
-      text-align: center;
-    }
-  </style>
-</head>
-<body>
-
-  <div class="tick" data-did-init="handleTickInit">
-    <div
-      data-repeat="true"
-      data-layout="horizontal center fit"
-      data-transform="string(hh:mm:ss)"
-    >
-      <div data-view="flip"></div>
+      .tick-group {
+        margin: 0 0.25em;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="tick" data-did-init="handleTickInit">
+      <div data-repeat="true" data-layout="horizontal center fit" data-transform="preset(h, m, s) -> delay">
+        <div class="tick-group">
+          <div data-key="value" data-repeat="true" data-transform="pad(00) -> split -> delay">
+            <span data-view="flip"></span>
+          </div>
+          <span data-key="label" data-view="text" class="tick-label"></span>
+        </div>
+      </div>
     </div>
-  </div>
 
-  <script src="https://unpkg.com/@pqina/flip/dist/flip.min.js"></script>
-  <script>
-    function handleTickInit(tick) {
-      Tick.helper.interval(() => {
-        const now = new Date();
-        const h = String(now.getHours()).padStart(2, '0');
-        const m = String(now.getMinutes()).padStart(2, '0');
-        const s = String(now.getSeconds()).padStart(2, '0');
-
-        tick.value = `${h}:${m}:${s}`; // ✅ single string — works
-      }, 1000);
-    }
-  </script>
-</body>
+    <script src="https://unpkg.com/@pqina/flip@1.2.0/dist/flip.min.js"></script>
+    <script>
+      function handleTickInit(tick) {
+        Tick.helper.interval(() => {
+          const now = new Date();
+          tick.value = [
+            { label: 'Hours', value: now.getHours() },
+            { label: 'Minutes', value: now.getMinutes() },
+            { label: 'Seconds', value: now.getSeconds() }
+          ];
+        }, 1000);
+      }
+    </script>
+  </body>
 </html>
