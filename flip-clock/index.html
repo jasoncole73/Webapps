@@ -1,1 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Flip Clock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://unpkg.com/@pqina/flip/dist/flip.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      font-family: sans-serif;
+    }
+    .tick {
+      font-size: 5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="tick" data-value="00:00:00">
+    <div data-repeat="true" aria-hidden="true">
+      <span data-view="flip"></span>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/@pqina/flip/dist/flip.min.js"></script>
+  <script>
+    const el = document.querySelector('.tick');
+    const tick = Tick.DOM.create(el);
+
+    setInterval(() => {
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      const ss = String(now.getSeconds()).padStart(2, '0');
+      tick.value = `${hh}:${mm}:${ss}`;
+    }, 1000);
+  </script>
+</body>
+</html>
 
