@@ -14,6 +14,7 @@
       justify-content: center;
       align-items: center;
     }
+
     tick-flip {
       --flip-digit-color: #fff;
       --flip-digit-background: #111;
@@ -22,12 +23,16 @@
   </style>
 </head>
 <body>
+
+  <!-- Flip Clock Element -->
   <tick-flip id="clock" data-repeat="true"></tick-flip>
 
- <script src="https://unpkg.com/@pqina/flip/dist/flip.min.js"></script>
-
+  <!-- Flip Library from CDN -->
+  <script src="https://unpkg.com/@pqina/flip/dist/flip.min.js"></script>
   <script>
-    const clock = new Tick.Flip(document.getElementById('clock'), { value: '00:00:00' });
+    const clock = new Tick.Flip(document.getElementById('clock'), {
+      value: '00:00:00'
+    });
 
     setInterval(() => {
       const now = new Date();
@@ -37,5 +42,6 @@
       clock.value = `${hh}:${mm}:${ss}`;
     }, 1000);
   </script>
+
 </body>
 </html>
