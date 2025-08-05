@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flip Clock</title>
+  <title>Flip Clock - No Branding</title>
   <link rel="stylesheet" href="https://unpkg.com/@pqina/flip/dist/flip.min.css" />
   <style>
     body {
@@ -43,40 +43,42 @@
 
   <div class="clock">
     <div class="unit">
-      <div class="tick" id="hourView"></div>
+      <div id="hours"></div>
       <div class="label">Hours</div>
     </div>
     <div class="unit">
-      <div class="tick" id="minuteView"></div>
+      <div id="minutes"></div>
       <div class="label">Minutes</div>
     </div>
     <div class="unit">
-      <div class="tick" id="secondView"></div>
+      <div id="seconds"></div>
       <div class="label">Seconds</div>
     </div>
   </div>
 
   <script src="https://unpkg.com/@pqina/flip/dist/flip.min.js"></script>
   <script>
-    function createFlip(viewId, initial) {
-      return Tick.DOM.create(document.getElementById(viewId), {
+    // ✅ Proper structure to suppress branding
+    const createClockUnit = (el, initial) => {
+      return Tick.DOM.create(el, {
+        root: 'tick', // ✅ Use 'tick' as root to suppress branding
         value: initial,
         view: {
-          layout: "horizontal center",
-          children: [{ view: "flip" }]
+          layout: 'horizontal center',
+          children: [{ view: 'flip' }]
         }
       });
-    }
+    };
 
-    const hourFlip = createFlip('hourView', '00');
-    const minuteFlip = createFlip('minuteView', '00');
-    const secondFlip = createFlip('secondView', '00');
+    const hourTick = createClockUnit(document.getElementById('hours'), '00');
+    const minuteTick = createClockUnit(document.getElementById('minutes'), '00');
+    const secondTick = createClockUnit(document.getElementById('seconds'), '00');
 
     Tick.helper.interval(() => {
       const now = new Date();
-      hourFlip.value = String(now.getHours()).padStart(2, '0');
-      minuteFlip.value = String(now.getMinutes()).padStart(2, '0');
-      secondFlip.value = String(now.getSeconds()).padStart(2, '0');
+      hourTick.value = String(now.getHours()).padStart(2, '0');
+      minuteTick.value = String(now.getMinutes()).padStart(2, '0');
+      secondTick.value = String(now.getSeconds()).padStart(2, '0');
     }, 1000);
   </script>
 </body>
