@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Flip Clock</title>
-  <link rel="stylesheet" href="dist/flip.min.css" />
+  <!-- ✅ Load CSS from CDN -->
+  <link rel="stylesheet" href="https://unpkg.com/@pqina/flip/dist/flip.min.css" />
   <style>
     body {
       margin: 0;
@@ -16,14 +17,17 @@
       align-items: center;
       height: 100vh;
     }
+
     .tick {
       font-size: 4rem;
       font-family: 'Segoe UI', sans-serif;
     }
+
     .tick-group {
       margin: 0 0.25em;
       text-align: center;
     }
+
     .tick-label {
       font-size: 0.3em;
       color: #aaa;
@@ -33,13 +37,7 @@
 <body>
 
   <div class="tick" data-did-init="handleTickInit">
-    <div data-repeat="true"
-         data-layout="horizontal center fit"
-         data-transform="preset(d, h, m, s)">
-      <div class="tick-group">
-        <div data-view="flip"></div>
-        <div data-view="text" class="tick-label">Days</div>
-      </div>
+    <div data-repeat="true" data-layout="horizontal center fit" data-transform="preset(h, m, s)">
       <div class="tick-group">
         <div data-view="flip"></div>
         <div data-view="text" class="tick-label">Hours</div>
@@ -55,14 +53,17 @@
     </div>
   </div>
 
-  <!-- ✅ Load Tick.js—use CDN to avoid local file issues -->
+  <!-- ✅ Load JS from CDN -->
   <script src="https://unpkg.com/@pqina/flip/dist/flip.min.js"></script>
 
+  <!-- ✅ Countdown init with debug -->
   <script>
     function handleTickInit(tick) {
+      console.log("Tick initialized", tick);
       Tick.count.down('2030-01-01T00:00:00')
         .onupdate = function (value) {
-          tick.value = value.value; // ✅ correct assignment
+          console.log("Countdown updated:", value);
+          tick.value = value.value;
         };
     }
   </script>
