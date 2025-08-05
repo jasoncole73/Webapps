@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flip Clock</title>
-  <!-- ✅ Flip CSS from CDN -->
+  <title>Flip Clock (Smooth)</title>
   <link rel="stylesheet" href="https://unpkg.com/@pqina/flip/dist/flip.min.css" />
   <style>
     body {
@@ -19,43 +18,48 @@
       font-size: 5rem;
       color: white;
     }
+    .tick-group {
+      margin: 0 0.5em;
+      text-align: center;
+    }
+    .tick-label {
+      font-size: 0.25em;
+      color: #aaa;
+    }
   </style>
 </head>
 <body>
 
-  <div id="flipContainer"></div>
+  <div class="tick" id="flipClock">
+    <div data-repeat="true" data-transform="preset(h, m, s)" data-layout="horizontal center fit">
+      <div class="tick-group">
+        <div data-view="flip"></div>
+        <div class="tick-label">Hours</div>
+      </div>
+      <div class="tick-group">
+        <div data-view="flip"></div>
+        <div class="tick-label">Minutes</div>
+      </div>
+      <div class="tick-group">
+        <div data-view="flip"></div>
+        <div class="tick-label">Seconds</div>
+      </div>
+    </div>
+  </div>
 
   <script src="https://unpkg.com/@pqina/flip/dist/flip.min.js"></script>
   <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      const el = document.getElementById("flipContainer");
+    document.addEventListener("DOMContentLoaded", () => {
+      const el = document.getElementById("flipClock");
+      const tick = new Tick.DOM(el);
 
-      const tick = Tick.DOM.create(el, {
-        value: "00:00:00",
-        view: {
-          root: "div",
-          layout: "horizontal center fit",
-          children: [
-            {
-              view: "flip"
-            }
-          ]
-        },
-        didInit: function(t) {
-          window.tickInstance = t;
-          console.log("Tick init:", t);
-        },
-        didUpdate: function(t) {
-          console.log("Tick updated:", t.value);
-        }
-      });
-
-      setInterval(() => {
+      Tick.helper.interval(() => {
         const now = new Date();
-        const h = String(now.getHours()).padStart(2, "0");
-        const m = String(now.getMinutes()).padStart(2, "0");
-        const s = String(now.getSeconds()).padStart(2, "0");
-        tick.value = `${h}:${m}:${s}`;
+        tick.value = [
+          String(now.getHours()).padStart(2, '0'),
+          String(now.getMinutes()).padStart(2, '0'),
+          String(now.getSeconds()).padStart(2, '0')
+        ];
       }, 1000);
     });
   </script>
