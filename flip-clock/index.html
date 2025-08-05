@@ -4,7 +4,10 @@
   <meta charset="UTF-8" />
   <title>Flip Clock</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Flip Clock Styles -->
   <link href="https://unpkg.com/@pqina/flip/dist/flip.min.css" rel="stylesheet" />
+
   <style>
     :root {
       --tick-text: white;
@@ -63,8 +66,10 @@
 </head>
 <body>
 
+  <!-- Flip Clock -->
   <div id="clock" class="tick" data-value="00:00:00"></div>
 
+  <!-- Controls -->
   <div class="controls">
     <div class="control-group">
       <button onclick="setTheme('neon')">Neon</button>
@@ -82,19 +87,22 @@
     </div>
   </div>
 
-  <!-- Flip Clock JS (external) -->
+  <!-- Flip Clock Script -->
   <script src="https://unpkg.com/@pqina/flip/dist/flip.min.js"></script>
   <script>
     const el = document.getElementById('clock');
     const tick = Tick.DOM.create(el);
 
-    setInterval(() => {
+    function updateTime() {
       const now = new Date();
       const hh = String(now.getHours()).padStart(2, '0');
       const mm = String(now.getMinutes()).padStart(2, '0');
       const ss = String(now.getSeconds()).padStart(2, '0');
-      tick.value = `${hh}:${mm}:${ss}`;
-    }, 1000);
+      tick._tick.value = `${hh}:${mm}:${ss}`;
+    }
+
+    updateTime();
+    setInterval(updateTime, 1000);
 
     function setVar(name, value) {
       document.documentElement.style.setProperty(name, value);
@@ -111,7 +119,7 @@
       setVar('--tick-panel', t.panel);
     }
 
-    // 🔒 Basic anti-copy protection
+    // 🔒 Anti-copy protection
     document.addEventListener('contextmenu', e => e.preventDefault());
     document.onkeydown = function(e) {
       if (e.key === "F12" ||
