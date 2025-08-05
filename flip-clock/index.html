@@ -1,46 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Flip Clock</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@pqina/flip/dist/flip.min.css" />
-    <style>
-      body {
-        margin: 0;
-        background: #000;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-      }
-      .tick {
-        font-size: 5rem;
-        color: white;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="tick" id="clock">
-      <div data-layout="horizontal center fit" data-transform="string(hh:mm:ss)">
-        <div data-view="flip"></div>
-      </div>
-    </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flip Clock</title>
+  <!-- ✅ Flip CSS from CDN -->
+  <link rel="stylesheet" href="https://unpkg.com/@pqina/flip/dist/flip.min.css" />
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .tick {
+      font-size: 5rem;
+      color: white;
+    }
+  </style>
+</head>
+<body>
 
-    <script src="https://cdn.jsdelivr.net/npm/@pqina/flip/dist/flip.min.js"></script>
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const el = document.getElementById("clock");
-        const tick = new Tick.DOM(el);
+  <div id="flipContainer"></div>
 
-        setInterval(() => {
-          const now = new Date();
-          const h = String(now.getHours()).padStart(2, "0");
-          const m = String(now.getMinutes()).padStart(2, "0");
-          const s = String(now.getSeconds()).padStart(2, "0");
-          tick.value = `${h}:${m}:${s}`;
-        }, 1000);
+  <script src="https://unpkg.com/@pqina/flip/dist/flip.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const el = document.getElementById("flipContainer");
+
+      const tick = Tick.DOM.create(el, {
+        value: "00:00:00",
+        view: {
+          root: "div",
+          layout: "horizontal center fit",
+          children: [
+            {
+              view: "flip"
+            }
+          ]
+        },
+        didInit: function(t) {
+          window.tickInstance = t;
+          console.log("Tick init:", t);
+        },
+        didUpdate: function(t) {
+          console.log("Tick updated:", t.value);
+        }
       });
-    </script>
-  </body>
+
+      setInterval(() => {
+        const now = new Date();
+        const h = String(now.getHours()).padStart(2, "0");
+        const m = String(now.getMinutes()).padStart(2, "0");
+        const s = String(now.getSeconds()).padStart(2, "0");
+        tick.value = `${h}:${m}:${s}`;
+      }, 1000);
+    });
+  </script>
+</body>
 </html>
