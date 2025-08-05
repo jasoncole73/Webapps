@@ -2,20 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Flip Clock with Style Controls</title>
+  <title>Flip Clock with Controls</title>
   <link href="https://unpkg.com/@pqina/flip/dist/flip.min.css" rel="stylesheet" />
   <style>
     :root {
-      --tick-background: #111;
-      --tick-text-color: white;
-      --tick-value-color: white;
-      --tick-panel-color: #222;
-      --tick-border-radius: 0.75rem;
+      --tick-bg: #111;
+      --tick-text: white;
+      --tick-panel: #222;
+      --tick-radius: 0.75rem;
+      --tick-shadow: none;
+      --tick-font-size: 5rem;
     }
 
     body {
-      background: var(--tick-background);
-      color: var(--tick-text-color);
+      background: var(--tick-bg);
+      color: var(--tick-text);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -27,10 +28,11 @@
     }
 
     .tick {
-      font-size: 5rem;
-      --tick-color: var(--tick-value-color);
-      --tick-panel-color: var(--tick-panel-color);
-      --tick-border-radius: var(--tick-border-radius);
+      font-size: var(--tick-font-size);
+      --tick-color: var(--tick-text);
+      --tick-panel-color: var(--tick-panel);
+      --tick-border-radius: var(--tick-radius);
+      filter: var(--tick-shadow);
     }
 
     .controls {
@@ -62,7 +64,6 @@
 </head>
 <body>
 
-  <!-- Flip Clock -->
   <div class="tick" data-value="00:00:00">
     <div data-repeat="true" aria-hidden="true">
       <span data-view="flip"></span>
@@ -71,25 +72,44 @@
 
   <!-- Controls -->
   <div class="controls">
+    <!-- Theme Colors -->
     <div class="control-group">
-      <button onclick="setVar('--tick-background', '#111')">Dark</button>
-      <button onclick="setVar('--tick-background', '#fff')">Light</button>
+      <button onclick="setTheme('dark')">Dark</button>
+      <button onclick="setTheme('light')">Light</button>
+      <button onclick="setTheme('neon')">Neon</button>
+      <button onclick="setTheme('sunset')">Sunset</button>
+      <button onclick="setTheme('midnight')">Midnight</button>
     </div>
+
+    <!-- Text Color -->
     <div class="control-group">
-      <button onclick="setVar('--tick-text-color', 'white')">Text White</button>
-      <button onclick="setVar('--tick-text-color', 'black')">Text Black</button>
+      <button onclick="setVar('--tick-text', 'white')">Text White</button>
+      <button onclick="setVar('--tick-text', 'black')">Text Black</button>
     </div>
+
+    <!-- Font -->
     <div class="control-group">
-      <button onclick="setVar('--tick-value-color', 'white')">Value White</button>
-      <button onclick="setVar('--tick-value-color', '#0ff')">Value Cyan</button>
-    </div>
-    <div class="control-group">
-      <button onclick="document.body.style.fontFamily = 'monospace'">Monospace</button>
       <button onclick="document.body.style.fontFamily = 'sans-serif'">Sans</button>
+      <button onclick="document.body.style.fontFamily = 'monospace'">Monospace</button>
     </div>
+
+    <!-- Font Size -->
     <div class="control-group">
-      <button onclick="setVar('--tick-border-radius', '0.25rem')">Sharp</button>
-      <button onclick="setVar('--tick-border-radius', '1rem')">Rounded</button>
+      <button onclick="setVar('--tick-font-size', '3rem')">Small</button>
+      <button onclick="setVar('--tick-font-size', '5rem')">Medium</button>
+      <button onclick="setVar('--tick-font-size', '7rem')">Large</button>
+    </div>
+
+    <!-- Border Radius -->
+    <div class="control-group">
+      <button onclick="setVar('--tick-radius', '0.25rem')">Sharp</button>
+      <button onclick="setVar('--tick-radius', '1rem')">Rounded</button>
+    </div>
+
+    <!-- Shadow Toggle -->
+    <div class="control-group">
+      <button onclick="setVar('--tick-shadow', 'drop-shadow(0 0 10px rgba(255,255,255,0.3))')">Shadow On</button>
+      <button onclick="setVar('--tick-shadow', 'none')">Shadow Off</button>
     </div>
   </div>
 
@@ -108,6 +128,20 @@
 
     function setVar(name, value) {
       document.documentElement.style.setProperty(name, value);
+    }
+
+    function setTheme(theme) {
+      const themes = {
+        dark:     { bg: '#111', panel: '#222', text: 'white' },
+        light:    { bg: '#fff', panel: '#ddd', text: 'black' },
+        neon:     { bg: '#000', panel: '#0ff', text: '#0ff' },
+        sunset:   { bg: '#fe9', panel: '#f96', text: '#700' },
+        midnight: { bg: '#001F3F', panel: '#003366', text: '#00FFFF' }
+      };
+      const t = themes[theme];
+      setVar('--tick-bg', t.bg);
+      setVar('--tick-panel', t.panel);
+      setVar('--tick-text', t.text);
     }
   </script>
 </body>
