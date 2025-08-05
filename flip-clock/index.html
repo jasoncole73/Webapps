@@ -29,8 +29,6 @@
 
     .tick {
       font-size: var(--tick-font-size);
-      --tick-color: var(--tick-text);
-      --tick-panel-color: var(--tick-panel);
       filter: var(--tick-shadow);
     }
 
@@ -69,7 +67,7 @@
 </head>
 <body>
 
-  <tick-flip id="clock" data-repeat="true" data-transform="character"></tick-flip>
+  <div id="clock" class="tick"></div>
 
   <div class="controls">
     <div class="control-group">
@@ -90,19 +88,18 @@
 
   <script src="https://unpkg.com/@pqina/flip/dist/flip.min.js"></script>
   <script>
-    const el = document.getElementById('clock');
-    const flip = new Tick.Flip(el);
+    const container = document.getElementById('clock');
+    const flip = new Tick.Flip(container, {
+      value: '00:00:00'
+    });
 
-    function updateTime() {
+    setInterval(() => {
       const now = new Date();
       const hh = String(now.getHours()).padStart(2, '0');
       const mm = String(now.getMinutes()).padStart(2, '0');
       const ss = String(now.getSeconds()).padStart(2, '0');
-      flip.value = hh + ':' + mm + ':' + ss;
-    }
-
-    setInterval(updateTime, 1000);
-    updateTime();
+      flip.value = `${hh}:${mm}:${ss}`;
+    }, 1000);
 
     function setVar(name, value) {
       document.documentElement.style.setProperty(name, value);
