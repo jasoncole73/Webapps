@@ -56,15 +56,15 @@
     </div>
   </div>
 
-  <!-- ✅ Load Tick.js from local file using RELATIVE path -->
+  <!-- ✅ Load Tick.js (local file assumed to be correct) -->
   <script src="tick/tick.min.js"></script>
 
-  <!-- ✅ Initialize the countdown -->
+  <!-- ✅ FIXED: Assign tick.value = value.value to avoid [object Object] -->
   <script>
     function handleTickInit(tick) {
       Tick.count.down('2030-01-01T00:00:00')
         .onupdate = function (value) {
-          tick.value = value;
+          tick.value = value.value; // ✅ This fixes the [object Object] issue
         };
     }
   </script>
