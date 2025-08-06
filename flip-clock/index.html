@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Flip Countdown</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="dist/flip.min.css">
+  <link rel="stylesheet" href="dist/tick.view.flip.min.css">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: #f8f8f8;
+      font-family: Arial, sans-serif;
+    }
+    h1 {
+      margin-bottom: 40px;
+    }
+    .tick {
+      font-size: 2em;
+    }
+    .tick .tick-flip {
+      font-size: 60px;
+      margin: 0 5px;
+    }
+    .tick-label {
+      font-size: 12px;
+      color: #999;
+      text-align: center;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Countdown to Event</h1>
+  <div class="tick" data-did-init="init">
+    <div class="tick-group">
+      <div data-key="days" data-view="flip">
+        <div data-repeat="true" class="tick-flip"></div>
+        <div class="tick-label">DAYS</div>
+      </div>
+      <div data-key="hours" data-view="flip">
+        <div data-repeat="true" class="tick-flip"></div>
+        <div class="tick-label">HOURS</div>
+      </div>
+      <div data-key="minutes" data-view="flip">
+        <div data-repeat="true" class="tick-flip"></div>
+        <div class="tick-label">MINUTES</div>
+      </div>
+      <div data-key="seconds" data-view="flip">
+        <div data-repeat="true" class="tick-flip"></div>
+        <div class="tick-label">SECONDS</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="tick/tick.core.global.min.js"></script>
+  <script src="dist/flip.min.js"></script>
+  <script src="dist/tick.view.flip.global.min.js"></script>
+  <script>
+    function init(tick) {
+      Tick.count.down("2025-08-25T00:00:00").onupdate = function(value) {
+        tick.value = value;
+      };
+    }
+  </script>
+</body>
+</html>
