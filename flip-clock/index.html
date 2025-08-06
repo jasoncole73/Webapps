@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Flip Clock - Current Time</title>
+    <link rel="stylesheet" href="dist/flip.min.css" />
+    <style>
+        .tick {
+            padding-bottom: 1em;
+            font-size: 2rem;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans,
+                Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+        }
+
+        .tick-label {
+            font-size: 0.375em;
+            text-align: center;
+        }
+
+        .tick-group {
+            margin: 0 0.25em;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Current Time</h1>
+
+    <div class="tick" data-did-init="handleTickInit">
+        <div data-layout="horizontal center fit">
+            <div class="tick-group">
+                <div data-key="hours" data-transform="pad(00) -> split -> delay" data-repeat="true">
+                    <span data-view="flip"></span>
+                </div>
+                <span class="tick-label">HOURS</span>
+            </div>
+            <div class="tick-group">
+                <div data-key="minutes" data-transform="pad(00) -> split -> delay" data-repeat="true">
+                    <span data-view="flip"></span>
+                </div>
+                <span class="tick-label">MINUTES</span>
+            </div>
+            <div class="tick-group">
+                <div data-key="seconds" data-transform="pad(00) -> split -> delay" data-repeat="true">
+                    <span data-view="flip"></span>
+                </div>
+                <span class="tick-label">SECONDS</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="dist/flip.min.js"></script>
+    <script>
+        function handleTickInit(tick) {
+            Tick.helper.interval(function () {
+                const now = new Date();
+                tick.value = {
+                    hours: now.getHours(),
+                    minutes: now.getMinutes(),
+                    seconds: now.getSeconds()
+                };
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
