@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Flip Clock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="dist/flip.min.css" />
+  <link rel="stylesheet" href="dist/tick.view.flip.min.css" />
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f8f8f8;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    h1 {
+      margin-bottom: 40px;
+    }
+
+    .tick {
+      font-size: 2rem;
+    }
+
+    .tick-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .tick-label {
+      font-size: 0.8rem;
+      color: #aaa;
+      margin-top: 5px;
+      text-align: center;
+    }
+
+    .tick-element {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>Current Time</h1>
+  <div class="tick" data-did-init="initTick">
+    <div class="tick-group" data-layout="horizontal center" data-repeat="true">
+      <div class="tick-element" data-key="hours" data-view="flip">
+        <span data-view="flip"></span>
+        <div class="tick-label">HOURS</div>
+      </div>
+      <div class="tick-element" data-key="minutes" data-view="flip">
+        <span data-view="flip"></span>
+        <div class="tick-label">MINUTES</div>
+      </div>
+      <div class="tick-element" data-key="seconds" data-view="flip">
+        <span data-view="flip"></span>
+        <div class="tick-label">SECONDS</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="tick/tick.core.global.min.js"></script>
+  <script src="dist/flip.min.js"></script>
+  <script src="dist/tick.view.flip.global.min.js"></script>
+  <script>
+    function initTick(tick) {
+      Tick.helper.interval(function () {
+        const now = new Date();
+        tick.value = {
+          hours: now.getHours(),
+          minutes: now.getMinutes(),
+          seconds: now.getSeconds()
+        };
+      }, 1000);
+    }
+  </script>
+</body>
+</html>
