@@ -11,14 +11,15 @@
       font-family: sans-serif;
       background: #f8f8f8;
       height: 100vh;
+      margin: 0;
       display: flex;
-      justify-content: center;
-      align-items: center;
       flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
 
     h1 {
-      margin-bottom: 40px;
+      margin-bottom: 30px;
     }
 
     .tick {
@@ -27,14 +28,14 @@
 
     .tick-group {
       display: flex;
-      gap: 10px;
+      gap: 15px;
     }
 
     .tick-label {
-      font-size: 0.8rem;
-      color: #aaa;
-      margin-top: 5px;
+      font-size: 0.75rem;
       text-align: center;
+      color: #999;
+      margin-top: 10px;
     }
 
     .tick-element {
@@ -49,15 +50,15 @@
   <div class="tick" data-did-init="initTick">
     <div class="tick-group" data-layout="horizontal center" data-repeat="true">
       <div class="tick-element" data-key="hours" data-view="flip">
-        <span data-view="flip"></span>
+        <div data-view="flip"></div>
         <div class="tick-label">HOURS</div>
       </div>
       <div class="tick-element" data-key="minutes" data-view="flip">
-        <span data-view="flip"></span>
+        <div data-view="flip"></div>
         <div class="tick-label">MINUTES</div>
       </div>
       <div class="tick-element" data-key="seconds" data-view="flip">
-        <span data-view="flip"></span>
+        <div data-view="flip"></div>
         <div class="tick-label">SECONDS</div>
       </div>
     </div>
@@ -67,13 +68,17 @@
   <script src="dist/flip.min.js"></script>
   <script src="dist/tick.view.flip.global.min.js"></script>
   <script>
+    function pad(num) {
+      return String(num).padStart(2, '0');
+    }
+
     function initTick(tick) {
       Tick.helper.interval(function () {
         const now = new Date();
         tick.value = {
-          hours: now.getHours(),
-          minutes: now.getMinutes(),
-          seconds: now.getSeconds()
+          hours: pad(now.getHours()),
+          minutes: pad(now.getMinutes()),
+          seconds: pad(now.getSeconds())
         };
       }, 1000);
     }
