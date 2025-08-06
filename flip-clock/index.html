@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Flip Clock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="dist/flip.min.css">
+  <link rel="stylesheet" href="dist/tick.view.flip.min.css">
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f8f8f8;
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    h1 {
+      margin-bottom: 30px;
+    }
+    .tick {
+      font-size: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Current Time</h1>
+  <div class="tick" id="clock"></div>
+
+  <script src="tick/tick.core.global.min.js"></script>
+  <script src="dist/flip.min.js"></script>
+  <script src="dist/tick.view.flip.global.min.js"></script>
+  <script>
+    Tick.DOM.create(document.getElementById('clock'), {
+      view: 'flip',
+      didInit: function(tick) {
+        Tick.helper.interval(function() {
+          const now = new Date();
+          tick.value = [
+            now.getHours().toString().padStart(2, '0'),
+            now.getMinutes().toString().padStart(2, '0'),
+            now.getSeconds().toString().padStart(2, '0')
+          ];
+        }, 1000);
+      }
+    });
+  </script>
+</body>
+</html>
