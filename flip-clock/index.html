@@ -7,60 +7,44 @@
   <link rel="stylesheet" href="dist/flip.min.css">
   <link rel="stylesheet" href="dist/tick.view.flip.min.css">
   <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
+    body {
+      font-family: sans-serif;
+      background: #f8f8f8;
+      height: 100vh;
       display: flex;
-      flex-direction: column;
       justify-content: center;
       align-items: center;
-      background: #f8f8f8;
-      font-family: Arial, sans-serif;
-    }
-    h1 {
-      margin-bottom: 40px;
+      flex-direction: column;
     }
     .tick {
-      font-size: 2em;
-    }
-    .tick-group {
-      display: flex;
-      gap: 20px;
-    }
-    .tick-group > div {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .tick-flip {
-      font-size: 50px;
+      font-size: 2rem;
     }
     .tick-label {
-      font-size: 0.8rem;
-      color: #999;
-      margin-top: 10px;
+      font-size: 0.75rem;
+      text-align: center;
+      color: #aaa;
+      margin-top: 5px;
     }
   </style>
 </head>
 <body>
   <h1>Countdown to Event</h1>
-  <div class="tick" data-did-init="init">
-    <div class="tick-group">
+  <div class="tick" data-did-init="initTick">
+    <div class="tick-group" data-layout="horizontal center" data-repeat="true">
       <div data-key="days" data-view="flip">
-        <span data-view="flip"></span>
+        <div data-view="flip"></div>
         <div class="tick-label">DAYS</div>
       </div>
       <div data-key="hours" data-view="flip">
-        <span data-view="flip"></span>
+        <div data-view="flip"></div>
         <div class="tick-label">HOURS</div>
       </div>
       <div data-key="minutes" data-view="flip">
-        <span data-view="flip"></span>
+        <div data-view="flip"></div>
         <div class="tick-label">MINUTES</div>
       </div>
       <div data-key="seconds" data-view="flip">
-        <span data-view="flip"></span>
+        <div data-view="flip"></div>
         <div class="tick-label">SECONDS</div>
       </div>
     </div>
@@ -70,8 +54,8 @@
   <script src="dist/flip.min.js"></script>
   <script src="dist/tick.view.flip.global.min.js"></script>
   <script>
-    function init(tick) {
-      Tick.count.down("2025-08-25T00:00:00").onupdate = function(value) {
+    function initTick(tick) {
+      Tick.count.down('2025-08-25T00:00:00').onupdate = function(value) {
         tick.value = value;
       };
     }
