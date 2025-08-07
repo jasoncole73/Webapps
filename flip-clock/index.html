@@ -1,1 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flip Clock</title>
+  <style>
+    /* All inline styles from flip.min.css + layout */
+    body {
+      background: #f0f0f0;
+      font-family: sans-serif;
+      margin: 0;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .tick {
+      font-size: clamp(4rem, 10vw, 9rem);
+      margin-top: 3rem;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+    .tick .tick-flip-panel {
+      background-color: var(--flip-color, #333);
+      border-radius: var(--flip-radius, 0.3rem);
+    }
+    .controls {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+    }
+    .controls label {
+      font-size: 1rem;
+    }
+    .tick-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+    .tick-label {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #222;
+    }
+    #modeSelect, #targetTime {
+      font-size: 1rem;
+      padding: 0.3rem;
+    }
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="controls">
+    <label>Tile Color: <input type="color" id="colorPicker" value="#333333"></label>
+    <label>Corner Radius: <input type="range" id="radiusSlider" min="0" max="1" step="0.05" value="0.3"></label>
+    <label>Mode: <select id="modeSelect"><option value="clock">Clock</option><option value="countdown">Countdown</option></select></label>
+    <label id="targetLabel" style="display:none;">Target Time: <input type="datetime-local" id="targetTime" /></label>
+  </div>
+
+  <div class="tick" id="tick-clock">
+    <div class="tick-group" data-key="hours" data-transform="pad(00) -> split -> delay" data-repeat="true"><span data-view="flip"></span><span class="tick-label">HOURS</span></div>
+    <div class="tick-group" data-key="minutes" data-transform="pad(00) -> split -> delay" data-repeat="true"><span data-view="flip"></span><span class="tick-label">MINUTES</span></div>
+    <div class="tick-group" data-key="seconds" data-transform="pad(00) -> split -> delay" data-repeat="true"><span data-view="flip"></span><span class="tick-label">SECONDS</span></div>
+  </div>
+
+  <div class="tick hidden" id="tick-countdown">
+    <div class="tick-group" data-key="weeks" data-transform="pad(00) -> split -> delay" data-repeat="true"><span data-view="flip"></span><span class="tick-label">WEEKS</span></div>
+    <div class="tick-group" data-key="days" data-transform="pad(00) -> split -> delay" data-repeat="true"><span data-view="flip"></span><span class="tick-label">DAYS</span></div>
+    <div class="tick-group" data-key="hours" data-transform="pad(00) -> split -> delay" data-repeat="true"><span data-view="flip"></span><span class="tick-label">HOURS</span></div>
+    <div class="tick-group" data-key="minutes" data-transform="pad(00) -> split -> delay" data-repeat="true"><span data-view="flip"></span><span class="tick-label">MINUTES</span></div>
+    <div class="tick-group" data-key="seconds" data-transform="pad(00) -> split -> delay" data-repeat="true"><span data-view="flip"></span><span class="tick-label">SECONDS</span></div>
+  </div>
+
+  <!-- Inline JS Libraries -->
+  <script>
+    // MINIFIED Tick Core (paste here)
+    /* Replace this comment with actual minified tick.core.global.js content */
+  </script>
+  <script>
+    // MINIFIED Flip Library (paste here)
+    /* Replace this comment with actual minified flip.min.js content */
+  </script>
+
+  <script>
+    let tickClock, tickCountdown;
+
+    function updateFlipStyles() {
+      document.documentElement.style.setProperty('--flip-color', document.getElementById('colorPicker').value);
+      document.documentElement.style.setProperty('--flip-radius', document.getElementById('radiusSlider').value + 'rem');
+    }
+
+    function startClock() {
+      stopAll();
+      tickClock.interval = Tick.helper.interval(() => {
+        const now = new Date();
+        tickClock.value = {
+          hours: now.getHours(),
+          minutes: now.getMinutes(),
+          seconds: now.getSeconds()
+        };
+      }, 1000);
+    }
+
+    function startCountdown(target) {
+      stopAll();
+      Tick.count.down(target).onupdate = value => tickCountdown.value = value;
+    }
+
+    function stopAll() {
+      if (tickClock?.interval) clearInterval(tickClock.interval);
+    }
+
+    function updateMode(mode) {
+      const isCountdown = mode === 'countdown';
+      document.getElementById('tick-clock').classList.toggle('hidden', isCountdown);
+      document.getElementById('tick-countdown').classList.toggle('hidden', !isCountdown);
+      document.getElementById('targetLabel').style.display = isCountdown ? 'inline-block' : 'none';
+      if (mode === 'clock') startClock();
+      else if (document.getElementById('targetTime').value) startCountdown(document.getElementById('targetTime').value);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      tickClock = Tick.DOM.create(document.getElementById("tick-clock"));
+      tickCountdown = Tick.DOM.create(document.getElementById("tick-countdown"));
+      document.getElementById("modeSelect").addEventListener("change", e => updateMode(e.target.value));
+      document.getElementById("targetTime").addEventListener("change", e => startCountdown(e.target.value));
+      document.getElementById('colorPicker').addEventListener('input', updateFlipStyles);
+      document.getElementById('radiusSlider').addEventListener('input', updateFlipStyles);
+      updateFlipStyles();
+      updateMode("clock");
+    });
+  </script>
+</body>
+</html>
 
