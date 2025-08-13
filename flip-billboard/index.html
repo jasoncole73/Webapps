@@ -6,7 +6,7 @@
   <title>Flip Billboard — Center W + Controls</title>
 
   <!-- LOCAL Flip CSS (same folder) -->
-  <link rel="stylesheet" href="./flip.min.css?v=8" />
+  <link rel="stylesheet" href="./flip.min.css?v=9" />
 
   <style>
     :root{
@@ -82,12 +82,13 @@
     }
     button:hover { background: #f4f4f4; }
 
-    /* Center any W/w in any tile (slight inset for optical centering) */
+    /* Center any W/w in any tile: narrow slightly for optical centering */
     .tick-flip-panel-text-wrapper.w-wide {
       display: flex !important;
       align-items: center;
       justify-content: center;
-      padding: 0 0.07em;
+      transform: scaleX(0.92);   /* <- key tweak */
+      padding: 0;
       box-sizing: border-box;
     }
   </style>
@@ -145,13 +146,13 @@
   </div>
 
   <!-- LOCAL Flip JS (same folder) -->
-  <script src="./flip.min.js?v=8"></script>
+  <script src="./flip.min.js?v=9"></script>
 
   <script>
     // ---------- helpers ----------
     const $ = (id) => document.getElementById(id);
     const css = document.documentElement.style;
-    const LS_KEY = 'flip-billboard-settings-v8';
+    const LS_KEY = 'flip-billboard-settings-v9';
 
     function padWords(words) {
       const clean = words.map(w => (w || '').toString().trim().toUpperCase());
