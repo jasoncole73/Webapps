@@ -3,16 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Flip Billboard — Controls + W Fix</title>
+  <title>Flip Billboard — Center W + Controls</title>
 
   <!-- LOCAL Flip CSS (same folder) -->
-  <link rel="stylesheet" href="./flip.min.css?v=6" />
+  <link rel="stylesheet" href="./flip.min.css?v=8" />
 
   <style>
     :root{
-      --billboard-size: 9em;
-      --panel-radius: 0em;        /* square by default */
-      --stage-shift: -10vh;
+      --billboard-size: 9em;  /* same as your flip clock */
+      --panel-radius: 0em;    /* square by default */
+      --stage-shift: -10vh;   /* negative raises the billboard */
       color-scheme: light only;
     }
 
@@ -25,16 +25,12 @@
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
 
-    /* Controls */
+    /* Controls (kept on top so they're clickable) */
     .controls {
-      position: sticky; top: 0;
-      z-index: 1000;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px 18px;
-      align-items: center;
-      padding: 10px 12px;
-      border-bottom: 1px solid #eee;
+      position: sticky; top: 0; z-index: 1000;
+      display: grid; grid-template-columns: 1fr auto;
+      gap: 10px 18px; align-items: center;
+      padding: 10px 12px; border-bottom: 1px solid #eee;
       background: #fafafa;
       font: 13px/1.35 ui-sans-serif, system-ui, -apple-system, Arial, sans-serif;
       color: #333;
@@ -47,13 +43,10 @@
     .actions { display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
     .controls small { opacity: .65; }
 
-    /* Stage */
+    /* Stage / billboard (below controls; don't capture clicks) */
     .stage {
-      position: relative;
-      z-index: 0;
-      pointer-events: none;
-      display: grid;
-      place-items: center;
+      position: relative; z-index: 0; pointer-events: none;
+      display: grid; place-items: center;
       padding: 2vh 3vw;
       transform: translateY(var(--stage-shift));
       transition: transform .25s ease;
@@ -61,44 +54,40 @@
 
     .tick { font-size: 1rem; white-space: nowrap; font-family: arial, sans-serif; }
     .tick-flip, .tick-text-inline { font-size: var(--billboard-size); }
+
     .tick-char { width: 1.15em; }
     .tick-group { margin: 0 .5em; text-align: center; }
 
     .tick-text-inline {
-      display: inline-block;
-      text-align: center;
-      min-width: 1em;
+      display: inline-block; text-align: center; min-width: 1em;
       color: rgb(90,93,99) !important;
     }
     .tick-text-inline + .tick-text-inline { margin-left: -.325em; }
 
-    .tick-label {
-      margin-top: 1em;
-      font-size: 1em;
-      color: rgb(90,93,99) !important;
-    }
+    .tick-label { margin-top: 1em; font-size: 1em; color: rgb(90,93,99) !important; }
 
     .tick-flip-panel {
-      color: #fff !important;
-      background: rgb(59,61,59) !important;
+      color: #fff !important; background: rgb(59,61,59) !important;
       border-radius: var(--panel-radius) !important;
       box-shadow: 0 8px 30px rgba(0,0,0,.08);
     }
-    .tick-flip-panel-text-wrapper { line-height: 1.45 !important; }
+    .tick-flip-panel-text-wrapper {
+      line-height: 1.45 !important;
+      text-align: center;
+    }
 
-    /* Buttons */
     button {
       appearance: none; border: 1px solid #ddd; background: #fff;
       padding: 6px 10px; border-radius: 8px; cursor: pointer;
     }
     button:hover { background: #f4f4f4; }
 
-    /* === FIX: Center W in the very first visible tile === */
-    .tick > .tick-group:first-child .tick-char:first-child .tick-flip-panel-text-wrapper {
+    /* Center any W/w in any tile (slight inset for optical centering) */
+    .tick-flip-panel-text-wrapper.w-wide {
       display: flex !important;
       align-items: center;
       justify-content: center;
-      padding: 0 0.07em; /* slight inset to visually center the W */
+      padding: 0 0.07em;
       box-sizing: border-box;
     }
   </style>
@@ -155,13 +144,14 @@
     </div>
   </div>
 
-  <!-- LOCAL Flip JS -->
-  <script src="./flip.min.js?v=6"></script>
+  <!-- LOCAL Flip JS (same folder) -->
+  <script src="./flip.min.js?v=8"></script>
 
   <script>
+    // ---------- helpers ----------
     const $ = (id) => document.getElementById(id);
     const css = document.documentElement.style;
-    const LS_KEY = 'flip-billboard-settings-v6';
+    const LS_KEY = 'flip-billboard-settings-v8';
 
     function padWords(words) {
       const clean = words.map(w => (w || '').toString().trim().toUpperCase());
@@ -192,6 +182,18 @@
       css.setProperty('--stage-shift', s.posVh + 'vh');
     }
 
+    // ---------- W centering (works during flips) ----------
+    function markWideGlyphs() {
+      document.querySelectorAll('.tick-flip-panel-text-wrapper').forEach(el => {
+        const ch = (el.textContent || '').trim();
+        el.classList.toggle('w-wide', ch === 'W' || ch === 'w');
+      });
+    }
+    const billboardObserver = new MutationObserver(() => {
+      requestAnimationFrame(markWideGlyphs);
+    });
+
+    // ---------- billboard state ----------
     let ROTATION = [];
     let tickRef = null;
     let timerCancel = null;
@@ -199,6 +201,7 @@
     function setRotation(words) {
       ROTATION = padWords(words);
       if (tickRef) tickRef.value = ROTATION[0] || '';
+      requestAnimationFrame(markWideGlyphs);
     }
 
     function startTicker(speed) {
@@ -208,31 +211,40 @@
         if (!ROTATION.length) return;
         i = (i + 1) % ROTATION.length;
         tickRef.value = ROTATION[i];
+        markWideGlyphs();
       }, speed);
     }
 
     function handleTickInit(tick) {
       tickRef = tick;
       tick.value = ROTATION[0] || '';
+      const root = document.querySelector('.tick');
+      if (root) {
+        billboardObserver.observe(root, { childList: true, subtree: true, characterData: true });
+      }
       startTicker(current.speedMs);
+      markWideGlyphs();
     }
     window.handleTickInit = handleTickInit;
 
+    // ---------- init ----------
     const current = loadSettings();
 
     (function init(){
       setRotation(current.words);
       applyUI(current);
 
+      // size
       $('sizeEm').addEventListener('input', e => {
         const v = +e.target.value; $('sizeRange').value = v;
-        css.setProperty('--billboard-size', v + 'em'); current.sizeEm = v; saveSettings(current);
+        css.setProperty('--billboard-size', v + 'em'); current.sizeEm = v; saveSettings(current); markWideGlyphs();
       });
       $('sizeRange').addEventListener('input', e => {
         const v = +e.target.value; $('sizeEm').value = v;
-        css.setProperty('--billboard-size', v + 'em'); current.sizeEm = v; saveSettings(current);
+        css.setProperty('--billboard-size', v + 'em'); current.sizeEm = v; saveSettings(current); markWideGlyphs();
       });
 
+      // radius
       $('radiusEm').addEventListener('input', e => {
         const v = +e.target.value; $('radiusRange').value = v;
         css.setProperty('--panel-radius', v + 'em'); current.radiusEm = v; saveSettings(current);
@@ -242,6 +254,7 @@
         css.setProperty('--panel-radius', v + 'em'); current.radiusEm = v; saveSettings(current);
       });
 
+      // position
       $('posVh').addEventListener('input', e => {
         const v = +e.target.value; $('posRange').value = v;
         css.setProperty('--stage-shift', v + 'vh'); current.posVh = v; saveSettings(current);
@@ -251,18 +264,21 @@
         css.setProperty('--stage-shift', v + 'vh'); current.posVh = v; saveSettings(current);
       });
 
+      // speed
       $('speedMs').addEventListener('input', e => {
         const v = Math.max(300, +e.target.value || 3000);
         current.speedMs = v; saveSettings(current);
         if (tickRef) startTicker(current.speedMs);
       });
 
+      // words
       $('applyWords').addEventListener('click', () => {
         const raw = $('words').value.split(',').map(s => s.trim()).filter(Boolean);
         if (!raw.length) return;
         current.words = raw; saveSettings(current); setRotation(current.words);
       });
 
+      // reset
       $('reset').addEventListener('click', () => {
         localStorage.removeItem(LS_KEY);
         location.href = location.pathname;
