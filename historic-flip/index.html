@@ -10,14 +10,13 @@
 
   <style>
     :root{
-      /* theme vars driven by the Style Controls */
-      --bg:#ffffff;             /* page background */
-      --text:#0b3b17;           /* title + labels */
-      --value:#ff2ba3;          /* flip panel text color */
-      --panel-bg:#3d2811;       /* flip panel background */
-      --radius:0.12em;          /* card corner radius */
-      --leading:1.4;            /* line-height inside panel */
-      --accent:#356307;         /* label color (kept for legacy mapping) */
+      /* Theme variables (live-updated by the style panel) */
+      --bg:#ffffff;
+      --text:#0b3b17;        /* title + labels */
+      --value:#5b2a77;       /* digits color */
+      --panel-bg:#ba7630;    /* flip panel background */
+      --radius:12px;         /* card corner radius */
+      --leading:1.4;         /* line-height inside panel */
     }
 
     * { box-sizing: border-box; }
@@ -25,254 +24,173 @@
 
     body {
       margin:0;
-      background: var(--bg);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
-      color:#222;
+      background:var(--bg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      color:#0f172a;
       display:grid;
       grid-template-rows:auto auto 1fr auto;
-      gap:0.5rem;
-      transition: background .15s ease;
+      gap:.25rem;
+      transition:background .15s ease;
     }
 
+    /* Header reduced to keep focus on clock */
     header{
-      padding:1rem clamp(1rem, 3vw, 2rem) 0.5rem;
-      border-bottom:1px solid #eee;
-      display:flex;
-      flex-wrap:wrap;
-      align-items:center;
-      justify-content:space-between;
-      gap:1rem;
+      padding:.75rem clamp(1rem, 3vw, 2rem) .25rem;
     }
     header h1{
-      font-size:clamp(1.1rem, 1.8vw, 1.4rem);
       margin:0;
+      font-size:clamp(1rem, 1.2vw, 1.1rem);
       font-weight:600;
+      color:#334155;
       letter-spacing:.2px;
-      color:#0f172a;
+      opacity:.75;
     }
 
-    /* ----- Event controls ----- */
-    .controls{
-      width:100%;
-      max-width:1100px;
+    /* ===== Compact event bar ===== */
+    .bar{
+      max-width:1200px;
       margin:0 auto;
-      display:grid;
-      gap:.75rem;
-      grid-template-columns: 1fr;
-      padding:0 clamp(1rem, 3vw, 2rem) .5rem;
-    }
-    .card{
-      border:1px solid #e6e6e6;
-      border-radius:16px;
-      padding:1rem;
-      box-shadow:0 1px 2px rgba(0,0,0,.04);
-      background:#fff;
-    }
-    .grid{
-      display:grid;
-      gap:.75rem;
-    }
-    @media (min-width:860px){
-      .grid{
-        grid-template-columns: 2fr 1.5fr auto;
-        align-items:end;
-      }
-    }
-    label{
-      font-size:.9rem;
-      color:#334155;
-      display:block;
-      margin:0 0 .35rem;
-    }
-    input[type="text"], input[type="datetime-local"]{
       width:100%;
-      padding:.6rem .7rem;
+      padding:0 clamp(1rem, 3vw, 2rem);
+    }
+    .eventbar{
+      display:flex;
+      gap:.5rem;
+      align-items:center;
+      border:1px solid #e5e7eb;
+      border-radius:14px;
+      padding:.5rem;
+      background:#fff;
+      box-shadow:0 1px 2px rgba(0,0,0,.04);
+    }
+    .eventbar input[type="text"],
+    .eventbar input[type="datetime-local"]{
       border:1px solid #dfe3e6;
       border-radius:10px;
-      font-size:1rem;
-      outline:none;
+      padding:.5rem .6rem;
+      font-size:.95rem;
+      min-width:0;
       background:#fff;
     }
-    input[type="text"]:focus, input[type="datetime-local"]:focus{
-      border-color:#94a3b8;
-      box-shadow:0 0 0 3px rgba(148,163,184,.2);
-    }
-    .btnrow{ display:flex; gap:.5rem; flex-wrap:wrap; }
-    button{
+    .eventbar .grow{ flex:1 1 420px; }
+    .eventbar .when{ flex:0 0 220px; }
+    .btn{
       appearance:none; border:0; cursor:pointer;
-      padding:.65rem .9rem;
-      border-radius:12px; font-weight:600; font-size:.95rem;
+      border-radius:10px; font-weight:600; font-size:.95rem;
+      padding:.55rem .9rem;
     }
-    .primary{ background:#0f766e; color:#fff; }
-    .ghost{ background:#f1f5f9; color:#0f172a; }
-    .danger{ background:#ef4444; color:#fff; }
+    .btn.primary{ background:#0f766e; color:#fff; }
+    .btn.ghost{ background:#f1f5f9; color:#0f172a; }
+    .btn.danger{ background:#ef4444; color:#fff; }
 
-    /* ----- Style controls (demo-like) ----- */
-    .style-bar{
-      width:100%;
-      max-width:1100px;
-      margin:0 auto;
+    /* ===== Collapsible style panel (hidden by default) ===== */
+    details.panel{
+      max-width:1200px;
+      margin:.25rem auto 0;
       padding:0 clamp(1rem, 3vw, 2rem);
-      display:flex;
-      flex-wrap:wrap;
-      gap:1rem 1.25rem;
     }
-    .group{
-      display:flex; align-items:center; gap:0;
-      border:2px solid #6b7280;
-      border-radius:999px; padding:.25rem;
+    details.panel > summary{
+      list-style:none;
+      cursor:pointer;
+      user-select:none;
+      font-weight:600;
+      color:#334155;
+      background:#ffffff;
+      border:1px solid #e5e7eb;
+      border-radius:12px;
+      padding:.6rem .9rem;
+      box-shadow:0 1px 2px rgba(0,0,0,.04);
+    }
+    details.panel[open] > summary{ border-bottom-left-radius:0; border-bottom-right-radius:0; }
+    .panel-body{
+      border:1px solid #e5e7eb;
+      border-top:0;
+      border-bottom-left-radius:12px;
+      border-bottom-right-radius:12px;
       background:#fff;
+      padding:.8rem;
+      display:flex; flex-wrap:wrap; gap:.75rem 1rem;
     }
-    .group > label{
-      margin:0; padding:.4rem .7rem; border-right:1px solid #d1d5db;
-      color:#111827; font-size:.9rem; white-space:nowrap;
-    }
-    .group > label:last-of-type{ border-right:0; }
     .chip{
       display:flex; align-items:center; gap:.5rem;
+      border:1px solid #d1d5db;
+      border-radius:999px;
       padding:.25rem .6rem;
-      border-right:1px solid #d1d5db;
+      background:#fff;
     }
-    .chip:last-child{ border-right:0; }
-    .chip input[type="color"]{
-      width:36px; height:28px; border:1px solid #cbd5e1; border-radius:8px; background:#fff; padding:0;
-    }
-    .chip select, .chip input[type="text"], .chip input[type="range"], .chip input[type="number"]{
-      border:1px solid #cbd5e1; border-radius:8px; padding:.35rem .5rem; font-size:.9rem; background:#fff;
+    .chip label{ font-size:.9rem; color:#111827; }
+    .chip input[type="color"]{ width:36px; height:28px; border:1px solid #cbd5e1; border-radius:8px; padding:0; }
+    .chip select, .chip input[type="range"]{
+      border:1px solid #cbd5e1; border-radius:8px; padding:.3rem .45rem; font-size:.9rem; background:#fff;
     }
     .chip input[type="range"]{ width:140px; }
 
-    /* ----- Counter area ----- */
+    /* ===== Clock stage ===== */
     .stage{
       display:grid;
       place-items:center;
-      padding: 0 clamp(1rem, 3vw, 2rem) 1rem; /* reduced bottom padding */
-      margin-top: -.25rem; /* tighter to controls */
+      padding: .25rem clamp(.5rem, 3vw, 2rem) .75rem; /* tight space */
     }
     .title{
       text-align:center;
-      font-size:clamp(1.25rem, 3vw, 1.75rem);
-      margin:.25rem 0 1rem;
-      color: var(--text);
-      min-height:1.8em;
+      font-size:clamp(1.15rem, 2.6vw, 1.6rem);
+      margin:.25rem 0 .35rem;
+      color:var(--text);
+      min-height:1.6em;
     }
 
-    .tick {
-      font-size: 1rem;
-      white-space: nowrap;
-    }
+    .tick { font-size:1rem; white-space:nowrap; }
+    .tick-flip, .tick-text-inline { font-size:7em; } /* your 7em */
+    .tick-group { margin:0 .35em; text-align:center; }
+    .tick-label { margin-top:.7em; font-size:1em; color:var(--text) !important; }
 
-    /* fixed 7em size as requested */
-    .tick-flip, .tick-text-inline {
-      font-size: 7em;
-    }
-
-    .tick-label {
-      margin-top: 1em;
-      font-size: 1em;
-      color: var(--text) !important;
-    }
-
-    .tick-char { width: 1.5em; }
-
-    .tick-text-inline {
-      display: inline-block;
-      text-align: center;
-      min-width: 1em;
-      color: var(--text) !important;
-    }
-
-    .tick-text-inline + .tick-text-inline { margin-left: -0.325em; }
-    .tick-group { margin: 0 .5em; text-align: center; }
-
-    .tick-flip {
-      border-radius: var(--radius) !important;
-      /* font family is set on body; Flip inherits */
-    }
-    .tick-flip-panel {
-      background-color: var(--panel-bg) !important;
-      color: var(--value) !important;
-    }
-    .tick-flip-panel-text-wrapper {
-      line-height: var(--leading) !important;
-    }
+    .tick-flip { border-radius:var(--radius) !important; }
+    .tick-flip-panel { background-color:var(--panel-bg) !important; color:var(--value) !important; }
+    .tick-flip-panel-text-wrapper { line-height:var(--leading) !important; }
 
     /* Remove Powered by PQINA */
-    .tick-credits { display:none !important; }
+    .tick-credits{ display:none !important; }
 
     footer{
-      text-align:center; color:#94a3b8; font-size:.85rem; padding:0 0 1.2rem;
+      text-align:center; color:#94a3b8; font-size:.85rem; padding:0 0 1rem;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Historic Flip — Preset Count‑Up</h1>
-  </header>
+  <header><h1>Historic Flip — Preset Count‑Up</h1></header>
 
-  <!-- Event Controls -->
-  <section class="controls">
-    <div class="card">
-      <div class="grid">
-        <div>
-          <label for="eventName">Event name</label>
-          <input id="eventName" type="text" placeholder="e.g., Y2K — New Millennium" />
-        </div>
-        <div>
-          <label for="eventStart">Start date &amp; time (your local time)</label>
-          <input id="eventStart" type="datetime-local" />
-        </div>
-        <div class="btnrow">
-          <button id="btnStart" class="primary" title="Start or update the counter">Start</button>
-          <button id="btnSave" class="ghost" title="Save event as default for this browser">Save as default</button>
-          <button id="btnClear" class="danger" title="Clear saved default">Clear</button>
-        </div>
-      </div>
+  <!-- Compact Event Bar -->
+  <div class="bar">
+    <div class="eventbar">
+      <input id="eventName" class="grow" type="text" placeholder="Event name (e.g., Y2K — New Millennium)" />
+      <input id="eventStart" class="when" type="datetime-local" />
+      <button id="btnStart" class="btn primary">Start</button>
+      <button id="btnSave" class="btn ghost">Save default</button>
+      <button id="btnClear" class="btn danger">Clear</button>
     </div>
-  </section>
+  </div>
 
-  <!-- Style Controls (demo-like) -->
-  <section class="style-bar">
-    <div class="group">
-      <div class="chip">
-        <label>Background Color</label>
-        <input id="bgColor" type="color" value="#ffffff" />
-      </div>
-      <div class="chip">
-        <label>Text Color</label>
-        <input id="textColor" type="color" value="#0b3b17" />
-      </div>
-    </div>
-
-    <div class="group">
-      <div class="chip">
-        <label>Value Color</label>
-        <input id="valueColor" type="color" value="#ff2ba3" />
-      </div>
+  <!-- Collapsible Style Panel (closed by default) -->
+  <details class="panel">
+    <summary>Style</summary>
+    <div class="panel-body">
+      <div class="chip"><label>Background</label><input id="bgColor" type="color" value="#ffffff"></div>
+      <div class="chip"><label>Text</label><input id="textColor" type="color" value="#0b3b17"></div>
+      <div class="chip"><label>Value</label><input id="valueColor" type="color" value="#5b2a77"></div>
       <div class="chip">
         <label>Font</label>
         <select id="fontFamily">
           <option value="system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif">System UI</option>
           <option value="Arial, Helvetica, sans-serif">Arial</option>
-          <option value="Roboto, Arial, sans-serif">Roboto (fallback)</option>
           <option value="Georgia, serif">Georgia</option>
           <option value="'Courier New', monospace">Courier New</option>
           <option value="'Trebuchet MS', Arial, sans-serif">Trebuchet MS</option>
         </select>
       </div>
+      <div class="chip"><label>Leading</label><input id="leading" type="range" min="1.0" max="2.0" step="0.05" value="1.4"></div>
+      <div class="chip"><label>Panel</label><input id="panelBg" type="color" value="#ba7630"></div>
       <div class="chip">
-        <label>Leading</label>
-        <input id="leading" type="range" min="1.0" max="2.0" step="0.05" value="1.4" />
-      </div>
-    </div>
-
-    <div class="group">
-      <div class="chip">
-        <label>Panel Color</label>
-        <input id="panelBg" type="color" value="#3d2811" />
-      </div>
-      <div class="chip">
-        <label>Corner Style</label>
+        <label>Corner</label>
         <select id="cornerStyle">
           <option value="square">Square</option>
           <option value="soft" selected>Soft</option>
@@ -280,18 +198,15 @@
           <option value="xround">Extra‑round</option>
         </select>
       </div>
-      <div class="chip">
-        <label>Corner Radius</label>
-        <input id="cornerRadius" type="range" min="0" max="32" step="1" value="2" />
-      </div>
+      <div class="chip"><label>Radius</label><input id="cornerRadius" type="range" min="0" max="32" step="1" value="12"></div>
     </div>
-  </section>
+  </details>
 
-  <!-- Counter -->
+  <!-- Clock -->
   <section class="stage">
     <div class="title" id="titleLine"></div>
 
-    <div class="tick" data-did-init="handleTickInit">
+    <div class="tick" id="tickRoot" data-did-init="handleTickInit">
       <div data-repeat="true" data-layout="horizontal fit" data-transform="preset(y, M, d, h, m, s) -> delay">
         <div class="tick-group">
           <div data-key="value" data-repeat="true" data-transform="pad(00) -> split -> delay">
@@ -303,108 +218,109 @@
     </div>
   </section>
 
-  <footer>
-    Counting up from your chosen moment • Works offline on GitHub Pages
-  </footer>
+  <footer>Counting up from your chosen moment • Works offline on GitHub Pages</footer>
 
   <!-- Flip (Tick) script -->
   <script src="https://cdn.jsdelivr.net/npm/@pqina/flip/dist/flip.min.js"></script>
 
   <script>
-    /* ---------- Helpers ---------- */
+    /* ========== Helpers ========== */
     const qs = id => document.getElementById(id);
+    const LS_EVENT = 'historicFlipEvent';
+    const LS_STYLE = 'historicFlipStyle';
 
-    function localDateTimeToIsoLocal(dtValue){
-      if(!dtValue) return null;               // "2000-01-01T00:00"
-      return dtValue + ":00";                 // keep local (no timezone suffix)
-    }
-    function setTitle(name){ qs('titleLine').textContent = name || ''; }
-    function parseQuery(){
-      const p = new URLSearchParams(window.location.search);
-      return { event: p.get('event') || '', at: p.get('at') || '' };
-    }
+    function isoLocalFromInput(v){ return v ? (v.length === 16 ? v + ':00' : v) : null; }
+    function setTitle(t){ qs('titleLine').textContent = t || ''; }
+    function parseQuery(){ const p = new URLSearchParams(location.search); return {event:p.get('event')||'', at:p.get('at')||''}; }
 
-    /* ---------- Tick setup ---------- */
+    /* ========== Tick lifecycle (fixes multi-flip) ========== */
     let tickInstance = null;
-    function handleTickInit(tick) {
-      tickInstance = tick;
+    let counter = null;
+    let restartTimer = null;
 
-      const locale = {
-        YEAR_PLURAL: 'Years', YEAR_SINGULAR: 'Year',
-        MONTH_PLURAL: 'Months', MONTH_SINGULAR: 'Month',
-        WEEK_PLURAL: 'Weeks', WEEK_SINGULAR: 'Week',
-        DAY_PLURAL: 'Days', DAY_SINGULAR: 'Day',
-        HOUR_PLURAL: 'Hours', HOUR_SINGULAR: 'Hour',
-        MINUTE_PLURAL: 'Minutes', MINUTE_SINGULAR: 'Minute',
-        SECOND_PLURAL: 'Seconds', SECOND_SINGULAR: 'Second',
-        MILLISECOND_PLURAL: 'Milliseconds', MILLISECOND_SINGULAR: 'Millisecond'
-      };
-      for (const key in locale) tick.setConstant(key, locale[key]);
-
-      bootFromQueryOrStorage();
-      bootStyleFromStorage();
+    function safeStopCounter(){
+      if (counter){
+        try { counter.onupdate = null; counter.stop(); } catch(e){}
+        counter = null;
+      }
     }
 
     function startCounter(isoLocal){
-      if (window._historicFlipCounter && typeof window._historicFlipCounter.stop === 'function') {
-        try { window._historicFlipCounter.stop(); } catch(e){}
-      }
-      window._historicFlipCounter = Tick.count.up(isoLocal, { format: ['y','M','d','h','m','s'] });
-      window._historicFlipCounter.onupdate = v => { if (tickInstance) tickInstance.value = v; };
+      safeStopCounter();               // ensure only ONE counter runs
+      counter = Tick.count.up(isoLocal, { format: ['y','M','d','h','m','s'] });
+      counter.onupdate = (value) => { if (tickInstance) tickInstance.value = value; };
     }
 
-    /* ---------- Event state ---------- */
-    const LS_EVENT = 'historicFlipEvent';
-    function bootFromQueryOrStorage(){
-      const q = parseQuery();
-      let name='', isoLocal='';
+    function handleTickInit(tick){
+      tickInstance = tick;
 
+      // English labels
+      const locale = {
+        YEAR_PLURAL:'Years', YEAR_SINGULAR:'Year',
+        MONTH_PLURAL:'Months', MONTH_SINGULAR:'Month',
+        WEEK_PLURAL:'Weeks', WEEK_SINGULAR:'Week',
+        DAY_PLURAL:'Days', DAY_SINGULAR:'Day',
+        HOUR_PLURAL:'Hours', HOUR_SINGULAR:'Hour',
+        MINUTE_PLURAL:'Minutes', MINUTE_SINGULAR:'Minute',
+        SECOND_PLURAL:'Seconds', SECOND_SINGULAR:'Second',
+        MILLISECOND_PLURAL:'Milliseconds', MILLISECOND_SINGULAR:'Millisecond'
+      };
+      for (const k in locale) tick.setConstant(k, locale[k]);
+
+      bootEvent();
+      bootStyle();
+    }
+
+    /* ========== Event state ========== */
+    function bootEvent(){
+      const q = parseQuery();
+      let name, iso;
       if (q.at){
         name = q.event || 'Historic Event';
-        isoLocal = q.at;
+        iso = q.at;
       } else {
         const saved = JSON.parse(localStorage.getItem(LS_EVENT) || 'null');
-        if (saved?.name && saved?.isoLocal){
-          name = saved.name;
-          isoLocal = saved.isoLocal;
-        } else {
-          name = 'Y2K — New Millennium';
-          isoLocal = '2000-01-01T00:00:00';
-        }
+        if (saved?.name && saved?.isoLocal){ name = saved.name; iso = saved.isoLocal; }
+        else { name = 'Y2K — New Millennium'; iso = '2000-01-01T00:00:00'; }
       }
       setTitle(name);
-      startCounter(isoLocal);
+      startCounter(iso);
       qs('eventName').value = name;
-      qs('eventStart').value = (isoLocal || '').slice(0,16);
+      qs('eventStart').value = (iso || '').slice(0,16);
     }
 
-    qs('btnStart').addEventListener('click', () => {
+    function applyEventFromUI(){
       const name = (qs('eventName').value || 'Historic Event').trim();
-      const isoLocal = localDateTimeToIsoLocal(qs('eventStart').value) || '2000-01-01T00:00:00';
+      const iso = isoLocalFromInput(qs('eventStart').value) || '2000-01-01T00:00:00';
       setTitle(name);
-      startCounter(isoLocal);
-      const url = new URL(window.location.href);
+
+      // Debounce rapid restarts to avoid visual stutter
+      if (restartTimer) clearTimeout(restartTimer);
+      restartTimer = setTimeout(() => { startCounter(iso); }, 120);
+
+      const url = new URL(location.href);
       url.searchParams.set('event', name);
-      url.searchParams.set('at', isoLocal);
-      history.replaceState({}, '', url.toString());
-    });
+      url.searchParams.set('at', iso);
+      history.replaceState({}, '', url);
+    }
+
+    qs('btnStart').addEventListener('click', applyEventFromUI);
 
     qs('btnSave').addEventListener('click', () => {
       const name = (qs('eventName').value || 'Historic Event').trim();
-      const isoLocal = localDateTimeToIsoLocal(qs('eventStart').value) || '2000-01-01T00:00:00';
-      localStorage.setItem(LS_EVENT, JSON.stringify({name, isoLocal}));
+      const iso = isoLocalFromInput(qs('eventStart').value) || '2000-01-01T00:00:00';
+      localStorage.setItem(LS_EVENT, JSON.stringify({name, isoLocal: iso}));
       qs('btnSave').textContent = 'Saved ✓';
-      setTimeout(()=> qs('btnSave').textContent = 'Save as default', 1200);
+      setTimeout(() => qs('btnSave').textContent = 'Save default', 1000);
     });
 
     qs('btnClear').addEventListener('click', () => {
       localStorage.removeItem(LS_EVENT);
       qs('btnClear').textContent = 'Cleared ✓';
-      setTimeout(()=> qs('btnClear').textContent = 'Clear', 1200);
+      setTimeout(() => qs('btnClear').textContent = 'Clear', 1000);
     });
 
-    /* ---------- Style controls ---------- */
-    const LS_STYLE = 'historicFlipStyle';
+    /* ========== Style state ========== */
     const styleEls = {
       bg: qs('bgColor'),
       text: qs('textColor'),
@@ -416,89 +332,50 @@
       cornerRadius: qs('cornerRadius')
     };
 
-    function applyStyle(style){
-      if (style.bg) document.documentElement.style.setProperty('--bg', style.bg);
-      if (style.text) {
-        document.documentElement.style.setProperty('--text', style.text);
-        document.documentElement.style.setProperty('--accent', style.text);
-      }
-      if (style.value) document.documentElement.style.setProperty('--value', style.value);
-      if (style.panelBg) document.documentElement.style.setProperty('--panel-bg', style.panelBg);
-      if (style.leading) document.documentElement.style.setProperty('--leading', style.leading);
-      if (style.font) document.body.style.fontFamily = style.font;
+    function applyStyle(s){
+      if (s.bg)      document.documentElement.style.setProperty('--bg', s.bg);
+      if (s.text){   document.documentElement.style.setProperty('--text', s.text); }
+      if (s.value)   document.documentElement.style.setProperty('--value', s.value);
+      if (s.panelBg) document.documentElement.style.setProperty('--panel-bg', s.panelBg);
+      if (s.leading) document.documentElement.style.setProperty('--leading', s.leading);
+      if (s.font)    document.body.style.fontFamily = s.font;
 
-      // Corner style presets mapped to radius (em)
-      const presetRadius = {
-        square: 0,
-        soft: 0.12 * 16,   // will be converted to px below
-        round: 8,
-        xround: 16
-      };
-      let r = style.cornerRadius != null ? Number(style.cornerRadius) : presetRadius.soft;
-      if (style.cornerStyle && presetRadius[style.cornerStyle] != null && style.cornerRadius == null){
-        r = presetRadius[style.cornerStyle];
-      }
-      // Apply px radius; Flip cards size in em, but CSS allows px too
+      // corner style presets if radius not manually set
+      const preset = { square:0, soft:12, round:18, xround:26 };
+      let r = s.cornerRadius != null ? Number(s.cornerRadius) : preset.soft;
+      if (s.cornerStyle && s.cornerRadius == null) r = preset[s.cornerStyle] ?? r;
       document.documentElement.style.setProperty('--radius', r + 'px');
     }
-
-    function currentStyleFromUI(){
+    function styleFromUI(){
       return {
-        bg: styleEls.bg.value,
-        text: styleEls.text.value,
-        value: styleEls.value.value,
-        font: styleEls.font.value,
-        leading: styleEls.leading.value,
-        panelBg: styleEls.panelBg.value,
-        cornerStyle: styleEls.cornerStyle.value,
-        cornerRadius: styleEls.cornerRadius.value
+        bg:styleEls.bg.value, text:styleEls.text.value, value:styleEls.value.value,
+        font:styleEls.font.value, leading:styleEls.leading.value, panelBg:styleEls.panelBg.value,
+        cornerStyle:styleEls.cornerStyle.value, cornerRadius:styleEls.cornerRadius.value
       };
     }
-
-    function setUIFromStyle(style){
-      if (style.bg) styleEls.bg.value = style.bg;
-      if (style.text) styleEls.text.value = style.text;
-      if (style.value) styleEls.value.value = style.value;
-      if (style.font) styleEls.font.value = style.font;
-      if (style.leading) styleEls.leading.value = style.leading;
-      if (style.panelBg) styleEls.panelBg.value = style.panelBg;
-      if (style.cornerStyle) styleEls.cornerStyle.value = style.cornerStyle;
-      if (style.cornerRadius != null) styleEls.cornerRadius.value = style.cornerRadius;
+    function setUIFromStyle(s){
+      if (s.bg) styleEls.bg.value = s.bg;
+      if (s.text) styleEls.text.value = s.text;
+      if (s.value) styleEls.value.value = s.value;
+      if (s.font) styleEls.font.value = s.font;
+      if (s.leading) styleEls.leading.value = s.leading;
+      if (s.panelBg) styleEls.panelBg.value = s.panelBg;
+      if (s.cornerStyle) styleEls.cornerStyle.value = s.cornerStyle;
+      if (s.cornerRadius != null) styleEls.cornerRadius.value = s.cornerRadius;
     }
-
-    function saveStyle(style){
-      localStorage.setItem(LS_STYLE, JSON.stringify(style));
-    }
-
-    function bootStyleFromStorage(){
+    function saveStyle(s){ localStorage.setItem(LS_STYLE, JSON.stringify(s)); }
+    function bootStyle(){
       const saved = JSON.parse(localStorage.getItem(LS_STYLE) || 'null') || {
-        bg:'#ffffff',
-        text:'#0b3b17',
-        value:'#ff2ba3',
+        bg:'#ffffff', text:'#0b3b17', value:'#5b2a77',
         font:"system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
-        leading:'1.4',
-        panelBg:'#3d2811',
-        cornerStyle:'soft',
-        cornerRadius:'2'
+        leading:'1.4', panelBg:'#ba7630', cornerStyle:'soft', cornerRadius:'12'
       };
       setUIFromStyle(saved);
       applyStyle(saved);
     }
-
-    // Wire up live updates
     Object.values(styleEls).forEach(el => {
-      el.addEventListener('input', () => {
-        const style = currentStyleFromUI();
-        // If user changes style preset, clear radius unless user also drags slider
-        if (el === styleEls.cornerStyle) style.cornerRadius = null;
-        applyStyle(style);
-        saveStyle(style);
-      });
-      el.addEventListener('change', () => {
-        const style = currentStyleFromUI();
-        applyStyle(style);
-        saveStyle(style);
-      });
+      el.addEventListener('input', () => { const s = styleFromUI(); if (el === styleEls.cornerStyle) s.cornerRadius = null; applyStyle(s); saveStyle(s); });
+      el.addEventListener('change', () => { const s = styleFromUI(); applyStyle(s); saveStyle(s); });
     });
   </script>
 </body>
