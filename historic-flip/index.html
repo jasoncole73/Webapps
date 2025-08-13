@@ -3,16 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Historic Flip — Preset Count‑Up</title>
+  <title>Historic Flip — Preset Count-Up</title>
 
   <!-- Flip (Tick) styles -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@pqina/flip/dist/flip.min.css" />
 
   <style>
     :root{
-      --accent:#356307;      /* label + small text color */
-      --panel-bg:#3d2811;    /* flip panel background */
-      --panel-fg:#ff2ba3;    /* flip panel text color */
+      --accent:#356307;
+      --panel-bg:#3d2811;
+      --panel-fg:#ff2ba3;
     }
 
     * { box-sizing: border-box; }
@@ -111,7 +111,8 @@
     .stage{
       display:grid;
       place-items:center;
-      padding: 0 clamp(1rem, 3vw, 2rem) 2rem;
+      padding: 0 clamp(1rem, 3vw, 2rem) 1rem; /* reduced bottom padding */
+      margin-top: -0.5rem; /* pulls closer to controls */
     }
     .title{
       text-align:center;
@@ -127,7 +128,7 @@
       font-family: arial, sans-serif;
     }
 
-    /* === Requested: fixed 7em counter size === */
+    /* Fixed 7em counter size */
     .tick-flip, .tick-text-inline {
       font-size: 7em;
     }
@@ -165,6 +166,11 @@
       line-height: 1.4 !important;
     }
 
+    /* Remove Powered by PQINA */
+    .tick-credits {
+      display: none !important;
+    }
+
     footer{
       text-align:center; color:#94a3b8; font-size:.85rem; padding:0 0 1.2rem;
     }
@@ -172,7 +178,7 @@
 </head>
 <body>
   <header>
-    <h1>Historic Flip — Preset Count‑Up</h1>
+    <h1>Historic Flip — Preset Count-Up</h1>
   </header>
 
   <!-- Controls -->
@@ -193,7 +199,6 @@
           <button id="btnClear" class="danger" title="Clear saved default">Clear</button>
         </div>
       </div>
-      <!-- Share line removed per request -->
     </div>
   </section>
 
@@ -221,14 +226,11 @@
   <script src="https://cdn.jsdelivr.net/npm/@pqina/flip/dist/flip.min.js"></script>
 
   <script>
-    // --- Utilities -----------------------------------------------------------
     function qs(id){ return document.getElementById(id); }
 
-    // Convert <input type="datetime-local"> value (local) to ISO8601 without Z,
-    // so Tick treats it as local time (no timezone suffix).
     function localDateTimeToIsoLocal(dtValue){
-      if(!dtValue) return null;              // "2000-01-01T00:00"
-      return dtValue + ":00";                // keep as local (no timezone)
+      if(!dtValue) return null;
+      return dtValue + ":00";
     }
 
     function setTitle(name){
@@ -242,12 +244,10 @@
       return {event, at};
     }
 
-    // --- Tick setup ----------------------------------------------------------
     let tickInstance = null;
     function handleTickInit(tick) {
       tickInstance = tick;
 
-      // English labels
       const locale = {
         YEAR_PLURAL: 'Years',
         YEAR_SINGULAR: 'Year',
@@ -268,23 +268,19 @@
       };
       for (var key in locale) if (Object.prototype.hasOwnProperty.call(locale, key)) tick.setConstant(key, locale[key]);
 
-      // On first load:
       bootFromQueryOrStorage();
     }
 
     function startCounter(isoLocal){
-      // Stop any previous counter
       if (window._historicFlipCounter && typeof window._historicFlipCounter.stop === 'function') {
         try { window._historicFlipCounter.stop(); } catch(e){}
       }
-      // Create new
       window._historicFlipCounter = Tick.count.up(isoLocal, { format: ['y','M','d','h','m','s'] });
       window._historicFlipCounter.onupdate = function(value){
         if (tickInstance) tickInstance.value = value;
       };
     }
 
-    // --- Boot logic ----------------------------------------------------------
     const LS_KEY = 'historicFlipEvent';
 
     function bootFromQueryOrStorage(){
@@ -300,7 +296,6 @@
           name = saved.name;
           isoLocal = saved.isoLocal;
         } else {
-          // Fallback default: Y2K
           name = 'Y2K — New Millennium';
           isoLocal = '2000-01-01T00:00:00';
         }
@@ -309,20 +304,15 @@
       setTitle(name);
       startCounter(isoLocal);
 
-      // Prefill controls (strip seconds)
       qs('eventName').value = name;
       qs('eventStart').value = (isoLocal || '').slice(0,16);
     }
 
-    // --- UI handlers ---------------------------------------------------------
     qs('btnStart').addEventListener('click', () => {
       const name = qs('eventName').value.trim() || 'Historic Event';
       const isoLocal = localDateTimeToIsoLocal(qs('eventStart').value) || '2000-01-01T00:00:00';
-
       setTitle(name);
       startCounter(isoLocal);
-
-      // Keep query params updated (even though share UI is removed)
       const url = new URL(window.location.href);
       url.searchParams.set('event', name);
       url.searchParams.set('at', isoLocal);
