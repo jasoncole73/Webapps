@@ -107,11 +107,6 @@
     .ghost{ background:#f1f5f9; color:#0f172a; }
     .danger{ background:#ef4444; color:#fff; }
 
-    .share{
-      font-size:.9rem; color:#475569; margin-top:.25rem; overflow:auto;
-    }
-    .share a{ word-break:break-all; }
-
     /* Counter area */
     .stage{
       display:grid;
@@ -132,8 +127,9 @@
       font-family: arial, sans-serif;
     }
 
+    /* === Requested: fixed 7em counter size === */
     .tick-flip, .tick-text-inline {
-      font-size: clamp(1.8rem, 6vw, 3rem);
+      font-size: 7em;
     }
 
     .tick-label {
@@ -197,9 +193,7 @@
           <button id="btnClear" class="danger" title="Clear saved default">Clear</button>
         </div>
       </div>
-      <div class="share" id="shareLine" hidden>
-        Share this link: <a id="shareHref" href="#"></a>
-      </div>
+      <!-- Share line removed per request -->
     </div>
   </section>
 
@@ -233,29 +227,12 @@
     // Convert <input type="datetime-local"> value (local) to ISO8601 without Z,
     // so Tick treats it as local time (no timezone suffix).
     function localDateTimeToIsoLocal(dtValue){
-      // dtValue like "2000-01-01T00:00"
-      if(!dtValue) return null;
-      // keep as-is so Tick interprets it as local (no timezone)
-      return dtValue + ":00";
+      if(!dtValue) return null;              // "2000-01-01T00:00"
+      return dtValue + ":00";                // keep as local (no timezone)
     }
 
     function setTitle(name){
       qs('titleLine').textContent = name ? name : '';
-    }
-
-    function setShareLink(name, isoLocal){
-      try{
-        const url = new URL(window.location.href);
-        url.searchParams.set('event', name || '');
-        url.searchParams.set('at', isoLocal || '');
-        const href = url.toString();
-        const a = qs('shareHref');
-        a.textContent = href;
-        a.href = href;
-        qs('shareLine').hidden = false;
-      }catch(e){
-        qs('shareLine').hidden = true;
-      }
     }
 
     function parseQuery(){
@@ -332,10 +309,9 @@
       setTitle(name);
       startCounter(isoLocal);
 
-      // Prefill controls (strip seconds for UI neatness if present)
+      // Prefill controls (strip seconds)
       qs('eventName').value = name;
       qs('eventStart').value = (isoLocal || '').slice(0,16);
-      setShareLink(name, isoLocal);
     }
 
     // --- UI handlers ---------------------------------------------------------
@@ -345,8 +321,8 @@
 
       setTitle(name);
       startCounter(isoLocal);
-      setShareLink(name, isoLocal);
-      // Update URL without reloading
+
+      // Keep query params updated (even though share UI is removed)
       const url = new URL(window.location.href);
       url.searchParams.set('event', name);
       url.searchParams.set('at', isoLocal);
@@ -357,7 +333,6 @@
       const name = qs('eventName').value.trim() || 'Historic Event';
       const isoLocal = localDateTimeToIsoLocal(qs('eventStart').value) || '2000-01-01T00:00:00';
       localStorage.setItem(LS_KEY, JSON.stringify({name, isoLocal}));
-      setShareLink(name, isoLocal);
       qs('btnSave').textContent = 'Saved ✓';
       setTimeout(()=> qs('btnSave').textContent = 'Save as default', 1200);
     });
