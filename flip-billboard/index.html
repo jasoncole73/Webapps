@@ -3,59 +3,134 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Flip Billboard (Local Only)</title>
+  <title>Flip Billboard — Full Screen</title>
 
-  <!-- LOCAL Flip CSS (bundled in this folder) -->
+  <!-- LOCAL Flip CSS (same folder) -->
   <link rel="stylesheet" href="./flip.min.css" />
 
   <style>
     :root { color-scheme: light only; }
+
+    /* Full-screen, centered stage */
     html, body { height: 100%; margin: 0; }
     body {
+      min-height: 100svh;            /* safe viewport height on mobile */
       display: grid;
       place-items: center;
-      background: #fff;
+      background: #ffffff;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
 
-    .tick { font-size:1rem; white-space:nowrap; font-family: arial, sans-serif; }
-    .tick-flip, .tick-text-inline { font-size:2.8em; }
-    .tick-label { margin-top:1em; font-size:1em; color: rgb(90, 93, 99) !important; }
-    .tick-char { width:1.6em; }
-    .tick-text-inline { display:inline-block; text-align:center; min-width:1em; color: rgb(90, 93, 99) !important; }
-    .tick-text-inline + .tick-text-inline { margin-left:-.325em; }
-    .tick-group { margin:0 .5em; text-align:center; }
-    .tick-flip-panel { color:#fff !important; background: rgb(59, 61, 59) !important; border-radius: .12em !important; }
-    .tick-flip-panel-text-wrapper { line-height:1.45 !important; }
-    .billboard { scale: clamp(.6, 5vw, 1.15); }
+    /* A flexible stage so Flip can “fit” horizontally */
+    .stage {
+      width: min(92vw, 1600px);
+      padding: clamp(8px, 2vw, 24px);
+      display: grid;
+      place-items: center;
+    }
+
+    /* Billboard styling (borrows from PQINA demo) */
+    .tick { font-size: 1rem; white-space: nowrap; font-family: arial, sans-serif; }
+
+    /* Auto-scale the digits/letters with viewport, but cap for readability */
+    .tick-flip, .tick-text-inline {
+      font-size: clamp(2rem, 12vw, 14rem);
+    }
+
+    .tick-char { width: 1.15em; }      /* widen each panel slightly for “billboard” look */
+    .tick-group { margin: 0 .5em; text-align: center; }
+
+    .tick-text-inline {
+      display: inline-block;
+      text-align: center;
+      min-width: 1em;
+      color: rgb(90, 93, 99) !important;
+    }
+    .tick-text-inline + .tick-text-inline { margin-left: -.325em; }
+
+    .tick-label {
+      margin-top: 1em;
+      font-size: 1em;
+      color: rgb(90, 93, 99) !important;
+    }
+
+    .tick-flip-panel {
+      color: #fff !important;
+      background: rgb(59, 61, 59) !important;
+      border-radius: 0.18em !important;   /* a bit rounder for the billboard vibe */
+      box-shadow: 0 8px 30px rgba(0,0,0,.08);
+    }
+    .tick-flip-panel-text-wrapper { line-height: 1.45 !important; }
+
+    /* Optional: subtle entrance */
+    .stage { opacity: 0; transform: translateY(8px); transition: opacity .4s ease, transform .4s ease; }
+    .stage.ready { opacity: 1; transform: translateY(0); }
   </style>
 </head>
 <body>
 
-  <!-- Billboard that flips words -->
-  <div class="tick billboard" data-did-init="handleTickInit">
-    <div data-repeat="true" data-layout="horizontal fit" data-transform="upper -> split -> delay(random, 100, 150)">
-      <span data-view="flip" data-transform="ascii -> arrive -> round -> char(a-zA-Z)" class="tick-char"></span>
+  <div id="stage" class="stage">
+    <!-- BILLBOARD -->
+    <div class="tick billboard" data-did-init="handleTickInit">
+      <div data-repeat="true"
+           data-layout="horizontal fit"
+           data-transform="upper -> split -> delay(random, 120, 180)">
+        <span data-view="flip"
+              data-transform="ascii -> arrive -> round -> char(a-zA-Z)"
+              class="tick-char"></span>
+      </div>
     </div>
   </div>
 
+  <!-- LOCAL Flip JS (same folder) -->
   <script src="./flip.min.js"></script>
+
   <script>
+    // Full-screen, centered, and flipping through words
     function handleTickInit(tick) {
+      // Edit these to your messages. Padding with spaces keeps panel widths steady.
       const rotation = [
-        'TICK     ',
-        'BILLBOARD',
-        'FLIPS    ',
-        'WORDS    ',
-        'AWESOME  '
+        'WELCOME   ',
+        'RANDOLPH  ',
+        'COUNTY    ',
+        'IT        ',
+        'SUPPORT   '
       ];
+
       let index = 0;
       tick.value = rotation[index];
+
+      // Change every 3 seconds
       Tick.helper.interval(function () {
         index = (index + 1) % rotation.length;
         tick.value = rotation[index];
       }, 3000);
+
+      // Fade in the stage once Tick is ready
+      requestAnimationFrame(() => document.getElementById('stage')?.classList.add('ready'));
     }
+
+    // (Optional) make panels slightly wider when very long words appear
+    // Automatically increase per-char width a bit for VERY long strings.
+    // You can remove this block if you prefer fixed widths.
+    (function adaptiveWidth() {
+      const root = document.documentElement;
+      let base = 1.15; // matches .tick-char width
+      function setWidthFor(len) {
+        // If >10 chars, ease width up to keep single-line fit
+        const extra = Math.max(0, len - 10);
+        const factor = Math.min(0.20, extra * 0.02); // cap +0.20em
+        document.querySelectorAll('.tick-char').forEach(el => {
+          el.style.width = (base + factor) + 'em';
+        });
+      }
+      // Observe billboard text length changes
+      const obs = new MutationObserver(() => {
+        const txt = document.querySelector('.tick')?.textContent || '';
+        setWidthFor(txt.trim().length);
+      });
+      obs.observe(document.body, { childList: true, subtree: true, characterData: true });
+    })();
   </script>
 </body>
 </html>
