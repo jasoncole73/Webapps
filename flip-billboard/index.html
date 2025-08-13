@@ -3,16 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Flip Billboard — Controls + URL Overrides</title>
+  <title>Flip Billboard — Controls + W Fix</title>
 
   <!-- LOCAL Flip CSS (same folder) -->
-  <link rel="stylesheet" href="./flip.min.css?v=4" />
+  <link rel="stylesheet" href="./flip.min.css?v=5" />
 
   <style>
     :root{
-      --billboard-size: 9em;   /* same as your flip clock */
-      --panel-radius: 0.18em;  /* rounded corners (adjustable) */
-      --stage-shift: -10vh;    /* negative raises the billboard */
+      --billboard-size: 9em;
+      --panel-radius: 0.18em;
+      --stage-shift: -10vh;
       color-scheme: light only;
     }
 
@@ -25,17 +25,17 @@
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
 
-    /* Controls bar — bring to front and ensure it captures clicks */
+    /* Controls */
     .controls {
       position: sticky; top: 0;
-      z-index: 1000;               /* <— key line */
+      z-index: 1000;
       display: grid;
       grid-template-columns: 1fr auto;
       gap: 10px 18px;
       align-items: center;
       padding: 10px 12px;
       border-bottom: 1px solid #eee;
-      background: #fafafa;         /* opaque so it visually sits above stage */
+      background: #fafafa;
       font: 13px/1.35 ui-sans-serif, system-ui, -apple-system, Arial, sans-serif;
       color: #333;
     }
@@ -47,11 +47,11 @@
     .actions { display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
     .controls small { opacity: .65; }
 
-    /* Stage / billboard — keep beneath controls and ignore pointer events */
+    /* Stage */
     .stage {
       position: relative;
-      z-index: 0;                  /* <— sits under the controls */
-      pointer-events: none;        /* <— stage won’t grab clicks */
+      z-index: 0;
+      pointer-events: none;
       display: grid;
       place-items: center;
       padding: 2vh 3vw;
@@ -61,7 +61,6 @@
 
     .tick { font-size: 1rem; white-space: nowrap; font-family: arial, sans-serif; }
     .tick-flip, .tick-text-inline { font-size: var(--billboard-size); }
-
     .tick-char { width: 1.15em; }
     .tick-group { margin: 0 .5em; text-align: center; }
 
@@ -87,11 +86,21 @@
     }
     .tick-flip-panel-text-wrapper { line-height: 1.45 !important; }
 
+    /* Buttons */
     button {
       appearance: none; border: 1px solid #ddd; background: #fff;
       padding: 6px 10px; border-radius: 8px; cursor: pointer;
     }
     button:hover { background: #f4f4f4; }
+
+    /* === FIX: Center W in the first tile === */
+    .tick .tick-char:first-child {
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      padding: 0 0.07em; /* slight inset to center wide W */
+      box-sizing: border-box;
+    }
   </style>
 </head>
 <body>
@@ -146,25 +155,13 @@
     </div>
   </div>
 
-  <!-- LOCAL Flip JS (same folder) -->
-  <script src="./flip.min.js?v=4"></script>
+  <!-- LOCAL Flip JS -->
+  <script src="./flip.min.js?v=5"></script>
 
   <script>
-    // ---- helpers ----
     const $ = (id) => document.getElementById(id);
     const css = document.documentElement.style;
-    const LS_KEY = 'flip-billboard-settings-v4';
-
-    function getOverridesFromURL() {
-      const p = new URLSearchParams(location.search);
-      const o = {};
-      if (p.has('size'))   o.sizeEm = parseFloat(p.get('size'));
-      if (p.has('radius')) o.radiusEm = parseFloat(p.get('radius'));
-      if (p.has('pos'))    o.posVh = parseFloat(p.get('pos'));
-      if (p.has('speed'))  o.speedMs = Math.max(300, parseInt(p.get('speed'), 10));
-      if (p.has('words'))  o.words = p.get('words').split('|').map(s => s.trim()).filter(Boolean);
-      return o;
-    }
+    const LS_KEY = 'flip-billboard-settings-v5';
 
     function padWords(words) {
       const clean = words.map(w => (w || '').toString().trim().toUpperCase());
@@ -175,18 +172,13 @@
     function loadSettings() {
       try {
         const s = JSON.parse(localStorage.getItem(LS_KEY));
-        if (s && Array.isArray(s.words) &&
-            typeof s.sizeEm === 'number' &&
-            typeof s.radiusEm === 'number' &&
-            typeof s.posVh === 'number' &&
-            typeof s.speedMs === 'number') return s;
+        if (s && Array.isArray(s.words)) return s;
       } catch {}
       return {
         words: ['WELCOME','RANDOLPH','COUNTY','IT','SUPPORT'],
         sizeEm: 9, radiusEm: 0.18, posVh: -10, speedMs: 3000
       };
     }
-
     function saveSettings(obj) { localStorage.setItem(LS_KEY, JSON.stringify(obj)); }
 
     function applyUI(s) {
@@ -200,7 +192,6 @@
       css.setProperty('--stage-shift', s.posVh + 'vh');
     }
 
-    // ---- billboard state ----
     let ROTATION = [];
     let tickRef = null;
     let timerCancel = null;
@@ -227,17 +218,12 @@
     }
     window.handleTickInit = handleTickInit;
 
-    // ---- init ----
-    const current = (() => {
-      const s = Object.assign(loadSettings(), getOverridesFromURL());
-      return s;
-    })();
+    const current = loadSettings();
 
     (function init(){
       setRotation(current.words);
       applyUI(current);
 
-      // size
       $('sizeEm').addEventListener('input', e => {
         const v = +e.target.value; $('sizeRange').value = v;
         css.setProperty('--billboard-size', v + 'em'); current.sizeEm = v; saveSettings(current);
@@ -247,7 +233,6 @@
         css.setProperty('--billboard-size', v + 'em'); current.sizeEm = v; saveSettings(current);
       });
 
-      // radius
       $('radiusEm').addEventListener('input', e => {
         const v = +e.target.value; $('radiusRange').value = v;
         css.setProperty('--panel-radius', v + 'em'); current.radiusEm = v; saveSettings(current);
@@ -257,7 +242,6 @@
         css.setProperty('--panel-radius', v + 'em'); current.radiusEm = v; saveSettings(current);
       });
 
-      // position
       $('posVh').addEventListener('input', e => {
         const v = +e.target.value; $('posRange').value = v;
         css.setProperty('--stage-shift', v + 'vh'); current.posVh = v; saveSettings(current);
@@ -267,24 +251,21 @@
         css.setProperty('--stage-shift', v + 'vh'); current.posVh = v; saveSettings(current);
       });
 
-      // speed
       $('speedMs').addEventListener('input', e => {
         const v = Math.max(300, +e.target.value || 3000);
         current.speedMs = v; saveSettings(current);
         if (tickRef) startTicker(current.speedMs);
       });
 
-      // words
       $('applyWords').addEventListener('click', () => {
         const raw = $('words').value.split(',').map(s => s.trim()).filter(Boolean);
         if (!raw.length) return;
         current.words = raw; saveSettings(current); setRotation(current.words);
       });
 
-      // reset
       $('reset').addEventListener('click', () => {
         localStorage.removeItem(LS_KEY);
-        location.href = location.pathname; // reload without query params
+        location.href = location.pathname;
       });
     })();
   </script>
