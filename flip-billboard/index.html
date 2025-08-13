@@ -3,41 +3,57 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Flip Billboard — Full Screen</title>
+  <title>Flip Billboard — 9em with Controls</title>
 
   <!-- LOCAL Flip CSS (same folder) -->
   <link rel="stylesheet" href="./flip.min.css" />
 
   <style>
-    :root { color-scheme: light only; }
+    :root {
+      /* Controls (defaults) */
+      --billboard-size: 9em;     /* same as your flip clock */
+      --panel-radius: 0.18em;    /* rounded corners (adjustable) */
+      color-scheme: light only;
+    }
 
-    /* Full-screen, centered stage */
     html, body { height: 100%; margin: 0; }
     body {
-      min-height: 100svh;            /* safe viewport height on mobile */
+      min-height: 100svh;
       display: grid;
-      place-items: center;
-      background: #ffffff;
+      grid-template-rows: auto 1fr;
+      background: #fff;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
 
-    /* A flexible stage so Flip can “fit” horizontally */
+    /* Tiny control bar */
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-bottom: 1px solid #eee;
+      font: 13px/1.3 ui-sans-serif, system-ui, -apple-system, Arial, sans-serif;
+      color: #333;
+      background: #fafafa;
+    }
+    .controls label { white-space: nowrap; }
+    .controls input[type="number"] { width: 6ch; }
+    .controls .spacer { flex: 1; opacity: .65; font-size: 12px; }
+
+    /* Stage */
     .stage {
-      width: min(92vw, 1600px);
-      padding: clamp(8px, 2vw, 24px);
       display: grid;
       place-items: center;
+      padding: 2vh 3vw;
     }
 
-    /* Billboard styling (borrows from PQINA demo) */
+    /* Billboard styles */
     .tick { font-size: 1rem; white-space: nowrap; font-family: arial, sans-serif; }
 
-    /* Auto-scale the digits/letters with viewport, but cap for readability */
-    .tick-flip, .tick-text-inline {
-      font-size: clamp(2rem, 12vw, 14rem);
-    }
+    /* SIZE = 9em by default; user can change via control */
+    .tick-flip, .tick-text-inline { font-size: var(--billboard-size); }
 
-    .tick-char { width: 1.15em; }      /* widen each panel slightly for “billboard” look */
+    .tick-char { width: 1.15em; }  /* per-character width */
     .tick-group { margin: 0 .5em; text-align: center; }
 
     .tick-text-inline {
@@ -54,22 +70,33 @@
       color: rgb(90, 93, 99) !important;
     }
 
+    /* Adjustable rounded corners */
     .tick-flip-panel {
       color: #fff !important;
       background: rgb(59, 61, 59) !important;
-      border-radius: 0.18em !important;   /* a bit rounder for the billboard vibe */
+      border-radius: var(--panel-radius) !important;
       box-shadow: 0 8px 30px rgba(0,0,0,.08);
     }
     .tick-flip-panel-text-wrapper { line-height: 1.45 !important; }
-
-    /* Optional: subtle entrance */
-    .stage { opacity: 0; transform: translateY(8px); transition: opacity .4s ease, transform .4s ease; }
-    .stage.ready { opacity: 1; transform: translateY(0); }
   </style>
 </head>
 <body>
 
-  <div id="stage" class="stage">
+  <!-- Controls -->
+  <form class="controls" id="controls" onsubmit="return false;">
+    <label>Size (em):
+      <input id="sizeEm" type="number" step="0.1" min="2" max="20" value="9">
+    </label>
+    <input id="sizeRange" type="range" step="0.1" min="2" max="20" value="9" />
+    <label>Corner radius (em):
+      <input id="radiusEm" type="number" step="0.01" min="0" max="0.6" value="0.18">
+    </label>
+    <input id="radiusRange" type="range" step="0.01" min="0" max="0.6" value="0.18" />
+    <span class="spacer">Changes are saved automatically</span>
+  </form>
+
+  <!-- Stage -->
+  <div class="stage">
     <!-- BILLBOARD -->
     <div class="tick billboard" data-did-init="handleTickInit">
       <div data-repeat="true"
@@ -86,50 +113,74 @@
   <script src="./flip.min.js"></script>
 
   <script>
-    // Full-screen, centered, and flipping through words
+    // Billboard words (edit as you like; pad with spaces to keep widths even)
+    const WORDS = ['WELCOME  ','RANDOLPH ','COUNTY   ','IT       ','SUPPORT  '];
+
     function handleTickInit(tick) {
-      // Edit these to your messages. Padding with spaces keeps panel widths steady.
-      const rotation = [
-        'WELCOME   ',
-        'RANDOLPH  ',
-        'COUNTY    ',
-        'IT        ',
-        'SUPPORT   '
-      ];
-
-      let index = 0;
-      tick.value = rotation[index];
-
-      // Change every 3 seconds
+      let i = 0;
+      tick.value = WORDS[i];
       Tick.helper.interval(function () {
-        index = (index + 1) % rotation.length;
-        tick.value = rotation[index];
+        i = (i + 1) % WORDS.length;
+        tick.value = WORDS[i];
       }, 3000);
-
-      // Fade in the stage once Tick is ready
-      requestAnimationFrame(() => document.getElementById('stage')?.classList.add('ready'));
     }
 
-    // (Optional) make panels slightly wider when very long words appear
-    // Automatically increase per-char width a bit for VERY long strings.
-    // You can remove this block if you prefer fixed widths.
-    (function adaptiveWidth() {
-      const root = document.documentElement;
-      let base = 1.15; // matches .tick-char width
-      function setWidthFor(len) {
-        // If >10 chars, ease width up to keep single-line fit
-        const extra = Math.max(0, len - 10);
-        const factor = Math.min(0.20, extra * 0.02); // cap +0.20em
-        document.querySelectorAll('.tick-char').forEach(el => {
-          el.style.width = (base + factor) + 'em';
+    // === Controls: size & corner radius (persist in localStorage) ===
+    const lsKey = 'flip-billboard-settings';
+    const $ = (id) => document.getElementById(id);
+    const css = document.documentElement.style;
+
+    function apply(sizeEm, radiusEm) {
+      css.setProperty('--billboard-size', sizeEm + 'em');
+      css.setProperty('--panel-radius', radiusEm + 'em');
+      $('sizeEm').value = sizeEm;
+      $('sizeRange').value = sizeEm;
+      $('radiusEm').value = radiusEm;
+      $('radiusRange').value = radiusEm;
+    }
+
+    function save(sizeEm, radiusEm) {
+      localStorage.setItem(lsKey, JSON.stringify({ sizeEm, radiusEm }));
+    }
+
+    function load() {
+      try {
+        const v = JSON.parse(localStorage.getItem(lsKey));
+        if (v && typeof v.sizeEm === 'number' && typeof v.radiusEm === 'number') {
+          return v;
+        }
+      } catch {}
+      return { sizeEm: 9, radiusEm: 0.18 };
+    }
+
+    // Initialize from saved values
+    (function initControls(){
+      const { sizeEm, radiusEm } = load();
+      apply(sizeEm, radiusEm);
+
+      // Wire inputs (number + range stay in sync)
+      const handlers = [
+        ['sizeEm', v => apply(+v, +$('radiusEm').value)],
+        ['sizeRange', v => apply(+v, +$('radiusEm').value)],
+        ['radiusEm', v => apply(+$('sizeEm').value, +v)],
+        ['radiusRange', v => apply(+$('sizeEm').value, +v)],
+      ];
+      handlers.forEach(([id, fn]) => {
+        $(id).addEventListener('input', e => {
+          const s = +$('sizeEm').value;
+          const r = +$('radiusEm').value;
+          if (id === 'sizeRange' || id === 'sizeEm') {
+            $('sizeEm').value = e.target.value;
+            $('sizeRange').value = e.target.value;
+            fn(e.target.value);
+          } else {
+            $('radiusEm').value = e.target.value;
+            $('radiusRange').value = e.target.value;
+            fn(e.target.value);
+          }
+          save(+$('sizeEm').value, +$('radiusEm').value);
         });
-      }
-      // Observe billboard text length changes
-      const obs = new MutationObserver(() => {
-        const txt = document.querySelector('.tick')?.textContent || '';
-        setWidthFor(txt.trim().length);
       });
-      obs.observe(document.body, { childList: true, subtree: true, characterData: true });
     })();
   </script>
 </body>
