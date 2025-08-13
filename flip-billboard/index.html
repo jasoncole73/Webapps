@@ -3,10 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Flip Billboard (Local Only)</title>
-
-  <!-- LOCAL Flip CSS (edit path if needed) -->
-  <link rel="stylesheet" href="../flip-master/dist/flip.min.css" />
+  <title>Flip Billboard (Local Only, Auto‑detect paths)</title>
 
   <style>
     :root { color-scheme: light only; }
@@ -29,8 +26,14 @@
     .tick-flip-panel { color: #fff !important; background: rgb(59, 61, 59) !important; border-radius: 0.12em !important; }
     .tick-flip-panel-text-wrapper { line-height: 1.45 !important; }
 
-    /* Responsive scaling */
     .billboard { scale: clamp(.6, 5vw, 1.2); }
+
+    /* Helpful visible error if nothing loads */
+    #status {
+      position: fixed; bottom: 10px; left: 10px; right: 10px;
+      font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      color: #555; opacity: .8;
+    }
   </style>
 </head>
 <body>
@@ -46,29 +49,92 @@
     </div>
   </div>
 
-  <!-- LOCAL Flip JS (edit path if needed) -->
-  <script src="../flip-master/dist/flip.min.js"></script>
+  <div id="status">Loading local Flip assets…</div>
 
   <script>
-    function handleTickInit(tick) {
-      // Words to rotate (pad with spaces for equal width)
-      const rotation = [
-        'TICK     ',
-        'BILLBOARD',
-        'FLIPS    ',
-        'WORDS    ',
-        'AWESOME  '
+    (function () {
+      // Candidate local paths (NO CDN)
+      const candidates = [
+        '../dist',
+        '../flip-master/dist',
+        '../flip-clock-responsive-works/dist',
+        '../../dist'
       ];
 
-      let index = 0;
-      tick.value = rotation[index];
+      const statusEl = document.getElementById('status');
 
-      // Change every 3 seconds
-      Tick.helper.interval(function () {
-        index = (index + 1) % rotation.length;
-        tick.value = rotation[index];
-      }, 3000);
-    }
+      function log(msg) {
+        if (statusEl) statusEl.textContent = msg;
+        console.log(msg);
+      }
+
+      function addCSS(href) {
+        return new Promise((resolve, reject) => {
+          const l = document.createElement('link');
+          l.rel = 'stylesheet';
+          l.href = href;
+          l.onload = () => resolve();
+          l.onerror = () => reject(new Error('CSS failed: ' + href));
+          document.head.appendChild(l);
+        });
+      }
+
+      function addScript(src) {
+        return new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = src;
+          s.onload = () => resolve();
+          s.onerror = () => reject(new Error('JS failed: ' + src));
+          document.body.appendChild(s);
+        });
+      }
+
+      async function tryPath(base) {
+        log('Trying ' + base + ' …');
+        await addCSS(base + '/flip.min.css');
+        await addScript(base + '/flip.min.js');
+        if (!window.Tick) throw new Error('Tick not defined after loading from ' + base);
+        log('Loaded from ' + base);
+      }
+
+      (async function loadFlip() {
+        let lastErr = null;
+        for (const base of candidates) {
+          try {
+            await tryPath(base);
+            initBillboard();
+            return;
+          } catch (e) {
+            console.warn(e);
+            lastErr = e;
+          }
+        }
+        log('Could not load local Flip assets. Check paths and that flip.min.js / flip.min.css exist.');
+      })();
+
+      function initBillboard() {
+        if (statusEl) statusEl.remove();
+
+        function handleTickInit(tick) {
+          const rotation = [
+            'TICK     ',
+            'BILLBOARD',
+            'FLIPS    ',
+            'WORDS    ',
+            'AWESOME  '
+          ];
+          let index = 0;
+          tick.value = rotation[index];
+          Tick.helper.interval(function () {
+            index = (index + 1) % rotation.length;
+            tick.value = rotation[index];
+          }, 3000);
+        }
+
+        // Expose for data-did-init
+        window.handleTickInit = handleTickInit;
+      }
+    })();
   </script>
 </body>
 </html>
