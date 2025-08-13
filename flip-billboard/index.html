@@ -3,16 +3,17 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Flip Billboard — 9em with Controls</title>
+  <title>Flip Billboard — 9em, Position & Custom Words</title>
 
   <!-- LOCAL Flip CSS (same folder) -->
   <link rel="stylesheet" href="./flip.min.css" />
 
   <style>
-    :root {
-      /* Controls (defaults) */
+    :root{
+      /* defaults */
       --billboard-size: 9em;     /* same as your flip clock */
-      --panel-radius: 0.18em;    /* rounded corners (adjustable) */
+      --panel-radius: 0.18em;    /* rounded corners */
+      --stage-shift: -10vh;      /* negative raises it up */
       color-scheme: light only;
     }
 
@@ -25,82 +26,102 @@
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
 
-    /* Tiny control bar */
+    /* Controls bar */
     .controls {
-      display: flex;
+      display: grid;
+      grid-template-columns: auto auto 1fr;
+      gap: 12px 18px;
       align-items: center;
-      gap: 12px;
       padding: 10px 12px;
       border-bottom: 1px solid #eee;
-      font: 13px/1.3 ui-sans-serif, system-ui, -apple-system, Arial, sans-serif;
-      color: #333;
       background: #fafafa;
+      font: 13px/1.35 ui-sans-serif, system-ui, -apple-system, Arial, sans-serif;
+      color: #333;
+    }
+    .row {
+      display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
     }
     .controls label { white-space: nowrap; }
     .controls input[type="number"] { width: 6ch; }
-    .controls .spacer { flex: 1; opacity: .65; font-size: 12px; }
+    .controls input[type="text"] { width: min(800px, 60vw); }
+    .controls small { opacity: .65; }
 
-    /* Stage */
+    /* Stage / billboard */
     .stage {
       display: grid;
       place-items: center;
       padding: 2vh 3vw;
+      transform: translateY(var(--stage-shift));
+      transition: transform .25s ease;
     }
 
-    /* Billboard styles */
     .tick { font-size: 1rem; white-space: nowrap; font-family: arial, sans-serif; }
-
-    /* SIZE = 9em by default; user can change via control */
     .tick-flip, .tick-text-inline { font-size: var(--billboard-size); }
 
-    .tick-char { width: 1.15em; }  /* per-character width */
+    .tick-char { width: 1.15em; }
     .tick-group { margin: 0 .5em; text-align: center; }
 
     .tick-text-inline {
       display: inline-block;
       text-align: center;
       min-width: 1em;
-      color: rgb(90, 93, 99) !important;
+      color: rgb(90,93,99) !important;
     }
     .tick-text-inline + .tick-text-inline { margin-left: -.325em; }
 
     .tick-label {
       margin-top: 1em;
       font-size: 1em;
-      color: rgb(90, 93, 99) !important;
+      color: rgb(90,93,99) !important;
     }
 
-    /* Adjustable rounded corners */
     .tick-flip-panel {
       color: #fff !important;
-      background: rgb(59, 61, 59) !important;
+      background: rgb(59,61,59) !important;
       border-radius: var(--panel-radius) !important;
       box-shadow: 0 8px 30px rgba(0,0,0,.08);
     }
     .tick-flip-panel-text-wrapper { line-height: 1.45 !important; }
+
+    button {
+      appearance: none; border: 1px solid #ddd; background: #fff;
+      padding: 6px 10px; border-radius: 8px; cursor: pointer;
+    }
+    button:hover { background: #f4f4f4; }
   </style>
 </head>
 <body>
 
   <!-- Controls -->
   <form class="controls" id="controls" onsubmit="return false;">
-    <label>Size (em):
-      <input id="sizeEm" type="number" step="0.1" min="2" max="20" value="9">
-    </label>
-    <input id="sizeRange" type="range" step="0.1" min="2" max="20" value="9" />
-    <label>Corner radius (em):
-      <input id="radiusEm" type="number" step="0.01" min="0" max="0.6" value="0.18">
-    </label>
-    <input id="radiusRange" type="range" step="0.01" min="0" max="0.6" value="0.18" />
-    <span class="spacer">Changes are saved automatically</span>
+    <div class="row">
+      <label>Size (em):
+        <input id="sizeEm" type="number" step="0.1" min="2" max="20" value="9">
+      </label>
+      <input id="sizeRange" type="range" step="0.1" min="2" max="20" value="9" />
+      <label>Corner radius (em):
+        <input id="radiusEm" type="number" step="0.01" min="0" max="0.6" value="0.18">
+      </label>
+      <input id="radiusRange" type="range" step="0.01" min="0" max="0.6" value="0.18" />
+      <label>Position (vh):
+        <input id="posVh" type="number" step="1" min="-60" max="60" value="-10">
+      </label>
+      <input id="posRange" type="range" step="1" min="-60" max="60" value="-10" />
+    </div>
+
+    <div class="row">
+      <label for="words">Words (comma-separated):</label>
+      <input id="words" type="text"
+             placeholder="WELCOME, RANDOLPH, COUNTY, IT, SUPPORT" />
+      <button id="applyWords">Apply</button>
+      <small>(We auto‑pad to keep the flip width steady.)</small>
+    </div>
   </form>
 
   <!-- Stage -->
   <div class="stage">
-    <!-- BILLBOARD -->
-    <div class="tick billboard" data-did-init="handleTickInit">
-      <div data-repeat="true"
-           data-layout="horizontal fit"
+    <div class="tick" data-did-init="handleTickInit">
+      <div data-repeat="true" data-layout="horizontal fit"
            data-transform="upper -> split -> delay(random, 120, 180)">
         <span data-view="flip"
               data-transform="ascii -> arrive -> round -> char(a-zA-Z)"
@@ -113,73 +134,123 @@
   <script src="./flip.min.js"></script>
 
   <script>
-    // Billboard words (edit as you like; pad with spaces to keep widths even)
-    const WORDS = ['WELCOME  ','RANDOLPH ','COUNTY   ','IT       ','SUPPORT  '];
-
-    function handleTickInit(tick) {
-      let i = 0;
-      tick.value = WORDS[i];
-      Tick.helper.interval(function () {
-        i = (i + 1) % WORDS.length;
-        tick.value = WORDS[i];
-      }, 3000);
-    }
-
-    // === Controls: size & corner radius (persist in localStorage) ===
-    const lsKey = 'flip-billboard-settings';
+    // ===== Utilities =====
     const $ = (id) => document.getElementById(id);
     const css = document.documentElement.style;
+    const LS_KEY = 'flip-billboard-settings-v2';
 
-    function apply(sizeEm, radiusEm) {
-      css.setProperty('--billboard-size', sizeEm + 'em');
-      css.setProperty('--panel-radius', radiusEm + 'em');
-      $('sizeEm').value = sizeEm;
-      $('sizeRange').value = sizeEm;
-      $('radiusEm').value = radiusEm;
-      $('radiusRange').value = radiusEm;
+    function padWords(words) {
+      // Uppercase and right-pad with spaces to the longest length
+      const clean = words.map(w => (w || '').toString().trim().toUpperCase());
+      const max = clean.reduce((m, w) => Math.max(m, w.length), 0);
+      return clean.map(w => w.padEnd(max, ' '));
     }
 
-    function save(sizeEm, radiusEm) {
-      localStorage.setItem(lsKey, JSON.stringify({ sizeEm, radiusEm }));
-    }
-
-    function load() {
+    function loadSettings() {
       try {
-        const v = JSON.parse(localStorage.getItem(lsKey));
-        if (v && typeof v.sizeEm === 'number' && typeof v.radiusEm === 'number') {
-          return v;
-        }
+        const s = JSON.parse(localStorage.getItem(LS_KEY));
+        if (s && Array.isArray(s.words) &&
+            typeof s.sizeEm === 'number' &&
+            typeof s.radiusEm === 'number' &&
+            typeof s.posVh === 'number') return s;
       } catch {}
-      return { sizeEm: 9, radiusEm: 0.18 };
+      return {
+        words: ['WELCOME','RANDOLPH','COUNTY','IT','SUPPORT'],
+        sizeEm: 9,
+        radiusEm: 0.18,
+        posVh: -10
+      };
     }
 
-    // Initialize from saved values
-    (function initControls(){
-      const { sizeEm, radiusEm } = load();
-      apply(sizeEm, radiusEm);
+    function saveSettings(obj) {
+      localStorage.setItem(LS_KEY, JSON.stringify(obj));
+    }
 
-      // Wire inputs (number + range stay in sync)
-      const handlers = [
-        ['sizeEm', v => apply(+v, +$('radiusEm').value)],
-        ['sizeRange', v => apply(+v, +$('radiusEm').value)],
-        ['radiusEm', v => apply(+$('sizeEm').value, +v)],
-        ['radiusRange', v => apply(+$('sizeEm').value, +v)],
-      ];
-      handlers.forEach(([id, fn]) => {
-        $(id).addEventListener('input', e => {
-          const s = +$('sizeEm').value;
-          const r = +$('radiusEm').value;
-          if (id === 'sizeRange' || id === 'sizeEm') {
-            $('sizeEm').value = e.target.value;
-            $('sizeRange').value = e.target.value;
-            fn(e.target.value);
-          } else {
-            $('radiusEm').value = e.target.value;
-            $('radiusRange').value = e.target.value;
-            fn(e.target.value);
-          }
-          save(+$('sizeEm').value, +$('radiusEm').value);
-        });
+    function applyUI(s) {
+      $('sizeEm').value = s.sizeEm;
+      $('sizeRange').value = s.sizeEm;
+      $('radiusEm').value = s.radiusEm;
+      $('radiusRange').value = s.radiusEm;
+      $('posVh').value = s.posVh;
+      $('posRange').value = s.posVh;
+      $('words').value = s.words.join(', ');
+      css.setProperty('--billboard-size', s.sizeEm + 'em');
+      css.setProperty('--panel-radius', s.radiusEm + 'em');
+      css.setProperty('--stage-shift', s.posVh + 'vh');
+    }
+
+    // ===== Billboard logic =====
+    let ROTATION = [];     // padded words
+    let tickRef = null;    // store the current tick (so we can update if words change)
+
+    function setRotation(words) {
+      ROTATION = padWords(words);
+      if (tickRef) tickRef.value = ROTATION[0] || '';
+    }
+
+    function handleTickInit(tick) {
+      tickRef = tick;
+      let i = 0;
+      tick.value = ROTATION[0] || '';
+      Tick.helper.interval(function () {
+        if (!ROTATION.length) return;
+        i = (i + 1) % ROTATION.length;
+        tick.value = ROTATION[i];
+      }, 3000);
+    }
+    window.handleTickInit = handleTickInit;
+
+    // ===== Init =====
+    (function init(){
+      const s = loadSettings();
+      setRotation(s.words);
+      applyUI(s);
+
+      // Wire controls
+      const syncSize = v => {
+        css.setProperty('--billboard-size', v + 'em');
+        s.sizeEm = +v; saveSettings(s);
+      };
+      const syncRadius = v => {
+        css.setProperty('--panel-radius', v + 'em');
+        s.radiusEm = +v; saveSettings(s);
+      };
+      const syncPos = v => {
+        css.setProperty('--stage-shift', v + 'vh');
+        s.posVh = +v; saveSettings(s);
+      };
+
+      // size
+      $('sizeEm').addEventListener('input', e => {
+        $('sizeRange').value = e.target.value; syncSize(e.target.value);
+      });
+      $('sizeRange').addEventListener('input', e => {
+        $('sizeEm').value = e.target.value; syncSize(e.target.value);
+      });
+
+      // radius
+      $('radiusEm').addEventListener('input', e => {
+        $('radiusRange').value = e.target.value; syncRadius(e.target.value);
+      });
+      $('radiusRange').addEventListener('input', e => {
+        $('radiusEm').value = e.target.value; syncRadius(e.target.value);
+      });
+
+      // position
+      $('posVh').addEventListener('input', e => {
+        $('posRange').value = e.target.value; syncPos(e.target.value);
+      });
+      $('posRange').addEventListener('input', e => {
+        $('posVh').value = e.target.value; syncPos(e.target.value);
+      });
+
+      // words
+      $('applyWords').addEventListener('click', () => {
+        const raw = $('words').value.split(',').map(s => s.trim()).filter(Boolean);
+        if (!raw.length) return;
+        s.words = raw;
+        saveSettings(s);
+        setRotation(s.words);
       });
     })();
   </script>
