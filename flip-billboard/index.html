@@ -1,122 +1,74 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flip Clock</title>
-  <link rel="stylesheet" href="dist/flip.min.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Flip Billboard (Local Only)</title>
+
+  <!-- LOCAL Flip CSS (edit path if needed) -->
+  <link rel="stylesheet" href="../flip-master/dist/flip.min.css" />
+
   <style>
+    :root { color-scheme: light only; }
+    html, body { height: 100%; margin: 0; }
     body {
-      background: #f0f0f0;
-      font-family: sans-serif;
-      margin: 0;
-      padding: 2rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      display: grid;
+      place-items: center;
+      background: #fff;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
 
-    .tick {
-      font-size: clamp(4rem, 10vw, 9rem); /* Responsive scale */
-      margin-top: 3rem;
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 2rem;
-    }
+    /* Billboard styling */
+    .tick { font-size: 1rem; white-space: nowrap; font-family: arial, sans-serif; }
+    .tick-flip, .tick-text-inline { font-size: 2.5em; }
+    .tick-label { margin-top: 1em; font-size: 1em; color: rgb(90, 93, 99) !important; }
+    .tick-char { width: 1.5em; }
+    .tick-text-inline { display: inline-block; text-align: center; min-width: 1em; color: rgb(90, 93, 99) !important; }
+    .tick-text-inline + .tick-text-inline { margin-left: -.325em; }
+    .tick-group { margin: 0 .5em; text-align: center; }
+    .tick-flip-panel { color: #fff !important; background: rgb(59, 61, 59) !important; border-radius: 0.12em !important; }
+    .tick-flip-panel-text-wrapper { line-height: 1.45 !important; }
 
-    .tick .tick-flip-panel {
-      background-color: var(--flip-color, #333);
-      border-radius: var(--flip-radius, 0.3rem);
-    }
-
-    .controls {
-      display: flex;
-      gap: 1.5rem;
-      flex-wrap: wrap;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .controls label {
-      font-size: 1rem;
-    }
-
-    .tick-group {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .tick-label {
-      font-size: 1.2rem;
-      font-weight: bold;
-      color: #222;
-    }
-
-    [style*="PQINA"], .tick-credits {
-      display: none !important;
-    }
+    /* Responsive scaling */
+    .billboard { scale: clamp(.6, 5vw, 1.2); }
   </style>
 </head>
 <body>
-  <div class="controls">
-    <label>
-      Tile Color:
-      <input type="color" id="colorPicker" value="#333333">
-    </label>
-    <label>
-      Corner Radius:
-      <input type="range" id="radiusSlider" min="0" max="1" step="0.05" value="0.3">
-    </label>
-  </div>
 
-  <div class="tick" data-did-init="handleTickInit">
-    <div class="tick-group">
-      <div data-key="hours" data-transform="pad(00) -> split -> delay" data-repeat="true">
-        <span data-view="flip"></span>
-      </div>
-      <span class="tick-label">HOURS</span>
-    </div>
-    <div class="tick-group">
-      <div data-key="minutes" data-transform="pad(00) -> split -> delay" data-repeat="true">
-        <span data-view="flip"></span>
-      </div>
-      <span class="tick-label">MINUTES</span>
-    </div>
-    <div class="tick-group">
-      <div data-key="seconds" data-transform="pad(00) -> split -> delay" data-repeat="true">
-        <span data-view="flip"></span>
-      </div>
-      <span class="tick-label">SECONDS</span>
+  <!-- BILLBOARD -->
+  <div class="tick billboard" data-did-init="handleTickInit">
+    <div data-repeat="true"
+         data-layout="horizontal fit"
+         data-transform="upper -> split -> delay(random, 100, 150)">
+      <span data-view="flip"
+            data-transform="ascii -> arrive -> round -> char(a-zA-Z)"
+            class="tick-char"></span>
     </div>
   </div>
 
-  <script src="dist/flip.min.js"></script>
+  <!-- LOCAL Flip JS (edit path if needed) -->
+  <script src="../flip-master/dist/flip.min.js"></script>
+
   <script>
     function handleTickInit(tick) {
+      // Words to rotate (pad with spaces for equal width)
+      const rotation = [
+        'TICK     ',
+        'BILLBOARD',
+        'FLIPS    ',
+        'WORDS    ',
+        'AWESOME  '
+      ];
+
+      let index = 0;
+      tick.value = rotation[index];
+
+      // Change every 3 seconds
       Tick.helper.interval(function () {
-        const now = new Date();
-        tick.value = {
-          hours: now.getHours(),
-          minutes: now.getMinutes(),
-          seconds: now.getSeconds()
-        };
-      }, 1000);
+        index = (index + 1) % rotation.length;
+        tick.value = rotation[index];
+      }, 3000);
     }
-
-    const colorPicker = document.getElementById('colorPicker');
-    const radiusSlider = document.getElementById('radiusSlider');
-
-    function updateFlipStyles() {
-      document.documentElement.style.setProperty('--flip-color', colorPicker.value);
-      document.documentElement.style.setProperty('--flip-radius', radiusSlider.value + 'rem');
-    }
-
-    colorPicker.addEventListener('input', updateFlipStyles);
-    radiusSlider.addEventListener('input', updateFlipStyles);
-    updateFlipStyles();
   </script>
 </body>
 </html>
