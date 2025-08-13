@@ -6,12 +6,12 @@
   <title>Flip Billboard — Controls + W Fix</title>
 
   <!-- LOCAL Flip CSS (same folder) -->
-  <link rel="stylesheet" href="./flip.min.css?v=5" />
+  <link rel="stylesheet" href="./flip.min.css?v=6" />
 
   <style>
     :root{
       --billboard-size: 9em;
-      --panel-radius: 0.18em;
+      --panel-radius: 0em;        /* square by default */
       --stage-shift: -10vh;
       color-scheme: light only;
     }
@@ -93,12 +93,12 @@
     }
     button:hover { background: #f4f4f4; }
 
-    /* === FIX: Center W in the first tile === */
-    .tick .tick-char:first-child {
+    /* === FIX: Center W in the very first visible tile === */
+    .tick > .tick-group:first-child .tick-char:first-child .tick-flip-panel-text-wrapper {
       display: flex !important;
       align-items: center;
       justify-content: center;
-      padding: 0 0.07em; /* slight inset to center wide W */
+      padding: 0 0.07em; /* slight inset to visually center the W */
       box-sizing: border-box;
     }
   </style>
@@ -115,9 +115,9 @@
         <input id="sizeRange" type="range" step="0.1" min="2" max="20" value="9" />
 
         <label>Corner radius (em):
-          <input id="radiusEm" type="number" step="0.01" min="0" max="0.6" value="0.18">
+          <input id="radiusEm" type="number" step="0.01" min="0" max="0.6" value="0">
         </label>
-        <input id="radiusRange" type="range" step="0.01" min="0" max="0.6" value="0.18" />
+        <input id="radiusRange" type="range" step="0.01" min="0" max="0.6" value="0" />
 
         <label>Position (vh):
           <input id="posVh" type="number" step="1" min="-60" max="60" value="-10">
@@ -156,12 +156,12 @@
   </div>
 
   <!-- LOCAL Flip JS -->
-  <script src="./flip.min.js?v=5"></script>
+  <script src="./flip.min.js?v=6"></script>
 
   <script>
     const $ = (id) => document.getElementById(id);
     const css = document.documentElement.style;
-    const LS_KEY = 'flip-billboard-settings-v5';
+    const LS_KEY = 'flip-billboard-settings-v6';
 
     function padWords(words) {
       const clean = words.map(w => (w || '').toString().trim().toUpperCase());
@@ -176,7 +176,7 @@
       } catch {}
       return {
         words: ['WELCOME','RANDOLPH','COUNTY','IT','SUPPORT'],
-        sizeEm: 9, radiusEm: 0.18, posVh: -10, speedMs: 3000
+        sizeEm: 9, radiusEm: 0, posVh: -10, speedMs: 3000
       };
     }
     function saveSettings(obj) { localStorage.setItem(LS_KEY, JSON.stringify(obj)); }
