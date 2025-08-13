@@ -3,17 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Flip Billboard — 9em, Position & Custom Words</title>
+  <title>Flip Billboard — Controls + URL Overrides</title>
 
   <!-- LOCAL Flip CSS (same folder) -->
-  <link rel="stylesheet" href="./flip.min.css" />
+  <link rel="stylesheet" href="./flip.min.css?v=3" />
 
   <style>
     :root{
-      /* defaults */
-      --billboard-size: 9em;     /* same as your flip clock */
-      --panel-radius: 0.18em;    /* rounded corners */
-      --stage-shift: -10vh;      /* negative raises it up */
+      --billboard-size: 9em;   /* same as your flip clock */
+      --panel-radius: 0.18em;  /* rounded corners (adjustable) */
+      --stage-shift: -10vh;    /* negative raises the billboard */
       color-scheme: light only;
     }
 
@@ -29,8 +28,8 @@
     /* Controls bar */
     .controls {
       display: grid;
-      grid-template-columns: auto auto 1fr;
-      gap: 12px 18px;
+      grid-template-columns: 1fr auto;
+      gap: 10px 18px;
       align-items: center;
       padding: 10px 12px;
       border-bottom: 1px solid #eee;
@@ -38,12 +37,12 @@
       font: 13px/1.35 ui-sans-serif, system-ui, -apple-system, Arial, sans-serif;
       color: #333;
     }
-    .row {
-      display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
-    }
+    .rows { display: grid; gap: 10px; }
+    .row  { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
     .controls label { white-space: nowrap; }
     .controls input[type="number"] { width: 6ch; }
     .controls input[type="text"] { width: min(800px, 60vw); }
+    .actions { display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
     .controls small { opacity: .65; }
 
     /* Stage / billboard */
@@ -94,27 +93,39 @@
 
   <!-- Controls -->
   <form class="controls" id="controls" onsubmit="return false;">
-    <div class="row">
-      <label>Size (em):
-        <input id="sizeEm" type="number" step="0.1" min="2" max="20" value="9">
-      </label>
-      <input id="sizeRange" type="range" step="0.1" min="2" max="20" value="9" />
-      <label>Corner radius (em):
-        <input id="radiusEm" type="number" step="0.01" min="0" max="0.6" value="0.18">
-      </label>
-      <input id="radiusRange" type="range" step="0.01" min="0" max="0.6" value="0.18" />
-      <label>Position (vh):
-        <input id="posVh" type="number" step="1" min="-60" max="60" value="-10">
-      </label>
-      <input id="posRange" type="range" step="1" min="-60" max="60" value="-10" />
+    <div class="rows">
+      <div class="row">
+        <label>Size (em):
+          <input id="sizeEm" type="number" step="0.1" min="2" max="20" value="9">
+        </label>
+        <input id="sizeRange" type="range" step="0.1" min="2" max="20" value="9" />
+
+        <label>Corner radius (em):
+          <input id="radiusEm" type="number" step="0.01" min="0" max="0.6" value="0.18">
+        </label>
+        <input id="radiusRange" type="range" step="0.01" min="0" max="0.6" value="0.18" />
+
+        <label>Position (vh):
+          <input id="posVh" type="number" step="1" min="-60" max="60" value="-10">
+        </label>
+        <input id="posRange" type="range" step="1" min="-60" max="60" value="-10" />
+
+        <label>Speed (ms):
+          <input id="speedMs" type="number" step="100" min="300" max="20000" value="3000">
+        </label>
+      </div>
+
+      <div class="row">
+        <label for="words">Words (comma-separated):</label>
+        <input id="words" type="text"
+               placeholder="WELCOME, RANDOLPH, COUNTY, IT, SUPPORT" />
+        <small>(We pad to keep widths steady.)</small>
+      </div>
     </div>
 
-    <div class="row">
-      <label for="words">Words (comma-separated):</label>
-      <input id="words" type="text"
-             placeholder="WELCOME, RANDOLPH, COUNTY, IT, SUPPORT" />
+    <div class="actions">
       <button id="applyWords">Apply</button>
-      <small>(We auto‑pad to keep the flip width steady.)</small>
+      <button id="reset">Reset</button>
     </div>
   </form>
 
@@ -131,16 +142,26 @@
   </div>
 
   <!-- LOCAL Flip JS (same folder) -->
-  <script src="./flip.min.js"></script>
+  <script src="./flip.min.js?v=3"></script>
 
   <script>
-    // ===== Utilities =====
+    // ---- helpers ----
     const $ = (id) => document.getElementById(id);
     const css = document.documentElement.style;
-    const LS_KEY = 'flip-billboard-settings-v2';
+    const LS_KEY = 'flip-billboard-settings-v3';
+
+    function getOverridesFromURL() {
+      const p = new URLSearchParams(location.search);
+      const o = {};
+      if (p.has('size'))   o.sizeEm = parseFloat(p.get('size'));
+      if (p.has('radius')) o.radiusEm = parseFloat(p.get('radius'));
+      if (p.has('pos'))    o.posVh = parseFloat(p.get('pos'));
+      if (p.has('speed'))  o.speedMs = Math.max(300, parseInt(p.get('speed'), 10));
+      if (p.has('words'))  o.words = p.get('words').split('|').map(s => s.trim()).filter(Boolean);
+      return o;
+    }
 
     function padWords(words) {
-      // Uppercase and right-pad with spaces to the longest length
       const clean = words.map(w => (w || '').toString().trim().toUpperCase());
       const max = clean.reduce((m, w) => Math.max(m, w.length), 0);
       return clean.map(w => w.padEnd(max, ' '));
@@ -152,105 +173,114 @@
         if (s && Array.isArray(s.words) &&
             typeof s.sizeEm === 'number' &&
             typeof s.radiusEm === 'number' &&
-            typeof s.posVh === 'number') return s;
+            typeof s.posVh === 'number' &&
+            typeof s.speedMs === 'number') return s;
       } catch {}
       return {
         words: ['WELCOME','RANDOLPH','COUNTY','IT','SUPPORT'],
-        sizeEm: 9,
-        radiusEm: 0.18,
-        posVh: -10
+        sizeEm: 9, radiusEm: 0.18, posVh: -10, speedMs: 3000
       };
     }
 
-    function saveSettings(obj) {
-      localStorage.setItem(LS_KEY, JSON.stringify(obj));
-    }
+    function saveSettings(obj) { localStorage.setItem(LS_KEY, JSON.stringify(obj)); }
 
     function applyUI(s) {
-      $('sizeEm').value = s.sizeEm;
-      $('sizeRange').value = s.sizeEm;
-      $('radiusEm').value = s.radiusEm;
-      $('radiusRange').value = s.radiusEm;
-      $('posVh').value = s.posVh;
-      $('posRange').value = s.posVh;
+      $('sizeEm').value = s.sizeEm; $('sizeRange').value = s.sizeEm;
+      $('radiusEm').value = s.radiusEm; $('radiusRange').value = s.radiusEm;
+      $('posVh').value = s.posVh; $('posRange').value = s.posVh;
+      $('speedMs').value = s.speedMs;
       $('words').value = s.words.join(', ');
       css.setProperty('--billboard-size', s.sizeEm + 'em');
       css.setProperty('--panel-radius', s.radiusEm + 'em');
       css.setProperty('--stage-shift', s.posVh + 'vh');
     }
 
-    // ===== Billboard logic =====
-    let ROTATION = [];     // padded words
-    let tickRef = null;    // store the current tick (so we can update if words change)
+    // ---- billboard state ----
+    let ROTATION = [];
+    let tickRef = null;
+    let timerCancel = null;
 
     function setRotation(words) {
       ROTATION = padWords(words);
       if (tickRef) tickRef.value = ROTATION[0] || '';
     }
 
-    function handleTickInit(tick) {
-      tickRef = tick;
+    function startTicker(speed) {
+      if (timerCancel) { timerCancel(); timerCancel = null; }
       let i = 0;
-      tick.value = ROTATION[0] || '';
-      Tick.helper.interval(function () {
+      // Return a cancel function using Tick.helper.interval
+      timerCancel = Tick.helper.interval(function () {
         if (!ROTATION.length) return;
         i = (i + 1) % ROTATION.length;
-        tick.value = ROTATION[i];
-      }, 3000);
+        tickRef.value = ROTATION[i];
+      }, speed);
+    }
+
+    function handleTickInit(tick) {
+      tickRef = tick;
+      tick.value = ROTATION[0] || '';
+      startTicker(current.speedMs);
     }
     window.handleTickInit = handleTickInit;
 
-    // ===== Init =====
-    (function init(){
-      const s = loadSettings();
-      setRotation(s.words);
-      applyUI(s);
+    // ---- init ----
+    const current = (() => {
+      const s = Object.assign(loadSettings(), getOverridesFromURL());
+      return s;
+    })();
 
-      // Wire controls
-      const syncSize = v => {
-        css.setProperty('--billboard-size', v + 'em');
-        s.sizeEm = +v; saveSettings(s);
-      };
-      const syncRadius = v => {
-        css.setProperty('--panel-radius', v + 'em');
-        s.radiusEm = +v; saveSettings(s);
-      };
-      const syncPos = v => {
-        css.setProperty('--stage-shift', v + 'vh');
-        s.posVh = +v; saveSettings(s);
-      };
+    (function init(){
+      setRotation(current.words);
+      applyUI(current);
 
       // size
       $('sizeEm').addEventListener('input', e => {
-        $('sizeRange').value = e.target.value; syncSize(e.target.value);
+        const v = +e.target.value; $('sizeRange').value = v;
+        css.setProperty('--billboard-size', v + 'em'); current.sizeEm = v; saveSettings(current);
       });
       $('sizeRange').addEventListener('input', e => {
-        $('sizeEm').value = e.target.value; syncSize(e.target.value);
+        const v = +e.target.value; $('sizeEm').value = v;
+        css.setProperty('--billboard-size', v + 'em'); current.sizeEm = v; saveSettings(current);
       });
 
       // radius
       $('radiusEm').addEventListener('input', e => {
-        $('radiusRange').value = e.target.value; syncRadius(e.target.value);
+        const v = +e.target.value; $('radiusRange').value = v;
+        css.setProperty('--panel-radius', v + 'em'); current.radiusEm = v; saveSettings(current);
       });
       $('radiusRange').addEventListener('input', e => {
-        $('radiusEm').value = e.target.value; syncRadius(e.target.value);
+        const v = +e.target.value; $('radiusEm').value = v;
+        css.setProperty('--panel-radius', v + 'em'); current.radiusEm = v; saveSettings(current);
       });
 
       // position
       $('posVh').addEventListener('input', e => {
-        $('posRange').value = e.target.value; syncPos(e.target.value);
+        const v = +e.target.value; $('posRange').value = v;
+        css.setProperty('--stage-shift', v + 'vh'); current.posVh = v; saveSettings(current);
       });
       $('posRange').addEventListener('input', e => {
-        $('posVh').value = e.target.value; syncPos(e.target.value);
+        const v = +e.target.value; $('posVh').value = v;
+        css.setProperty('--stage-shift', v + 'vh'); current.posVh = v; saveSettings(current);
+      });
+
+      // speed
+      $('speedMs').addEventListener('input', e => {
+        const v = Math.max(300, +e.target.value || 3000);
+        current.speedMs = v; saveSettings(current);
+        if (tickRef) startTicker(current.speedMs);
       });
 
       // words
       $('applyWords').addEventListener('click', () => {
         const raw = $('words').value.split(',').map(s => s.trim()).filter(Boolean);
         if (!raw.length) return;
-        s.words = raw;
-        saveSettings(s);
-        setRotation(s.words);
+        current.words = raw; saveSettings(current); setRotation(current.words);
+      });
+
+      // reset
+      $('reset').addEventListener('click', () => {
+        localStorage.removeItem(LS_KEY);
+        location.href = location.pathname; // reload without query params
       });
     })();
   </script>
