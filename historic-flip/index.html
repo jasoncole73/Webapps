@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Historic Flip — Preset Count‑Up</title>
+
+  <!-- Flip (Tick) styles -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@pqina/flip/dist/flip.min.css" />
+
+  <style>
+    :root{
+      --accent:#356307;      /* label + small text color */
+      --panel-bg:#3d2811;    /* flip panel background */
+      --panel-fg:#ff2ba3;    /* flip panel text color */
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height:100%; }
+
+    body {
+      margin:0;
+      background:#fff;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+      color:#222;
+      display:grid;
+      grid-template-rows:auto 1fr;
+      gap:1rem;
+    }
+
+    header{
+      padding:1rem clamp(1rem, 3vw, 2rem);
+      border-bottom:1px solid #eee;
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      gap:1rem;
+    }
+
+    header h1{
+      font-size:clamp(1.1rem, 1.8vw, 1.4rem);
+      margin:0;
+      font-weight:600;
+      letter-spacing:.2px;
+      color:#0f172a;
+    }
+
+    .controls{
+      width:100%;
+      max-width:950px;
+      margin:0 auto;
+      display:grid;
+      gap:.75rem;
+      grid-template-columns: 1fr;
+      padding:0 clamp(1rem, 3vw, 2rem) 1rem;
+    }
+
+    .card{
+      border:1px solid #ececec;
+      border-radius:16px;
+      padding:1rem;
+      box-shadow:0 1px 2px rgba(0,0,0,.04);
+    }
+
+    .grid{
+      display:grid;
+      gap:.75rem;
+    }
+
+    @media (min-width:720px){
+      .grid{
+        grid-template-columns: 2fr 1.5fr auto;
+        align-items:end;
+      }
+    }
+
+    label{
+      font-size:.9rem;
+      color:#334155;
+      display:block;
+      margin:0 0 .35rem;
+    }
+
+    input[type="text"], input[type="datetime-local"]{
+      width:100%;
+      padding:.6rem .7rem;
+      border:1px solid #dfe3e6;
+      border-radius:10px;
+      font-size:1rem;
+      outline:none;
+    }
+    input[type="text"]:focus, input[type="datetime-local"]:focus{
+      border-color:#94a3b8;
+      box-shadow:0 0 0 3px rgba(148,163,184,.2);
+    }
+
+    .btnrow{
+      display:flex; gap:.5rem; flex-wrap:wrap;
+    }
+    button{
+      appearance:none; border:0; cursor:pointer;
+      padding:.65rem .9rem;
+      border-radius:12px; font-weight:600; font-size:.95rem;
+    }
+    .primary{ background:#0f766e; color:#fff; }
+    .ghost{ background:#f1f5f9; color:#0f172a; }
+    .danger{ background:#ef4444; color:#fff; }
+
+    .share{
+      font-size:.9rem; color:#475569; margin-top:.25rem; overflow:auto;
+    }
+    .share a{ word-break:break-all; }
+
+    /* Counter area */
+    .stage{
+      display:grid;
+      place-items:center;
+      padding: 0 clamp(1rem, 3vw, 2rem) 2rem;
+    }
+    .title{
+      text-align:center;
+      font-size:clamp(1.25rem, 3vw, 1.75rem);
+      margin:.25rem 0 1rem;
+      color:#0b3b17;
+      min-height:1.8em;
+    }
+
+    .tick {
+      font-size: 1rem;
+      white-space: nowrap;
+      font-family: arial, sans-serif;
+    }
+
+    .tick-flip, .tick-text-inline {
+      font-size: clamp(1.8rem, 6vw, 3rem);
+    }
+
+    .tick-label {
+      margin-top: 1em;
+      font-size: 1em;
+      color: var(--accent) !important;
+    }
+
+    .tick-char { width: 1.5em; }
+
+    .tick-text-inline {
+      display: inline-block;
+      text-align: center;
+      min-width: 1em;
+      color: var(--accent) !important;
+    }
+
+    .tick-text-inline + .tick-text-inline { margin-left: -0.325em; }
+
+    .tick-group { margin: 0 .5em; text-align: center; }
+
+    .tick-flip {
+      border-radius: .12em !important;
+      font-family: inherit !important;
+    }
+
+    .tick-flip-panel {
+      background-color: var(--panel-bg) !important;
+      color: var(--panel-fg) !important;
+    }
+
+    .tick-flip-panel-text-wrapper {
+      line-height: 1.4 !important;
+    }
+
+    footer{
+      text-align:center; color:#94a3b8; font-size:.85rem; padding:0 0 1.2rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Historic Flip — Preset Count‑Up</h1>
+  </header>
+
+  <!-- Controls -->
+  <section class="controls">
+    <div class="card">
+      <div class="grid">
+        <div>
+          <label for="eventName">Event name</label>
+          <input id="eventName" type="text" placeholder="e.g., Y2K — New Millennium" />
+        </div>
+        <div>
+          <label for="eventStart">Start date &amp; time (your local time)</label>
+          <input id="eventStart" type="datetime-local" />
+        </div>
+        <div class="btnrow">
+          <button id="btnStart" class="primary" title="Start or update the counter">Start</button>
+          <button id="btnSave" class="ghost" title="Save event as default for this browser">Save as default</button>
+          <button id="btnClear" class="danger" title="Clear saved default">Clear</button>
+        </div>
+      </div>
+      <div class="share" id="shareLine" hidden>
+        Share this link: <a id="shareHref" href="#"></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Counter -->
+  <section class="stage">
+    <div class="title" id="titleLine"></div>
+
+    <div class="tick" data-did-init="handleTickInit">
+      <div data-repeat="true" data-layout="horizontal fit" data-transform="preset(y, M, d, h, m, s) -> delay">
+        <div class="tick-group">
+          <div data-key="value" data-repeat="true" data-transform="pad(00) -> split -> delay">
+            <span data-view="flip"></span>
+          </div>
+          <span data-key="label" data-view="text" class="tick-label"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Counting up from your chosen moment • Works offline on GitHub Pages
+  </footer>
+
+  <!-- Flip (Tick) script -->
+  <script src="https://cdn.jsdelivr.net/npm/@pqina/flip/dist/flip.min.js"></script>
+
+  <script>
+    // --- Utilities -----------------------------------------------------------
+    function qs(id){ return document.getElementById(id); }
+
+    // Convert <input type="datetime-local"> value (local) to ISO8601 without Z,
+    // so Tick treats it as local time (no timezone suffix).
+    function localDateTimeToIsoLocal(dtValue){
+      // dtValue like "2000-01-01T00:00"
+      if(!dtValue) return null;
+      // keep as-is so Tick interprets it as local (no timezone)
+      return dtValue + ":00";
+    }
+
+    function setTitle(name){
+      qs('titleLine').textContent = name ? name : '';
+    }
+
+    function setShareLink(name, isoLocal){
+      try{
+        const url = new URL(window.location.href);
+        url.searchParams.set('event', name || '');
+        url.searchParams.set('at', isoLocal || '');
+        const href = url.toString();
+        const a = qs('shareHref');
+        a.textContent = href;
+        a.href = href;
+        qs('shareLine').hidden = false;
+      }catch(e){
+        qs('shareLine').hidden = true;
+      }
+    }
+
+    function parseQuery(){
+      const p = new URLSearchParams(window.location.search);
+      const event = p.get('event') || '';
+      const at = p.get('at') || '';
+      return {event, at};
+    }
+
+    // --- Tick setup ----------------------------------------------------------
+    let tickInstance = null;
+    function handleTickInit(tick) {
+      tickInstance = tick;
+
+      // English labels
+      const locale = {
+        YEAR_PLURAL: 'Years',
+        YEAR_SINGULAR: 'Year',
+        MONTH_PLURAL: 'Months',
+        MONTH_SINGULAR: 'Month',
+        WEEK_PLURAL: 'Weeks',
+        WEEK_SINGULAR: 'Week',
+        DAY_PLURAL: 'Days',
+        DAY_SINGULAR: 'Day',
+        HOUR_PLURAL: 'Hours',
+        HOUR_SINGULAR: 'Hour',
+        MINUTE_PLURAL: 'Minutes',
+        MINUTE_SINGULAR: 'Minute',
+        SECOND_PLURAL: 'Seconds',
+        SECOND_SINGULAR: 'Second',
+        MILLISECOND_PLURAL: 'Milliseconds',
+        MILLISECOND_SINGULAR: 'Millisecond'
+      };
+      for (var key in locale) if (Object.prototype.hasOwnProperty.call(locale, key)) tick.setConstant(key, locale[key]);
+
+      // On first load:
+      bootFromQueryOrStorage();
+    }
+
+    function startCounter(isoLocal){
+      // Stop any previous counter
+      if (window._historicFlipCounter && typeof window._historicFlipCounter.stop === 'function') {
+        try { window._historicFlipCounter.stop(); } catch(e){}
+      }
+      // Create new
+      window._historicFlipCounter = Tick.count.up(isoLocal, { format: ['y','M','d','h','m','s'] });
+      window._historicFlipCounter.onupdate = function(value){
+        if (tickInstance) tickInstance.value = value;
+      };
+    }
+
+    // --- Boot logic ----------------------------------------------------------
+    const LS_KEY = 'historicFlipEvent';
+
+    function bootFromQueryOrStorage(){
+      const q = parseQuery();
+      let name='', isoLocal='';
+
+      if (q.at){
+        name = q.event || 'Historic Event';
+        isoLocal = q.at;
+      } else {
+        const saved = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+        if (saved && saved.name && saved.isoLocal){
+          name = saved.name;
+          isoLocal = saved.isoLocal;
+        } else {
+          // Fallback default: Y2K
+          name = 'Y2K — New Millennium';
+          isoLocal = '2000-01-01T00:00:00';
+        }
+      }
+
+      setTitle(name);
+      startCounter(isoLocal);
+
+      // Prefill controls (strip seconds for UI neatness if present)
+      qs('eventName').value = name;
+      qs('eventStart').value = (isoLocal || '').slice(0,16);
+      setShareLink(name, isoLocal);
+    }
+
+    // --- UI handlers ---------------------------------------------------------
+    qs('btnStart').addEventListener('click', () => {
+      const name = qs('eventName').value.trim() || 'Historic Event';
+      const isoLocal = localDateTimeToIsoLocal(qs('eventStart').value) || '2000-01-01T00:00:00';
+
+      setTitle(name);
+      startCounter(isoLocal);
+      setShareLink(name, isoLocal);
+      // Update URL without reloading
+      const url = new URL(window.location.href);
+      url.searchParams.set('event', name);
+      url.searchParams.set('at', isoLocal);
+      history.replaceState({}, '', url.toString());
+    });
+
+    qs('btnSave').addEventListener('click', () => {
+      const name = qs('eventName').value.trim() || 'Historic Event';
+      const isoLocal = localDateTimeToIsoLocal(qs('eventStart').value) || '2000-01-01T00:00:00';
+      localStorage.setItem(LS_KEY, JSON.stringify({name, isoLocal}));
+      setShareLink(name, isoLocal);
+      qs('btnSave').textContent = 'Saved ✓';
+      setTimeout(()=> qs('btnSave').textContent = 'Save as default', 1200);
+    });
+
+    qs('btnClear').addEventListener('click', () => {
+      localStorage.removeItem(LS_KEY);
+      qs('btnClear').textContent = 'Cleared ✓';
+      setTimeout(()=> qs('btnClear').textContent = 'Clear', 1200);
+    });
+  </script>
+</body>
+</html>
