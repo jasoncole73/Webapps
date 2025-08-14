@@ -33,7 +33,7 @@
     font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   }
 
-  /* ===== Target badge (moved up & separated) ===== */
+  /* ===== Target badge (separate at top) ===== */
   .target-wrap{
     display:grid;
     place-items:center;
@@ -58,14 +58,20 @@
     place-items:center;
     padding: clamp(8px, 2vw, 24px);
     gap:.75rem;
+    background: var(--page-bg);
   }
+  /* Keep fullscreen background white regardless of page theme */
+  #stage:fullscreen{ background: #ffffff !important; }
+  #stage:-webkit-full-screen{ background: #ffffff !important; } /* Safari */
+  #stage:-ms-fullscreen{ background: #ffffff !important; }
+
   #fsBtn{
     position:absolute;
     top: clamp(8px, 2vw, 16px);
     right: clamp(8px, 2vw, 16px);
     z-index: 5;
     border: 1px solid rgba(0,0,0,.18);
-    background: rgba(255,255,255,.85);
+    background: rgba(255,255,255,.9);
     backdrop-filter: blur(4px);
     border-radius: 10px;
     padding: .45rem .7rem;
@@ -90,7 +96,7 @@
   }
   .tick-flip-panel-text-wrapper { line-height:1.45 !important; color: var(--tile-text) !important; }
 
-  /* ===== Bottom controls (hidden automatically in fullscreen since not inside #stage) ===== */
+  /* ===== Bottom controls ===== */
   .bottom{
     display:grid;
     gap:1rem;
@@ -133,6 +139,7 @@
   .controls input[type="range"],
   .row input[type="time"],
   .row input[type="date"],
+  .row input[type="datetime-local"],
   .row select{
     width:100%;
     height:38px;
@@ -149,7 +156,7 @@
     cursor:pointer;
   }
 
-  /* Collapsible Appearance */
+  /* Collapsible Appearance (closed by default) */
   details.panel summary{
     list-style:none;
     cursor:pointer;
@@ -176,12 +183,12 @@
 </head>
 <body>
 
-  <!-- Target date moved up & separated -->
+  <!-- Target date (separate, at top) -->
   <div class="target-wrap">
     <div class="target-badge" id="targetBadge">Target: Christmas 2025 • 12:00 AM</div>
   </div>
 
-  <!-- Fullscreen stage (only this goes fullscreen so controls disappear) -->
+  <!-- Fullscreen stage (only this goes fullscreen; controls stay hidden) -->
   <section id="stage" aria-label="Countdown stage">
     <button id="fsBtn" type="button" aria-label="Enter full screen">⤢ Full Screen</button>
 
@@ -227,11 +234,15 @@
           <input type="time" id="customTime" value="00:00" />
         </label>
 
+        <label style="grid-column: span 2;">Manual Date &amp; Time
+          <input type="datetime-local" id="manualDateTime" placeholder="YYYY-MM-DDTHH:MM" />
+        </label>
+
         <button id="applyEventBtn" class="btn" type="button">Set Event</button>
       </div>
     </section>
 
-    <!-- Appearance panel (collapsible; CLOSED by default) -->
+    <!-- Appearance panel (collapsible; CLOSED on load) -->
     <details class="panel" id="appearancePanel">
       <summary><span class="chev">▶</span> Appearance</summary>
       <div style="margin-top:.75rem">
@@ -310,6 +321,13 @@
       const [y,m,d] = dateStr.split('-').map(n=>+n);
       const [hh='00', mm='00'] = (timeStr||'00:00').split(':');
       const dt = new Date(y, m-1, d, +hh, +mm, 0, 0);
+      return dt.toISOString();
+    }
+    function manualISO(datetimeLocalValue){
+      if(!datetimeLocalValue) return null;
+      // datetime-local uses local time without TZ; construct Date in local TZ
+      const dt = new Date(datetimeLocalValue);
+      if (isNaN(dt)) return null;
       return dt.toISOString();
     }
     function fmtLocal(dt){
@@ -404,24 +422,40 @@
       const select = qs('#eventSelect');
       const dateIn = qs('#customDate');
       const timeIn = qs('#customTime');
+      const manualDT = qs('#manualDateTime');
       const applyBtn = qs('#applyEventBtn');
 
       select.addEventListener('change', () => {
         if (!select.value) return;
+        // next occurrence of the preset
         const iso = nextOccurrenceISO(select.value, timeIn.value || '00:00');
         setTargetISO(iso);
-        dateIn.value = ''; // clear custom when preset chosen
+        // clear manual/custom when preset chosen
+        manualDT.value = '';
+        dateIn.value = '';
       });
 
       applyBtn.addEventListener('click', () => {
+        // Priority: Manual datetime-local > Custom date+time > Preset
+        if (manualDT.value) {
+          const iso = manualISO(manualDT.value);
+          if (iso) return setTargetISO(iso);
+        }
         if (dateIn.value) {
           const iso = customISO(dateIn.value, timeIn.value || '00:00');
-          setTargetISO(iso);
-        } else if (select.value) {
+          if (iso) return setTargetISO(iso);
+        }
+        if (select.value) {
           const iso = nextOccurrenceISO(select.value, timeIn.value || '00:00');
-          setTargetISO(iso);
+          if (iso) return setTargetISO(iso);
         }
       });
+
+      // Hitting Enter inside any event input triggers Set
+      document.querySelectorAll('#eventSelect, #customDate, #customTime, #manualDateTime')
+        .forEach(el => el.addEventListener('keydown', e => {
+          if (e.key === 'Enter') { e.preventDefault(); applyBtn.click(); }
+        }));
     }
 
     /* ========= Fullscreen ========= */
