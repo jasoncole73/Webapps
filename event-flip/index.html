@@ -10,126 +10,135 @@
 
 <style>
   :root{
-    /* === Theme variables (defaults) === */
+    /* Theme defaults */
     --flip-size: 9em;              /* requested default size */
-    --tile-bg:   #3b3d3b;
+    --tile-bg:   #3b3b3b;
     --tile-text: #ffffff;
     --label-text:#5a5d63;
     --inline-text:#5a5d63;
     --page-bg:   #ffffff;
-    --tile-radius: 0em;            /* square by default */
+    --tile-radius: 0em;            /* square tiles by default */
   }
 
   /* Hide library credit/watermark if present */
   .tick-credits{ display:none !important; }
 
   * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    min-height: 100vh;
-    display: grid;
-    grid-template-rows: auto 1fr;
-    gap: 1rem;
-    place-items: center;
+  body{
+    margin:0;
+    min-height:100vh;
+    display:grid;
+    grid-template-rows: 1fr auto; /* clock area, then bottom controls */
     background: var(--page-bg) !important;
     font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   }
 
-  .panel {
-    width: min(1100px, 95vw);
-    display: grid;
-    gap: 0.75rem;
+  .wrap{
+    display:grid;
+    gap:.5rem;
+    place-content:center;
+    padding: clamp(12px,2vw,24px);
+  }
+  .target-line{
+    font-size:.95rem;
+    color:#555;
+    text-align:center;
+  }
+
+  /* Panels container at bottom */
+  .bottom{
+    display:grid;
+    gap:1rem;
     padding: 1rem;
-    border-radius: 14px;
-    box-shadow: 0 6px 22px rgba(0,0,0,.08);
-    background: #fff;
-    border: 1px solid rgba(0,0,0,.06);
+    justify-items:center;
+  }
+  .panel, details.panel{
+    width:min(1100px,95vw);
+    border:1px solid rgba(0,0,0,.06);
+    border-radius:14px;
+    background:#fff;
+    box-shadow:0 6px 22px rgba(0,0,0,.08);
+    padding:1rem;
+  }
+  .title{
+    font: 600 clamp(1rem, 2.5vw, 1.25rem)/1.2 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    color:#3b3d3b;
+    margin:0 0 .75rem;
   }
 
-  .controls {
-    display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: .75rem;
+  .row{
+    display:grid;
+    grid-template-columns: repeat(6, minmax(0,1fr));
+    gap:.75rem;
+    align-items:center;
   }
-
-  .controls label {
-    display: grid;
-    gap: .35rem;
-    font-size: .9rem;
-    color: #3b3d3b;
-    align-content: start;
+  .controls{
+    display:grid;
+    grid-template-columns: repeat(6, minmax(0,1fr));
+    gap:.75rem;
   }
-
+  .controls label, .row label{
+    display:grid;
+    gap:.35rem;
+    font-size:.9rem;
+    color:#3b3d3b;
+    align-content:start;
+  }
   .controls input[type="color"],
   .controls input[type="number"],
   .controls input[type="range"],
-  .controls input[type="time"],
-  .controls input[type="date"],
-  .controls select {
-    width: 100%;
-    height: 38px;
-    border: 1px solid rgba(0,0,0,.15);
-    border-radius: 8px;
-    padding: 0 8px;
-    background: #fafafa;
+  .row input[type="time"],
+  .row input[type="date"],
+  .row select{
+    width:100%;
+    height:38px;
+    border:1px solid rgba(0,0,0,.15);
+    border-radius:8px;
+    padding:0 8px;
+    background:#fafafa;
+  }
+  .btn{
+    height:38px;
+    border:1px solid rgba(0,0,0,.15);
+    background:#f3f3f3;
+    border-radius:8px;
+    cursor:pointer;
   }
 
-  .controls button {
-    height: 38px;
-    border: 1px solid rgba(0,0,0,.15);
-    background: #f3f3f3;
-    border-radius: 8px;
-    cursor: pointer;
+  /* Details (collapsible appearance) */
+  details.panel summary{
+    list-style:none;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:.5rem;
+    font: 600 1rem/1.2 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    color:#3b3d3b;
+    user-select:none;
   }
-
-  .row {
-    display: grid;
-    grid-template-columns: repeat(6, minmax(0,1fr));
-    gap: .75rem;
-    align-items: center;
+  details.panel summary::-webkit-details-marker{ display:none; }
+  .chev{
+    inline-size: .8em;
+    transform: rotate(0deg);
+    transition: transform .2s ease;
   }
+  details[open] .chev{ transform: rotate(90deg); }
 
-  .title {
-    font: 600 clamp(1rem, 2.5vw, 1.5rem)/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    color: #3b3d3b;
-    margin: 0;
-    text-align: left;
-  }
-
-  .wrap {
-    width: 100%;
-    display: grid;
-    justify-items: center;
-    align-content: center;
-    gap: .5rem;
-    padding: clamp(12px,2vw,24px);
-  }
-
-  .target-line {
-    font-size: .95rem;
-    color: #555;
-    text-align: center;
-  }
-
-  /* ===== Flip styles (from your base, wired to CSS vars) ===== */
-  .tick { font-size: 1rem; white-space: nowrap; font-family: arial, sans-serif; }
+  /* ===== Flip styles wired to CSS vars ===== */
+  .tick { font-size:1rem; white-space:nowrap; font-family:arial, sans-serif; }
   .tick-flip, .tick-text-inline { font-size: var(--flip-size); }
-  .tick-label { margin-top: 1em; font-size: 1em; color: var(--label-text) !important; }
-  .tick-char { width: 1.5em; }
-  .tick-text-inline { display: inline-block; text-align: center; min-width: 1em; color: var(--inline-text) !important; }
-  .tick-text-inline + .tick-text-inline { margin-left: -.325em; }
-  .tick-group { margin: 0 .5em; text-align: center; }
-
+  .tick-label { margin-top:1em; font-size:1em; color: var(--label-text) !important; }
+  .tick-char { width:1.5em; }
+  .tick-text-inline { display:inline-block; text-align:center; min-width:1em; color: var(--inline-text) !important; }
+  .tick-text-inline + .tick-text-inline { margin-left:-.325em; }
+  .tick-group { margin:0 .5em; text-align:center; }
   .tick-flip { font-family: inherit !important; }
   .tick-flip-panel {
     background-color: var(--tile-bg) !important;
     color: var(--tile-text) !important;
     border-radius: var(--tile-radius) !important;
   }
-  .tick-flip-panel-text-wrapper {
-    line-height: 1.45 !important;
-    color: var(--tile-text) !important;
-  }
+  .tick-flip-panel-text-wrapper { line-height:1.45 !important; color: var(--tile-text) !important; }
 
   /* Responsive */
   @media (max-width: 900px){
@@ -137,75 +146,16 @@
   }
   @media (max-width: 520px){
     .controls, .row { grid-template-columns: repeat(2, minmax(0,1fr)); }
-    .tick { font-size: .85rem; }
+    .tick { font-size:.85rem; }
   }
 </style>
 </head>
 <body>
 
-  <!-- THEME / APPEARANCE CONTROLS -->
-  <section class="panel">
-    <h2 class="title">Appearance</h2>
-    <form class="controls" id="controls" onsubmit="return false;">
-      <label>Tile background
-        <input type="color" id="tileBg" value="#3b3b3b">
-      </label>
-      <label>Tile text
-        <input type="color" id="tileText" value="#ffffff">
-      </label>
-      <label>Label text
-        <input type="color" id="labelText" value="#5a5d63">
-      </label>
-      <label>Inline/separator text
-        <input type="color" id="inlineText" value="#5a5d63">
-      </label>
-      <label>Page background
-        <input type="color" id="pageBg" value="#ffffff">
-      </label>
-      <label>Size (em)
-        <input type="number" id="sizeEm" value="9" step="0.25" min="2" max="24">
-      </label>
-
-      <label>Corner radius (em)
-        <input type="range" id="radiusEm" value="0" step="0.02" min="0" max="0.6">
-      </label>
-
-      <button type="button" id="resetBtn">Reset</button>
-    </form>
-  </section>
-
-  <!-- EVENT CONTROLS -->
-  <section class="panel">
-    <h2 class="title">Event</h2>
-    <div class="row">
-      <label>Preset
-        <select id="eventSelect">
-          <option value="">— Select an event —</option>
-          <option value="newyear">New Year’s Day</option>
-          <option value="memorial">Memorial Day</option>
-          <option value="labor">Labor Day</option>
-          <option value="halloween">Halloween</option>
-          <option value="thanksgiving">Thanksgiving</option>
-          <option value="christmas">Christmas</option>
-        </select>
-      </label>
-
-      <label>Date (custom)
-        <input type="date" id="customDate" />
-      </label>
-
-      <label>Time (local)
-        <input type="time" id="customTime" value="00:00" />
-      </label>
-
-      <button id="applyEventBtn" type="button">Set Event</button>
-    </div>
-  </section>
-
+  <!-- CLOCK AREA -->
   <div class="wrap">
-    <div class="target-line" id="targetLine">Target: (pick an event)</div>
+    <div class="target-line" id="targetLine">Target: Christmas 2025 • 12:00 AM</div>
 
-    <!-- COUNTDOWN -->
     <div class="tick" data-did-init="handleTickInit">
       <div data-repeat="true" data-layout="horizontal fit" data-transform="preset(d, h, m, s) -> delay">
         <div class="tick-group">
@@ -218,8 +168,70 @@
     </div>
 
     <div class="tick-onended-message" style="display:none">
-      <p class="title" style="color:#3b3d3b">Time's up</p>
+      <p class="title" style="color:#3b3d3b;text-align:center">Time's up</p>
     </div>
+  </div>
+
+  <!-- CONTROLS AT THE BOTTOM -->
+  <div class="bottom">
+    <!-- Event panel (visible) -->
+    <section class="panel">
+      <h2 class="title">Event</h2>
+      <div class="row">
+        <label>Preset
+          <select id="eventSelect">
+            <option value="">— Select an event —</option>
+            <option value="newyear">New Year’s Day</option>
+            <option value="memorial">Memorial Day</option>
+            <option value="labor">Labor Day</option>
+            <option value="halloween">Halloween</option>
+            <option value="thanksgiving">Thanksgiving</option>
+            <option value="christmas" selected>Christmas</option>
+          </select>
+        </label>
+
+        <label>Date (custom)
+          <input type="date" id="customDate" value="2025-12-25" />
+        </label>
+
+        <label>Time (local)
+          <input type="time" id="customTime" value="00:00" />
+        </label>
+
+        <button id="applyEventBtn" class="btn" type="button">Set Event</button>
+      </div>
+    </section>
+
+    <!-- Appearance panel (collapsible) -->
+    <details class="panel" id="appearancePanel">
+      <summary><span class="chev">▶</span> Appearance</summary>
+      <div style="margin-top:.75rem">
+        <form class="controls" id="controls" onsubmit="return false;">
+          <label>Tile background
+            <input type="color" id="tileBg" value="#3b3b3b">
+          </label>
+          <label>Tile text
+            <input type="color" id="tileText" value="#ffffff">
+          </label>
+          <label>Label text
+            <input type="color" id="labelText" value="#5a5d63">
+          </label>
+          <label>Inline/separator text
+            <input type="color" id="inlineText" value="#5a5d63">
+          </label>
+          <label>Page background
+            <input type="color" id="pageBg" value="#ffffff">
+          </label>
+          <label>Size (em)
+            <input type="number" id="sizeEm" value="9" step="0.25" min="2" max="24">
+          </label>
+          <label>Corner radius (em)
+            <input type="range" id="radiusEm" value="0" step="0.02" min="0" max="0.6">
+          </label>
+          <button type="button" id="resetBtn" class="btn">Reset</button>
+        </form>
+      </div>
+    </details>
   </div>
 
   <!-- Flip/Tick core JS -->
@@ -241,12 +253,12 @@
     }
     function getHolidayLocalDate(year, key){
       switch(key){
-        case 'newyear':     return new Date(year, 0, 1);
-        case 'memorial':    return lastWeekdayOfMonth(year, 4, 1);       // last Monday in May
-        case 'labor':       return nthWeekdayOfMonth(year, 8, 1, 1);     // first Monday in Sept
-        case 'halloween':   return new Date(year, 9, 31);
-        case 'thanksgiving':return nthWeekdayOfMonth(year, 10, 4, 4);    // 4th Thursday in Nov
-        case 'christmas':   return new Date(year, 11, 25);
+        case 'newyear':      return new Date(year, 0, 1);
+        case 'memorial':     return lastWeekdayOfMonth(year, 4, 1);       // last Monday in May
+        case 'labor':        return nthWeekdayOfMonth(year, 8, 1, 1);     // first Monday in Sept
+        case 'halloween':    return new Date(year, 9, 31);
+        case 'thanksgiving': return nthWeekdayOfMonth(year, 10, 4, 4);    // 4th Thursday in Nov
+        case 'christmas':    return new Date(year, 11, 25);
         default: return null;
       }
     }
@@ -262,7 +274,7 @@
         d = getHolidayLocalDate(y+1, key);
         d.setHours(+hh, +mm, 0, 0);
       }
-      return d.toISOString(); // absolute UTC timestamp for local date/time
+      return d.toISOString();
     }
     function customISO(dateStr, timeStr="00:00"){
       if(!dateStr) return null;
@@ -292,7 +304,6 @@
         const msg = document.querySelector('.tick-onended-message');
         if (msg) msg.style.display = '';
       };
-
       // show target under clock
       const targetLine = document.getElementById('targetLine');
       const when = new Date(iso);
@@ -302,8 +313,15 @@
 
     function handleTickInit(tick) {
       tickInstance = tick;
-      // default: no target until user picks; set one if you prefer:
-      // setTargetISO(nextOccurrenceISO('newyear', '00:00'));
+
+      // Default event: Christmas 2025 @ 00:00 (local)
+      const defaultISO = new Date(2025, 11, 25, 0, 0, 0, 0).toISOString();
+      setTargetISO(defaultISO);
+
+      // Reflect defaults in controls
+      document.getElementById('eventSelect').value = 'christmas';
+      document.getElementById('customDate').value = '2025-12-25';
+      document.getElementById('customTime').value = '00:00';
     }
 
     /* ========= Appearance controls ========= */
@@ -359,16 +377,14 @@
       const timeIn = qs('#customTime');
       const applyBtn = qs('#applyEventBtn');
 
-      // Selecting a preset immediately sets the countdown
       select.addEventListener('change', () => {
         if (!select.value) return;
+        // next occurrence of the preset (respects current year)
         const iso = nextOccurrenceISO(select.value, timeIn.value || '00:00');
         setTargetISO(iso);
-        // clear custom date field to signal preset is active
-        dateIn.value = '';
+        dateIn.value = ''; // clear custom when preset chosen
       });
 
-      // Apply button: use custom date if present, else current preset
       applyBtn.addEventListener('click', () => {
         if (dateIn.value) {
           const iso = customISO(dateIn.value, timeIn.value || '00:00');
