@@ -9,133 +9,192 @@
   <link rel="stylesheet" href="https://unpkg.com/@pqina/flip/dist/flip.min.css">
 
   <style>
-    /* ===== Your provided styles (with a tiny fix for font-family) ===== */
-    .tick {
-      font-size:1rem; white-space:nowrap; font-family:arial,sans-serif;
+    :root{
+      /* === Theme variables (defaults) === */
+      --flip-size: 9em;              /* requested default */
+      --tile-bg:   #3b3d3b;
+      --tile-text: #ffffff;
+      --label-text:#5a5d63;
+      --inline-text:#5a5d63;
+      --page-bg:   #ffffff;
+      --tile-radius: .12em;
     }
 
-    .tick-flip,.tick-text-inline {
-      font-size:2.5em;
-    }
+    /* Hide any library credit/watermark if present */
+    .tick-credits{ display:none !important; }
 
-    .tick-label {
-      margin-top:1em;font-size:1em;
-    }
-
-    .tick-char {
-      width:1.5em;
-    }
-
-    .tick-text-inline {
-      display:inline-block;text-align:center;min-width:1em;
-    }
-
-    .tick-text-inline+.tick-text-inline {
-      margin-left:-.325em;
-    }
-
-    .tick-group {
-      margin:0 .5em;text-align:center;
-    }
-
+    /* Base layout */
+    * { box-sizing: border-box; }
     body {
-      background-color: rgb(255, 255, 255) !important;
       margin: 0;
       min-height: 100vh;
       display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 1rem;
       place-items: center;
+      background: var(--page-bg) !important;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
+
+    .controls {
+      width: min(1000px, 95vw);
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: .75rem;
+      padding: 1rem;
+      border-radius: 14px;
+      box-shadow: 0 6px 22px rgba(0,0,0,.08);
+      background: #fff;
+      border: 1px solid rgba(0,0,0,.06);
+    }
+    .controls label {
+      display: grid;
+      gap: .35rem;
+      font-size: .9rem;
+      color: #3b3d3b;
+      align-content: start;
+    }
+    .controls input[type="color"],
+    .controls input[type="number"],
+    .controls input[type="range"] {
+      width: 100%;
+      height: 38px;
+      border: 1px solid rgba(0,0,0,.15);
+      border-radius: 8px;
+      padding: 0 8px;
+      background: #fafafa;
+    }
+    .controls .stack {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: .5rem;
+      align-items: center;
+    }
+    .controls button {
+      grid-column: -2 / -1;
+      height: 38px;
+      border: 1px solid rgba(0,0,0,.15);
+      background: #f3f3f3;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    /* ===== Flip styles (from your snippet, converted to variables) ===== */
+    .tick {
+      font-size: 1rem; white-space: nowrap;
+      font-family: arial, sans-serif;
+    }
+    .tick-flip, .tick-text-inline {
+      font-size: var(--flip-size);
+    }
+    .tick-label {
+      margin-top: 1em; font-size: 1em;
+      color: var(--label-text) !important;
+    }
+    .tick-char { width: 1.5em; }
 
     .tick-text-inline {
-      color: rgb(90, 93, 99) !important;
+      display: inline-block; text-align: center; min-width: 1em;
+      color: var(--inline-text) !important;
     }
+    .tick-text-inline + .tick-text-inline { margin-left: -.325em; }
 
-    .tick-label {
-      color: rgb(90, 93, 99) !important;
-    }
+    .tick-group { margin: 0 .5em; text-align: center; }
 
     .tick-flip-panel {
-      color: rgb(255, 255, 255) !important;
+      background-color: var(--tile-bg) !important;
+      color: var(--tile-text) !important;
+      border-radius: var(--tile-radius) !important;
     }
-
-    /* Set to inherit to avoid an empty font-family rule */
-    .tick-flip {
-      font-family: inherit !important;
-    }
-
     .tick-flip-panel-text-wrapper {
       line-height: 1.45 !important;
+      color: var(--tile-text) !important;
+    }
+    .tick-flip { font-family: inherit !important; }
+
+    .wrap {
+      width: 100%;
+      display: grid;
+      justify-items: center;
+      align-content: center;
+      gap: 1rem;
+      padding: clamp(12px,2vw,24px);
     }
 
-    .tick-flip-panel {
-      background-color: rgb(59, 61, 59) !important;
-    }
-
-    .tick-flip {
-      border-radius:0.12em !important;
-    }
-
-    /* Optional: simple heading + responsive scale */
     .title {
       font: 600 clamp(1rem, 2.5vw, 1.5rem)/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       color: #3b3d3b;
-      margin: 0 0 0.5rem;
+      margin: 0;
       text-align: center;
     }
-    @media (max-width: 480px) {
-      .tick { font-size: 0.85rem; }
-      .tick-flip,.tick-text-inline { font-size: 2rem; }
+
+    /* Responsive nudge on very small screens */
+    @media (max-width: 520px){
+      .controls { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .tick { font-size: .85rem; }
     }
   </style>
 </head>
 <body>
 
-  <h1 class="title">Event Countdown</h1>
+  <!-- Controls -->
+  <form class="controls" id="controls" onsubmit="return false;">
+    <label>Tile background
+      <input type="color" id="tileBg" value="#3b3d3b">
+    </label>
+    <label>Tile text
+      <input type="color" id="tileText" value="#ffffff">
+    </label>
+    <label>Label text
+      <input type="color" id="labelText" value="#5a5d63">
+    </label>
+    <label>Inline/separator text
+      <input type="color" id="inlineText" value="#5a5d63">
+    </label>
+    <label>Page background
+      <input type="color" id="pageBg" value="#ffffff">
+    </label>
 
-  <!--
-    Set your target using data-target (ISO 8601).
-    Examples:
-      data-target="2025-12-25T10:00:00-05:00"  (local offset)
-      data-target="2025-12-25T15:00:00Z"       (UTC)
-    If data-target is omitted, it will default to next Jan 1 @ 00:00:00 UTC.
-  -->
-  <div class="tick" data-did-init="handleTickInit"
-       data-target="2025-12-25T10:00:00-05:00">
-    <div data-repeat="true" data-layout="horizontal fit" data-transform="preset(d, h, m, s) -> delay">
-      <div class="tick-group">
-        <div data-key="value" data-repeat="true" data-transform="pad(00) -> split -> delay">
-          <span data-view="flip"></span>
+    <label class="stack">Size (em)
+      <input type="number" id="sizeEm" value="9" step="0.25" min="2" max="20" style="width:80px;">
+    </label>
+
+    <button type="button" id="resetBtn">Reset</button>
+  </form>
+
+  <div class="wrap">
+    <h1 class="title">Event Countdown</h1>
+
+    <!--
+      Set your target using data-target (ISO 8601).
+      Examples:
+        data-target="2025-12-25T10:00:00-05:00"  (local offset)
+        data-target="2025-12-25T15:00:00Z"       (UTC)
+      If data-target is omitted, it defaults to next Jan 1 @ 00:00:00 UTC.
+    -->
+    <div class="tick" data-did-init="handleTickInit"
+         data-target="2025-12-25T10:00:00-05:00">
+      <div data-repeat="true" data-layout="horizontal fit" data-transform="preset(d, h, m, s) -> delay">
+        <div class="tick-group">
+          <div data-key="value" data-repeat="true" data-transform="pad(00) -> split -> delay">
+            <span data-view="flip"></span>
+          </div>
+          <span data-key="label" data-view="text" class="tick-label"></span>
         </div>
-        <span data-key="label" data-view="text" class="tick-label"></span>
       </div>
+    </div>
+
+    <div class="tick-onended-message" style="display:none">
+      <p class="title" style="color:#3b3d3b">Time's up</p>
     </div>
   </div>
 
-  <div class="tick-onended-message" style="display:none">
-    <p class="title" style="color:#3b3d3b">Time's up</p>
-  </div>
-
-  <!-- Flip/Tick core JS (registers global Tick + flip view) -->
+  <!-- Flip/Tick core JS -->
   <script src="https://unpkg.com/@pqina/flip/dist/flip.min.js"></script>
 
   <script>
     function handleTickInit(tick) {
-      // Optional: localization example
-      /*
-      const locale = {
-        YEAR_PLURAL:'Years', YEAR_SINGULAR:'Year',
-        MONTH_PLURAL:'Months', MONTH_SINGULAR:'Month',
-        WEEK_PLURAL:'Weeks', WEEK_SINGULAR:'Week',
-        DAY_PLURAL:'Days', DAY_SINGULAR:'Day',
-        HOUR_PLURAL:'Hours', HOUR_SINGULAR:'Hour',
-        MINUTE_PLURAL:'Minutes', MINUTE_SINGULAR:'Minute',
-        SECOND_PLURAL:'Seconds', SECOND_SINGULAR:'Second',
-        MILLISECOND_PLURAL:'Milliseconds', MILLISECOND_SINGULAR:'Millisecond'
-      };
-      for (const k in locale) tick.setConstant(k, locale[k]);
-      */
-
-      // Use data-target if provided; otherwise default to next Jan 1 @ 00:00:00 UTC
+      // Determine target time: prefer data-target, else next Jan 1 @ 00:00:00 UTC
       const attrTarget = tick.root.getAttribute('data-target');
       const defaultTarget = (() => {
         const nextYear = new Date().getUTCFullYear() + 1;
@@ -143,7 +202,6 @@
       })();
       const targetISO = attrTarget || defaultTarget;
 
-      // Create countdown
       const counter = Tick.count.down(targetISO);
 
       counter.onupdate = function(value) {
@@ -151,12 +209,60 @@
       };
 
       counter.onended = function() {
-        // Hide counter and show message
         tick.root.style.display = 'none';
         const msg = document.querySelector('.tick-onended-message');
         if (msg) msg.style.display = '';
       };
     }
+
+    // === Controls wiring ===
+    const rootStyle = document.documentElement.style;
+    const qs = sel => document.querySelector(sel);
+
+    function applyVars(vars){
+      if ('tileBg' in vars)    rootStyle.setProperty('--tile-bg', vars.tileBg);
+      if ('tileText' in vars)  rootStyle.setProperty('--tile-text', vars.tileText);
+      if ('labelText' in vars) rootStyle.setProperty('--label-text', vars.labelText);
+      if ('inlineText'in vars) rootStyle.setProperty('--inline-text', vars.inlineText);
+      if ('pageBg' in vars)    rootStyle.setProperty('--page-bg', vars.pageBg);
+      if ('sizeEm' in vars)    rootStyle.setProperty('--flip-size', vars.sizeEm + 'em');
+    }
+
+    // Defaults (match :root)
+    const DEFAULTS = {
+      tileBg:   '#3b3d3b',
+      tileText: '#ffffff',
+      labelText:'#5a5d63',
+      inlineText:'#5a5d63',
+      pageBg:   '#ffffff',
+      sizeEm:   9
+    };
+
+    // Initialize controls with defaults
+    function initControls(){
+      qs('#tileBg').value    = DEFAULTS.tileBg;
+      qs('#tileText').value  = DEFAULTS.tileText;
+      qs('#labelText').value = DEFAULTS.labelText;
+      qs('#inlineText').value= DEFAULTS.inlineText;
+      qs('#pageBg').value    = DEFAULTS.pageBg;
+      qs('#sizeEm').value    = DEFAULTS.sizeEm;
+      applyVars(DEFAULTS);
+    }
+
+    // Bind events
+    function bindControlEvents(){
+      qs('#tileBg').addEventListener('input', e => applyVars({tileBg:e.target.value}));
+      qs('#tileText').addEventListener('input', e => applyVars({tileText:e.target.value}));
+      qs('#labelText').addEventListener('input', e => applyVars({labelText:e.target.value}));
+      qs('#inlineText').addEventListener('input', e => applyVars({inlineText:e.target.value}));
+      qs('#pageBg').addEventListener('input', e => applyVars({pageBg:e.target.value}));
+      qs('#sizeEm').addEventListener('input', e => applyVars({sizeEm: parseFloat(e.target.value)||DEFAULTS.sizeEm}));
+      qs('#resetBtn').addEventListener('click', () => initControls());
+    }
+
+    // Kick off
+    initControls();
+    bindControlEvents();
   </script>
 </body>
 </html>
