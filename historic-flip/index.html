@@ -3,20 +3,20 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Historic Flip — Preset Count‑Up (Responsive)</title>
+  <title>Historic Flip — Preset Count‑Up (Responsive + Full‑Screen)</title>
 
   <!-- Flip (Tick) styles -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@pqina/flip/dist/flip.min.css" />
 
   <style>
     :root{
-      /* ==== DEFAULT THEME (matches screenshot) ==== */
-      --bg:#ffffff;        /* page background */
-      --text:#ffffff;      /* labels / title */
-      --value:#ffffff;     /* digit color */
-      --panel-bg:#3b3d3e;  /* dark gray flip panels */
-      --radius:8px;        /* subtle rounding */
-      --leading:1.35;
+      /* Your default theme (matches current site) */
+      --bg:#ffffff;
+      --text:#356307;     /* green labels/title */
+      --value:#ff2ba3;    /* pink digits */
+      --panel-bg:#3d2811; /* dark brown panels */
+      --radius:12px;
+      --leading:1.4;
 
       /* Responsive sizing */
       --digit-min: 2.2rem;
@@ -43,13 +43,23 @@
 
     header{
       padding:.6rem clamp(1rem, 3vw, 2rem) 0;
+      display:flex; align-items:center; justify-content:space-between;
     }
     header h1{
       margin:0;
       font-size:clamp(1rem, 1.2vw, 1.1rem);
       font-weight:600;
-      color:#6b7280; /* muted header chrome */
+      color:#334155;
+      opacity:.75;
     }
+
+    /* Full-screen toggle button (hidden while in fullscreen) */
+    .fs-btn{
+      border:0; cursor:pointer;
+      border-radius:10px; font-weight:600; font-size:.95rem;
+      padding:.5rem .8rem; background:#0f766e; color:#fff;
+    }
+    .fs-active .fs-btn{ display:none; }
 
     /* CLOCK FIRST */
     .stage{
@@ -66,33 +76,21 @@
       line-height:1.15;
       word-break:break-word;
       padding:0 .25rem;
-      text-shadow:0 1px 2px rgba(0,0,0,.25);
     }
 
     .tick { white-space:nowrap; max-width:100%; overflow:hidden; }
-    /* Responsive digits: scale with viewport, capped at 7em */
     .tick-flip, .tick-text-inline {
       font-size: clamp(var(--digit-min), var(--digit-vw), var(--digit-max));
     }
-
     .tick-group { margin:0 .35em; text-align:center; }
-    .tick-label {
-      margin-top:.7em;
-      font-size:1em;
-      color:var(--text) !important;
-      opacity:.95;
-      text-shadow:0 1px 2px rgba(0,0,0,.25);
-    }
+    .tick-label { margin-top:.7em; font-size:1em; color:var(--text) !important; }
 
     .tick-flip { border-radius:var(--radius) !important; }
-    .tick-flip-panel {
-      background-color:var(--panel-bg) !important;
-      color:var(--value) !important;
-    }
+    .tick-flip-panel { background-color:var(--panel-bg) !important; color:var(--value) !important; }
     .tick-flip-panel-text-wrapper { line-height:var(--leading) !important; }
-    .tick-credits{ display:none !important; } /* hide PQINA credit */
+    .tick-credits{ display:none !important; }
 
-    /* Controls under the clock */
+    /* Bars under the clock */
     .bar{
       max-width:1200px;
       margin:0 auto;
@@ -161,6 +159,13 @@
 
     footer{ text-align:center; color:#94a3b8; font-size:.9rem; padding:.25rem 0 1rem; }
 
+    /* ===== FULL-SCREEN: hide all controls ===== */
+    .fs-active header,
+    .fs-active .bar,
+    .fs-active details.panel,
+    .fs-active footer { display:none !important; }
+
+    /* ===== Mobile niceties ===== */
     @media (max-width: 560px){
       .tick-group { margin: 0 .2em; }
       .tick-label { margin-top: .5em; font-size: .95em; }
@@ -170,7 +175,10 @@
   </style>
 </head>
 <body>
-  <header><h1>Historic Flip — Preset Count‑Up</h1></header>
+  <header>
+    <h1>Historic Flip — Preset Count‑Up</h1>
+    <button class="fs-btn" id="fsToggle" type="button" title="Full Screen (F)">Full Screen</button>
+  </header>
 
   <!-- CLOCK -->
   <section class="stage">
@@ -209,8 +217,8 @@
     <summary>Style</summary>
     <div class="panel-body">
       <div class="chip"><label>Background</label><input id="bgColor" type="color" value="#ffffff"></div>
-      <div class="chip"><label>Text</label><input id="textColor" type="color" value="#ffffff"></div>
-      <div class="chip"><label>Value</label><input id="valueColor" type="color" value="#ffffff"></div>
+      <div class="chip"><label>Text</label><input id="textColor" type="color" value="#356307"></div>
+      <div class="chip"><label>Value</label><input id="valueColor" type="color" value="#ff2ba3"></div>
       <div class="chip"><label>Font</label>
         <select id="fontFamily">
           <option value="Arial, Helvetica, sans-serif" selected>Arial</option>
@@ -220,9 +228,9 @@
           <option value="'Trebuchet MS', Arial, sans-serif">Trebuchet MS</option>
         </select>
       </div>
-      <div class="chip"><label>Leading</label><input id="leading" type="range" min="1.0" max="2.0" step="0.05" value="1.35"></div>
-      <div class="chip"><label>Panel</label><input id="panelBg" type="color" value="#3b3d3e"></div>
-      <div class="chip"><label>Radius</label><input id="cornerRadius" type="range" min="0" max="24" step="1" value="8"></div>
+      <div class="chip"><label>Leading</label><input id="leading" type="range" min="1.0" max="2.0" step="0.05" value="1.4"></div>
+      <div class="chip"><label>Panel</label><input id="panelBg" type="color" value="#3d2811"></div>
+      <div class="chip"><label>Radius</label><input id="cornerRadius" type="range" min="0" max="32" step="1" value="12"></div>
 
       <!-- Reset Colors Button -->
       <div class="chip">
@@ -251,20 +259,20 @@
     const LS_EVENT = 'historicFlipEvent';
     const LS_STYLE = 'historicFlipStyle';
 
-    // Defaults used by Reset Colors (match screenshot theme)
+    // Defaults used by Reset Colors
     const DEFAULT_STYLE = {
       bg:'#ffffff',
-      text:'#ffffff',
-      value:'#ffffff',
+      text:'#356307',
+      value:'#ff2ba3',
       font:'Arial, Helvetica, sans-serif',
-      leading:'1.35',
-      panelBg:'#3b3d3e',
-      cornerRadius:'8'
+      leading:'1.4',
+      panelBg:'#3d2811',
+      cornerRadius:'12'
     };
 
     function isoLocalFromInput(v){
       if (!v) return null;
-      return v.length === 16 ? v + ':00' : v; // "YYYY-MM-DDTHH:MM[:SS]"
+      return v.length === 16 ? v + ':00' : v;
     }
     function setTitle(t){ qs('titleLine').textContent = t || ''; }
 
@@ -317,7 +325,7 @@
       if (!p) return;
       const hasTZ = /([+-]\d{2}:\d{2}|Z)$/.test(p.at);
       qs('eventName').value = p.name;
-      qs('eventStart').value = p.at.slice(0,16);  // display-friendly
+      qs('eventStart').value = p.at.slice(0,16);
       qs('eventStart').dataset.tziso = hasTZ ? p.at : '';
     }
     qs('btnLoadPreset').addEventListener('click', () => {
@@ -377,7 +385,7 @@
       document.documentElement.style.setProperty('--value', s.value);
       document.documentElement.style.setProperty('--panel-bg', s.panelBg);
       document.documentElement.style.setProperty('--leading', s.leading);
-      document.documentElement.style.setProperty('--radius', (s.cornerRadius||'8') + 'px');
+      document.documentElement.style.setProperty('--radius', (s.cornerRadius||'12') + 'px');
       document.body.style.fontFamily = s.font;
     }
 
@@ -413,7 +421,7 @@
       });
     });
 
-    // Reset Colors button — returns to screenshot theme
+    // Reset Colors
     document.getElementById('resetColors').addEventListener('click', () => {
       styleEls.bg.value = DEFAULT_STYLE.bg;
       styleEls.text.value = DEFAULT_STYLE.text;
@@ -425,6 +433,46 @@
 
       applyStyle(DEFAULT_STYLE);
       localStorage.setItem(LS_STYLE, JSON.stringify(DEFAULT_STYLE));
+    });
+
+    /* ======== Full‑Screen handling ======== */
+    const fsToggle = document.getElementById('fsToggle');
+
+    function enterFullscreen(){
+      const el = document.documentElement;
+      if (el.requestFullscreen) el.requestFullscreen();
+      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen(); // Safari
+      else if (el.msRequestFullscreen) el.msRequestFullscreen();         // IE/Edge legacy
+    }
+    function exitFullscreen(){
+      if (document.exitFullscreen) document.exitFullscreen();
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      else if (document.msExitFullscreen) document.msExitFullscreen();
+    }
+    function toggleFullscreen(){
+      if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement){
+        exitFullscreen();
+      } else {
+        enterFullscreen();
+      }
+    }
+    fsToggle.addEventListener('click', toggleFullscreen);
+
+    // Add/remove class to hide controls in fullscreen
+    function syncFSClass(){
+      const active = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+      document.documentElement.classList.toggle('fs-active', active);
+    }
+    document.addEventListener('fullscreenchange', syncFSClass);
+    document.addEventListener('webkitfullscreenchange', syncFSClass);
+    document.addEventListener('msfullscreenchange', syncFSClass);
+
+    // Keyboard shortcut: F to toggle fullscreen
+    document.addEventListener('keydown', (e) => {
+      if (e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        toggleFullscreen();
+      }
     });
   </script>
 </body>
