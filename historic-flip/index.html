@@ -10,10 +10,11 @@
 
   <style>
     :root{
+      /* Match other flip-clocks defaults */
       --bg:#ffffff;
-      --text:#0b3b17;
-      --value:#5b2a77;
-      --panel-bg:#ba7630;
+      --text:#356307;     /* green labels/title */
+      --value:#ff2ba3;    /* pink digits */
+      --panel-bg:#3d2811; /* dark brown panels */
       --radius:12px;
       --leading:1.4;
     }
@@ -23,7 +24,7 @@
 
     body {
       background:var(--bg);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      font-family: Arial, Helvetica, sans-serif; /* default font like other clocks */
       color:#0f172a;
       display:grid;
       grid-template-rows:auto 1fr auto auto; /* header, CLOCK, bars, footer */
@@ -197,19 +198,19 @@
     <summary>Style</summary>
     <div class="panel-body">
       <div class="chip"><label>Background</label><input id="bgColor" type="color" value="#ffffff"></div>
-      <div class="chip"><label>Text</label><input id="textColor" type="color" value="#0b3b17"></div>
-      <div class="chip"><label>Value</label><input id="valueColor" type="color" value="#5b2a77"></div>
+      <div class="chip"><label>Text</label><input id="textColor" type="color" value="#356307"></div>
+      <div class="chip"><label>Value</label><input id="valueColor" type="color" value="#ff2ba3"></div>
       <div class="chip"><label>Font</label>
         <select id="fontFamily">
+          <option value="Arial, Helvetica, sans-serif" selected>Arial</option>
           <option value="system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif">System UI</option>
-          <option value="Arial, Helvetica, sans-serif">Arial</option>
           <option value="Georgia, serif">Georgia</option>
           <option value="'Courier New', monospace">Courier New</option>
           <option value="'Trebuchet MS', Arial, sans-serif">Trebuchet MS</option>
         </select>
       </div>
       <div class="chip"><label>Leading</label><input id="leading" type="range" min="1.0" max="2.0" step="0.05" value="1.4"></div>
-      <div class="chip"><label>Panel</label><input id="panelBg" type="color" value="#ba7630"></div>
+      <div class="chip"><label>Panel</label><input id="panelBg" type="color" value="#3d2811"></div>
       <div class="chip"><label>Radius</label><input id="cornerRadius" type="range" min="0" max="32" step="1" value="12"></div>
 
       <!-- Reset Colors Button -->
@@ -239,14 +240,14 @@
     const LS_EVENT = 'historicFlipEvent';
     const LS_STYLE = 'historicFlipStyle';
 
-    // Defaults for Reset Colors
+    // Defaults used by Reset Colors (match other clocks)
     const DEFAULT_STYLE = {
       bg:'#ffffff',
-      text:'#0b3b17',
-      value:'#5b2a77',
-      font:"system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+      text:'#356307',
+      value:'#ff2ba3',
+      font:'Arial, Helvetica, sans-serif',
       leading:'1.4',
-      panelBg:'#ba7630',
+      panelBg:'#3d2811',
       cornerRadius:'12'
     };
 
@@ -403,7 +404,7 @@
       });
     });
 
-    // Reset Colors button
+    // Reset Colors button — matches other flip clocks
     document.getElementById('resetColors').addEventListener('click', () => {
       // Reset UI controls
       styleEls.bg.value = DEFAULT_STYLE.bg;
