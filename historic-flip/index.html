@@ -10,18 +10,18 @@
 
   <style>
     :root{
-      /* Match other flip‑clocks defaults */
-      --bg:#ffffff;
-      --text:#356307;     /* green labels/title */
-      --value:#ff2ba3;    /* pink digits */
-      --panel-bg:#3d2811; /* dark brown panels */
-      --radius:12px;
-      --leading:1.4;
+      /* ==== DEFAULT THEME (matches screenshot) ==== */
+      --bg:#ffffff;        /* page background */
+      --text:#ffffff;      /* labels / title */
+      --value:#ffffff;     /* digit color */
+      --panel-bg:#3b3d3e;  /* dark gray flip panels */
+      --radius:8px;        /* subtle rounding */
+      --leading:1.35;
 
       /* Responsive sizing */
-      --digit-min: 2.2rem;  /* smallest digit size on tiny screens */
-      --digit-vw: 12vw;     /* how fast digits scale with viewport */
-      --digit-max: 7em;     /* cap (your original target) */
+      --digit-min: 2.2rem;
+      --digit-vw: 12vw;
+      --digit-max: 7em;
       --title-min: 1.05rem;
       --title-vw: 2.4vw;
       --title-max: 1.6rem;
@@ -32,13 +32,13 @@
 
     body {
       background:var(--bg);
-      font-family: Arial, Helvetica, sans-serif; /* default font like your other clocks */
+      font-family: Arial, Helvetica, sans-serif;
       color:#0f172a;
       display:grid;
       grid-template-rows:auto 1fr auto auto; /* header, CLOCK, bars, footer */
       gap:.25rem;
       transition:background .15s ease;
-      overflow-x:hidden; /* avoid sideways scroll on small screens */
+      overflow-x:hidden;
     }
 
     header{
@@ -48,8 +48,7 @@
       margin:0;
       font-size:clamp(1rem, 1.2vw, 1.1rem);
       font-weight:600;
-      color:#334155;
-      opacity:.75;
+      color:#6b7280; /* muted header chrome */
     }
 
     /* CLOCK FIRST */
@@ -67,27 +66,33 @@
       line-height:1.15;
       word-break:break-word;
       padding:0 .25rem;
+      text-shadow:0 1px 2px rgba(0,0,0,.25);
     }
 
-    .tick {
-      white-space:nowrap;
-      max-width:100%;
-      overflow:hidden; /* just in case on ultra-narrow screens */
-    }
+    .tick { white-space:nowrap; max-width:100%; overflow:hidden; }
     /* Responsive digits: scale with viewport, capped at 7em */
     .tick-flip, .tick-text-inline {
       font-size: clamp(var(--digit-min), var(--digit-vw), var(--digit-max));
     }
 
     .tick-group { margin:0 .35em; text-align:center; }
-    .tick-label { margin-top:.7em; font-size:1em; color:var(--text) !important; }
+    .tick-label {
+      margin-top:.7em;
+      font-size:1em;
+      color:var(--text) !important;
+      opacity:.95;
+      text-shadow:0 1px 2px rgba(0,0,0,.25);
+    }
 
     .tick-flip { border-radius:var(--radius) !important; }
-    .tick-flip-panel { background-color:var(--panel-bg) !important; color:var(--value) !important; }
+    .tick-flip-panel {
+      background-color:var(--panel-bg) !important;
+      color:var(--value) !important;
+    }
     .tick-flip-panel-text-wrapper { line-height:var(--leading) !important; }
-    .tick-credits{ display:none !important; } /* remove PQINA credit */
+    .tick-credits{ display:none !important; } /* hide PQINA credit */
 
-    /* Bars under the clock */
+    /* Controls under the clock */
     .bar{
       max-width:1200px;
       margin:0 auto;
@@ -96,14 +101,11 @@
     }
 
     .eventbar, .presetbar{
-      display:flex;
-      flex-wrap:wrap; /* allow wrapping on small screens */
-      gap:.5rem;
-      align-items:center;
+      display:flex; flex-wrap:wrap;
+      gap:.5rem; align-items:center;
       border:1px solid #e5e7eb;
       border-radius:14px;
-      padding:.5rem;
-      background:#fff;
+      padding:.5rem; background:#fff;
       box-shadow:0 1px 2px rgba(0,0,0,.04);
       margin-bottom:.35rem;
     }
@@ -111,12 +113,8 @@
     .eventbar input[type="text"],
     .eventbar input[type="datetime-local"],
     .presetbar select{
-      border:1px solid #dfe3e6;
-      border-radius:10px;
-      padding:.5rem .6rem;
-      font-size:1rem;
-      background:#fff;
-      min-height:42px;
+      border:1px solid #dfe3e6; border-radius:10px;
+      padding:.5rem .6rem; font-size:1rem; background:#fff; min-height:42px;
     }
     .eventbar .grow{ flex:1 1 280px; min-width:10rem; }
     .eventbar .when{ flex:0 1 220px; min-width:12rem; }
@@ -125,64 +123,44 @@
     .btn{
       border:0; cursor:pointer;
       border-radius:10px; font-weight:600; font-size:1rem;
-      padding:.55rem .9rem;
-      white-space:nowrap;
-      min-height:42px;
+      padding:.55rem .9rem; white-space:nowrap; min-height:42px;
     }
     .btn.primary{ background:#0f766e; color:#fff; }
     .btn.ghost{ background:#f1f5f9; color:#0f172a; }
     .btn.danger{ background:#ef4444; color:#fff; }
 
-    /* Optional Style panel */
+    /* Style panel */
     details.panel{
-      max-width:1200px;
-      margin:.1rem auto 0;
+      max-width:1200px; margin:.1rem auto 0;
       padding:0 clamp(1rem, 3vw, 2rem);
     }
     details.panel > summary{
-      list-style:none;
-      cursor:pointer;
-      font-weight:600;
-      color:#334155;
-      background:#fff;
-      border:1px solid #e5e7eb;
-      border-radius:12px;
-      padding:.6rem .9rem;
-      box-shadow:0 1px 2px rgba(0,0,0,.04);
+      list-style:none; cursor:pointer; font-weight:600; color:#334155;
+      background:#fff; border:1px solid #e5e7eb; border-radius:12px;
+      padding:.6rem .9rem; box-shadow:0 1px 2px rgba(0,0,0,.04);
     }
     details.panel[open] > summary{ border-bottom-left-radius:0; border-bottom-right-radius:0; }
     .panel-body{
-      border:1px solid #e5e7eb;
-      border-top:0;
-      border-bottom-left-radius:12px;
-      border-bottom-right-radius:12px;
-      background:#fff;
-      padding:.8rem;
-      display:flex; flex-wrap:wrap; gap:.75rem 1rem;
-      align-items:center;
+      border:1px solid #e5e7eb; border-top:0;
+      border-bottom-left-radius:12px; border-bottom-right-radius:12px;
+      background:#fff; padding:.8rem;
+      display:flex; flex-wrap:wrap; gap:.75rem 1rem; align-items:center;
     }
     .chip{
       display:flex; align-items:center; gap:.5rem;
-      border:1px solid #d1d5db;
-      border-radius:999px;
-      padding:.25rem .6rem;
-      background:#fff;
-      white-space:nowrap;
+      border:1px solid #d1d5db; border-radius:999px;
+      padding:.25rem .6rem; background:#fff; white-space:nowrap;
     }
     .chip label{ font-size:.95rem; }
     .chip input[type="color"]{ width:40px; height:32px; border:1px solid #cbd5e1; border-radius:8px; }
     .chip select, .chip input[type="range"]{
       border:1px solid #cbd5e1; border-radius:8px; padding:.35rem .5rem;
-      font-size:.95rem; background:#fff;
-      min-height:42px;
+      font-size:.95rem; background:#fff; min-height:42px;
     }
     .chip input[type="range"]{ width:160px; }
 
-    footer{
-      text-align:center; color:#94a3b8; font-size:.9rem; padding:.25rem 0 1rem;
-    }
+    footer{ text-align:center; color:#94a3b8; font-size:.9rem; padding:.25rem 0 1rem; }
 
-    /* ===== Extra mobile niceties ===== */
     @media (max-width: 560px){
       .tick-group { margin: 0 .2em; }
       .tick-label { margin-top: .5em; font-size: .95em; }
@@ -226,13 +204,13 @@
     </div>
   </div>
 
-  <!-- Optional Style Panel -->
+  <!-- Style Panel -->
   <details class="panel">
     <summary>Style</summary>
     <div class="panel-body">
       <div class="chip"><label>Background</label><input id="bgColor" type="color" value="#ffffff"></div>
-      <div class="chip"><label>Text</label><input id="textColor" type="color" value="#356307"></div>
-      <div class="chip"><label>Value</label><input id="valueColor" type="color" value="#ff2ba3"></div>
+      <div class="chip"><label>Text</label><input id="textColor" type="color" value="#ffffff"></div>
+      <div class="chip"><label>Value</label><input id="valueColor" type="color" value="#ffffff"></div>
       <div class="chip"><label>Font</label>
         <select id="fontFamily">
           <option value="Arial, Helvetica, sans-serif" selected>Arial</option>
@@ -242,9 +220,9 @@
           <option value="'Trebuchet MS', Arial, sans-serif">Trebuchet MS</option>
         </select>
       </div>
-      <div class="chip"><label>Leading</label><input id="leading" type="range" min="1.0" max="2.0" step="0.05" value="1.4"></div>
-      <div class="chip"><label>Panel</label><input id="panelBg" type="color" value="#3d2811"></div>
-      <div class="chip"><label>Radius</label><input id="cornerRadius" type="range" min="0" max="32" step="1" value="12"></div>
+      <div class="chip"><label>Leading</label><input id="leading" type="range" min="1.0" max="2.0" step="0.05" value="1.35"></div>
+      <div class="chip"><label>Panel</label><input id="panelBg" type="color" value="#3b3d3e"></div>
+      <div class="chip"><label>Radius</label><input id="cornerRadius" type="range" min="0" max="24" step="1" value="8"></div>
 
       <!-- Reset Colors Button -->
       <div class="chip">
@@ -273,19 +251,19 @@
     const LS_EVENT = 'historicFlipEvent';
     const LS_STYLE = 'historicFlipStyle';
 
-    // Defaults used by Reset Colors (match other clocks)
+    // Defaults used by Reset Colors (match screenshot theme)
     const DEFAULT_STYLE = {
       bg:'#ffffff',
-      text:'#356307',
-      value:'#ff2ba3',
+      text:'#ffffff',
+      value:'#ffffff',
       font:'Arial, Helvetica, sans-serif',
-      leading:'1.4',
-      panelBg:'#3d2811',
-      cornerRadius:'12'
+      leading:'1.35',
+      panelBg:'#3b3d3e',
+      cornerRadius:'8'
     };
 
     function isoLocalFromInput(v){
-      if (!v) return null;                    // empty
+      if (!v) return null;
       return v.length === 16 ? v + ':00' : v; // "YYYY-MM-DDTHH:MM[:SS]"
     }
     function setTitle(t){ qs('titleLine').textContent = t || ''; }
@@ -327,7 +305,7 @@
       bootEvent();
       bootStyle();
     }
-    window.handleTickInit = handleTickInit; // ensure global
+    window.handleTickInit = handleTickInit;
 
     /* ======== Presets UI ======== */
     function populatePresets(){
@@ -356,11 +334,10 @@
       if (saved && saved.name && saved.isoLocal){
         qs('eventName').value = saved.name;
         qs('eventStart').value = (saved.isoLocal || '').slice(0,16);
-        qs('eventStart').dataset.tziso = ''; // saved isoLocal is local
+        qs('eventStart').dataset.tziso = '';
         setTitle(saved.name);
         startCounter(saved.isoLocal);
       } else {
-        // Default to first preset
         loadPresetToFields(0);
         startFromUI(true);
       }
@@ -400,13 +377,12 @@
       document.documentElement.style.setProperty('--value', s.value);
       document.documentElement.style.setProperty('--panel-bg', s.panelBg);
       document.documentElement.style.setProperty('--leading', s.leading);
-      document.documentElement.style.setProperty('--radius', (s.cornerRadius||'12') + 'px');
+      document.documentElement.style.setProperty('--radius', (s.cornerRadius||'8') + 'px');
       document.body.style.fontFamily = s.font;
     }
 
     function bootStyle(){
       const saved = JSON.parse(localStorage.getItem(LS_STYLE) || 'null') || DEFAULT_STYLE;
-      // set UI from saved
       styleEls.bg.value = saved.bg;
       styleEls.text.value = saved.text;
       styleEls.value.value = saved.value;
@@ -437,9 +413,8 @@
       });
     });
 
-    // Reset Colors button — matches other flip clocks
+    // Reset Colors button — returns to screenshot theme
     document.getElementById('resetColors').addEventListener('click', () => {
-      // Reset UI controls
       styleEls.bg.value = DEFAULT_STYLE.bg;
       styleEls.text.value = DEFAULT_STYLE.text;
       styleEls.value.value = DEFAULT_STYLE.value;
@@ -448,7 +423,6 @@
       styleEls.panelBg.value = DEFAULT_STYLE.panelBg;
       styleEls.cornerRadius.value = DEFAULT_STYLE.cornerRadius;
 
-      // Apply and save
       applyStyle(DEFAULT_STYLE);
       localStorage.setItem(LS_STYLE, JSON.stringify(DEFAULT_STYLE));
     });
