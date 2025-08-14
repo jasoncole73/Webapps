@@ -1,179 +1,212 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Event Countdown – Flip Clock</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Event Countdown – Flip Clock</title>
 
-  <!-- Flip/Tick core CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/@pqina/flip/dist/flip.min.css">
+<!-- Flip/Tick core CSS -->
+<link rel="stylesheet" href="https://unpkg.com/@pqina/flip/dist/flip.min.css">
 
-  <style>
-    :root{
-      /* === Theme variables (defaults) === */
-      --flip-size: 9em;              /* requested default */
-      --tile-bg:   #3b3d3b;
-      --tile-text: #ffffff;
-      --label-text:#5a5d63;
-      --inline-text:#5a5d63;
-      --page-bg:   #ffffff;
-      --tile-radius: .12em;
-    }
+<style>
+  :root{
+    /* === Theme variables (defaults) === */
+    --flip-size: 9em;              /* requested default size */
+    --tile-bg:   #3b3d3b;
+    --tile-text: #ffffff;
+    --label-text:#5a5d63;
+    --inline-text:#5a5d63;
+    --page-bg:   #ffffff;
+    --tile-radius: 0em;            /* square by default */
+  }
 
-    /* Hide any library credit/watermark if present */
-    .tick-credits{ display:none !important; }
+  /* Hide library credit/watermark if present */
+  .tick-credits{ display:none !important; }
 
-    /* Base layout */
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      grid-template-rows: auto 1fr;
-      gap: 1rem;
-      place-items: center;
-      background: var(--page-bg) !important;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 1rem;
+    place-items: center;
+    background: var(--page-bg) !important;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  }
 
-    .controls {
-      width: min(1000px, 95vw);
-      display: grid;
-      grid-template-columns: repeat(6, minmax(0, 1fr));
-      gap: .75rem;
-      padding: 1rem;
-      border-radius: 14px;
-      box-shadow: 0 6px 22px rgba(0,0,0,.08);
-      background: #fff;
-      border: 1px solid rgba(0,0,0,.06);
-    }
-    .controls label {
-      display: grid;
-      gap: .35rem;
-      font-size: .9rem;
-      color: #3b3d3b;
-      align-content: start;
-    }
-    .controls input[type="color"],
-    .controls input[type="number"],
-    .controls input[type="range"] {
-      width: 100%;
-      height: 38px;
-      border: 1px solid rgba(0,0,0,.15);
-      border-radius: 8px;
-      padding: 0 8px;
-      background: #fafafa;
-    }
-    .controls .stack {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: .5rem;
-      align-items: center;
-    }
-    .controls button {
-      grid-column: -2 / -1;
-      height: 38px;
-      border: 1px solid rgba(0,0,0,.15);
-      background: #f3f3f3;
-      border-radius: 8px;
-      cursor: pointer;
-    }
+  .panel {
+    width: min(1100px, 95vw);
+    display: grid;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: 14px;
+    box-shadow: 0 6px 22px rgba(0,0,0,.08);
+    background: #fff;
+    border: 1px solid rgba(0,0,0,.06);
+  }
 
-    /* ===== Flip styles (from your snippet, converted to variables) ===== */
-    .tick {
-      font-size: 1rem; white-space: nowrap;
-      font-family: arial, sans-serif;
-    }
-    .tick-flip, .tick-text-inline {
-      font-size: var(--flip-size);
-    }
-    .tick-label {
-      margin-top: 1em; font-size: 1em;
-      color: var(--label-text) !important;
-    }
-    .tick-char { width: 1.5em; }
+  .controls {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: .75rem;
+  }
 
-    .tick-text-inline {
-      display: inline-block; text-align: center; min-width: 1em;
-      color: var(--inline-text) !important;
-    }
-    .tick-text-inline + .tick-text-inline { margin-left: -.325em; }
+  .controls label {
+    display: grid;
+    gap: .35rem;
+    font-size: .9rem;
+    color: #3b3d3b;
+    align-content: start;
+  }
 
-    .tick-group { margin: 0 .5em; text-align: center; }
+  .controls input[type="color"],
+  .controls input[type="number"],
+  .controls input[type="range"],
+  .controls input[type="time"],
+  .controls input[type="date"],
+  .controls select {
+    width: 100%;
+    height: 38px;
+    border: 1px solid rgba(0,0,0,.15);
+    border-radius: 8px;
+    padding: 0 8px;
+    background: #fafafa;
+  }
 
-    .tick-flip-panel {
-      background-color: var(--tile-bg) !important;
-      color: var(--tile-text) !important;
-      border-radius: var(--tile-radius) !important;
-    }
-    .tick-flip-panel-text-wrapper {
-      line-height: 1.45 !important;
-      color: var(--tile-text) !important;
-    }
-    .tick-flip { font-family: inherit !important; }
+  .controls button {
+    height: 38px;
+    border: 1px solid rgba(0,0,0,.15);
+    background: #f3f3f3;
+    border-radius: 8px;
+    cursor: pointer;
+  }
 
-    .wrap {
-      width: 100%;
-      display: grid;
-      justify-items: center;
-      align-content: center;
-      gap: 1rem;
-      padding: clamp(12px,2vw,24px);
-    }
+  .row {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0,1fr));
+    gap: .75rem;
+    align-items: center;
+  }
 
-    .title {
-      font: 600 clamp(1rem, 2.5vw, 1.5rem)/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color: #3b3d3b;
-      margin: 0;
-      text-align: center;
-    }
+  .title {
+    font: 600 clamp(1rem, 2.5vw, 1.5rem)/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    color: #3b3d3b;
+    margin: 0;
+    text-align: left;
+  }
 
-    /* Responsive nudge on very small screens */
-    @media (max-width: 520px){
-      .controls { grid-template-columns: repeat(2, minmax(0,1fr)); }
-      .tick { font-size: .85rem; }
-    }
-  </style>
+  .wrap {
+    width: 100%;
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: .5rem;
+    padding: clamp(12px,2vw,24px);
+  }
+
+  .target-line {
+    font-size: .95rem;
+    color: #555;
+    text-align: center;
+  }
+
+  /* ===== Flip styles (from your base, wired to CSS vars) ===== */
+  .tick { font-size: 1rem; white-space: nowrap; font-family: arial, sans-serif; }
+  .tick-flip, .tick-text-inline { font-size: var(--flip-size); }
+  .tick-label { margin-top: 1em; font-size: 1em; color: var(--label-text) !important; }
+  .tick-char { width: 1.5em; }
+  .tick-text-inline { display: inline-block; text-align: center; min-width: 1em; color: var(--inline-text) !important; }
+  .tick-text-inline + .tick-text-inline { margin-left: -.325em; }
+  .tick-group { margin: 0 .5em; text-align: center; }
+
+  .tick-flip { font-family: inherit !important; }
+  .tick-flip-panel {
+    background-color: var(--tile-bg) !important;
+    color: var(--tile-text) !important;
+    border-radius: var(--tile-radius) !important;
+  }
+  .tick-flip-panel-text-wrapper {
+    line-height: 1.45 !important;
+    color: var(--tile-text) !important;
+  }
+
+  /* Responsive */
+  @media (max-width: 900px){
+    .controls, .row { grid-template-columns: repeat(3, minmax(0,1fr)); }
+  }
+  @media (max-width: 520px){
+    .controls, .row { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .tick { font-size: .85rem; }
+  }
+</style>
 </head>
 <body>
 
-  <!-- Controls -->
-  <form class="controls" id="controls" onsubmit="return false;">
-    <label>Tile background
-      <input type="color" id="tileBg" value="#3b3d3b">
-    </label>
-    <label>Tile text
-      <input type="color" id="tileText" value="#ffffff">
-    </label>
-    <label>Label text
-      <input type="color" id="labelText" value="#5a5d63">
-    </label>
-    <label>Inline/separator text
-      <input type="color" id="inlineText" value="#5a5d63">
-    </label>
-    <label>Page background
-      <input type="color" id="pageBg" value="#ffffff">
-    </label>
+  <!-- THEME / APPEARANCE CONTROLS -->
+  <section class="panel">
+    <h2 class="title">Appearance</h2>
+    <form class="controls" id="controls" onsubmit="return false;">
+      <label>Tile background
+        <input type="color" id="tileBg" value="#3b3b3b">
+      </label>
+      <label>Tile text
+        <input type="color" id="tileText" value="#ffffff">
+      </label>
+      <label>Label text
+        <input type="color" id="labelText" value="#5a5d63">
+      </label>
+      <label>Inline/separator text
+        <input type="color" id="inlineText" value="#5a5d63">
+      </label>
+      <label>Page background
+        <input type="color" id="pageBg" value="#ffffff">
+      </label>
+      <label>Size (em)
+        <input type="number" id="sizeEm" value="9" step="0.25" min="2" max="24">
+      </label>
 
-    <label class="stack">Size (em)
-      <input type="number" id="sizeEm" value="9" step="0.25" min="2" max="20" style="width:80px;">
-    </label>
+      <label>Corner radius (em)
+        <input type="range" id="radiusEm" value="0" step="0.02" min="0" max="0.6">
+      </label>
 
-    <button type="button" id="resetBtn">Reset</button>
-  </form>
+      <button type="button" id="resetBtn">Reset</button>
+    </form>
+  </section>
+
+  <!-- EVENT CONTROLS -->
+  <section class="panel">
+    <h2 class="title">Event</h2>
+    <div class="row">
+      <label>Preset
+        <select id="eventSelect">
+          <option value="">— Select an event —</option>
+          <option value="newyear">New Year’s Day</option>
+          <option value="memorial">Memorial Day</option>
+          <option value="labor">Labor Day</option>
+          <option value="halloween">Halloween</option>
+          <option value="thanksgiving">Thanksgiving</option>
+          <option value="christmas">Christmas</option>
+        </select>
+      </label>
+
+      <label>Date (custom)
+        <input type="date" id="customDate" />
+      </label>
+
+      <label>Time (local)
+        <input type="time" id="customTime" value="00:00" />
+      </label>
+
+      <button id="applyEventBtn" type="button">Set Event</button>
+    </div>
+  </section>
 
   <div class="wrap">
-    <h1 class="title">Event Countdown</h1>
+    <div class="target-line" id="targetLine">Target: (pick an event)</div>
 
-    <!--
-      Set your target using data-target (ISO 8601).
-      Examples:
-        data-target="2025-12-25T10:00:00-05:00"  (local offset)
-        data-target="2025-12-25T15:00:00Z"       (UTC)
-      If data-target is omitted, it defaults to next Jan 1 @ 00:00:00 UTC.
-    -->
-    <div class="tick" data-did-init="handleTickInit"
-         data-target="2025-12-25T10:00:00-05:00">
+    <!-- COUNTDOWN -->
+    <div class="tick" data-did-init="handleTickInit">
       <div data-repeat="true" data-layout="horizontal fit" data-transform="preset(d, h, m, s) -> delay">
         <div class="tick-group">
           <div data-key="value" data-repeat="true" data-transform="pad(00) -> split -> delay">
@@ -193,76 +226,164 @@
   <script src="https://unpkg.com/@pqina/flip/dist/flip.min.js"></script>
 
   <script>
-    function handleTickInit(tick) {
-      // Determine target time: prefer data-target, else next Jan 1 @ 00:00:00 UTC
-      const attrTarget = tick.root.getAttribute('data-target');
-      const defaultTarget = (() => {
-        const nextYear = new Date().getUTCFullYear() + 1;
-        return `${nextYear}-01-01T00:00:00Z`;
-      })();
-      const targetISO = attrTarget || defaultTarget;
+    /* ========= Helpers: Holiday dates ========= */
+    function nthWeekdayOfMonth(year, monthIndex, weekday, n){
+      // weekday: 0=Sun..6=Sat, n: 1..5
+      const first = new Date(year, monthIndex, 1);
+      const offset = (7 + weekday - first.getDay()) % 7;
+      const day = 1 + offset + (n-1)*7;
+      return new Date(year, monthIndex, day);
+    }
+    function lastWeekdayOfMonth(year, monthIndex, weekday){
+      const last = new Date(year, monthIndex + 1, 0); // last day of month
+      const offset = (7 + last.getDay() - weekday) % 7;
+      return new Date(year, monthIndex, last.getDate() - offset);
+    }
+    function getHolidayLocalDate(year, key){
+      switch(key){
+        case 'newyear':     return new Date(year, 0, 1);
+        case 'memorial':    return lastWeekdayOfMonth(year, 4, 1);       // last Monday in May
+        case 'labor':       return nthWeekdayOfMonth(year, 8, 1, 1);     // first Monday in Sept
+        case 'halloween':   return new Date(year, 9, 31);
+        case 'thanksgiving':return nthWeekdayOfMonth(year, 10, 4, 4);    // 4th Thursday in Nov
+        case 'christmas':   return new Date(year, 11, 25);
+        default: return null;
+      }
+    }
+    function nextOccurrenceISO(key, timeStr="00:00"){
+      if(!key) return null;
+      const now = new Date();
+      const [hh='00', mm='00'] = timeStr.split(':');
+      const y = now.getFullYear();
+      let d = getHolidayLocalDate(y, key);
+      if (!d) return null;
+      d.setHours(+hh, +mm, 0, 0);
+      if (d <= now) {
+        d = getHolidayLocalDate(y+1, key);
+        d.setHours(+hh, +mm, 0, 0);
+      }
+      return d.toISOString(); // absolute UTC timestamp for local date/time
+    }
+    function customISO(dateStr, timeStr="00:00"){
+      if(!dateStr) return null;
+      const [y,m,d] = dateStr.split('-').map(n=>+n);
+      const [hh='00', mm='00'] = (timeStr||'00:00').split(':');
+      const dt = new Date(y, m-1, d, +hh, +mm, 0, 0);
+      return dt.toISOString();
+    }
+    function fmtLocal(dt){
+      const opts = { year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' };
+      return dt.toLocaleString([], opts);
+    }
 
-      const counter = Tick.count.down(targetISO);
+    /* ========= Countdown wiring ========= */
+    let currentCounter = null; // keep a single active counter
+    let tickInstance = null;
 
-      counter.onupdate = function(value) {
-        tick.value = value;
-      };
-
-      counter.onended = function() {
-        tick.root.style.display = 'none';
+    function setTargetISO(iso){
+      if(!iso || !tickInstance) return;
+      // detach previous updates
+      if (currentCounter) currentCounter.onupdate = function(){};
+      // new counter
+      currentCounter = Tick.count.down(iso);
+      currentCounter.onupdate = v => { tickInstance.value = v; };
+      currentCounter.onended  = () => {
+        tickInstance.root.style.display = 'none';
         const msg = document.querySelector('.tick-onended-message');
         if (msg) msg.style.display = '';
       };
+
+      // show target under clock
+      const targetLine = document.getElementById('targetLine');
+      const when = new Date(iso);
+      targetLine.textContent = 'Target: ' + fmtLocal(when);
+      tickInstance.root.style.display = ''; // in case it was hidden previously
     }
 
-    // === Controls wiring ===
+    function handleTickInit(tick) {
+      tickInstance = tick;
+      // default: no target until user picks; set one if you prefer:
+      // setTargetISO(nextOccurrenceISO('newyear', '00:00'));
+    }
+
+    /* ========= Appearance controls ========= */
     const rootStyle = document.documentElement.style;
     const qs = sel => document.querySelector(sel);
+
+    const DEFAULTS = {
+      tileBg:   '#3b3b3b',
+      tileText: '#ffffff',
+      labelText:'#5a5d63',
+      inlineText:'#5a5d63',
+      pageBg:   '#ffffff',
+      sizeEm:   9,
+      radiusEm: 0
+    };
 
     function applyVars(vars){
       if ('tileBg' in vars)    rootStyle.setProperty('--tile-bg', vars.tileBg);
       if ('tileText' in vars)  rootStyle.setProperty('--tile-text', vars.tileText);
       if ('labelText' in vars) rootStyle.setProperty('--label-text', vars.labelText);
-      if ('inlineText'in vars) rootStyle.setProperty('--inline-text', vars.inlineText);
+      if ('inlineText' in vars)rootStyle.setProperty('--inline-text', vars.inlineText);
       if ('pageBg' in vars)    rootStyle.setProperty('--page-bg', vars.pageBg);
       if ('sizeEm' in vars)    rootStyle.setProperty('--flip-size', vars.sizeEm + 'em');
+      if ('radiusEm' in vars)  rootStyle.setProperty('--tile-radius', vars.radiusEm + 'em');
     }
 
-    // Defaults (match :root)
-    const DEFAULTS = {
-      tileBg:   '#3b3d3b',
-      tileText: '#ffffff',
-      labelText:'#5a5d63',
-      inlineText:'#5a5d63',
-      pageBg:   '#ffffff',
-      sizeEm:   9
-    };
-
-    // Initialize controls with defaults
-    function initControls(){
+    function initAppearance(){
       qs('#tileBg').value    = DEFAULTS.tileBg;
       qs('#tileText').value  = DEFAULTS.tileText;
       qs('#labelText').value = DEFAULTS.labelText;
       qs('#inlineText').value= DEFAULTS.inlineText;
       qs('#pageBg').value    = DEFAULTS.pageBg;
       qs('#sizeEm').value    = DEFAULTS.sizeEm;
+      qs('#radiusEm').value  = DEFAULTS.radiusEm;
       applyVars(DEFAULTS);
     }
 
-    // Bind events
-    function bindControlEvents(){
+    function bindAppearance(){
       qs('#tileBg').addEventListener('input', e => applyVars({tileBg:e.target.value}));
       qs('#tileText').addEventListener('input', e => applyVars({tileText:e.target.value}));
       qs('#labelText').addEventListener('input', e => applyVars({labelText:e.target.value}));
       qs('#inlineText').addEventListener('input', e => applyVars({inlineText:e.target.value}));
       qs('#pageBg').addEventListener('input', e => applyVars({pageBg:e.target.value}));
       qs('#sizeEm').addEventListener('input', e => applyVars({sizeEm: parseFloat(e.target.value)||DEFAULTS.sizeEm}));
-      qs('#resetBtn').addEventListener('click', () => initControls());
+      qs('#radiusEm').addEventListener('input', e => applyVars({radiusEm: parseFloat(e.target.value)||DEFAULTS.radiusEm}));
+      qs('#resetBtn').addEventListener('click', () => initAppearance());
     }
 
-    // Kick off
-    initControls();
-    bindControlEvents();
+    /* ========= Event controls ========= */
+    function bindEvents(){
+      const select = qs('#eventSelect');
+      const dateIn = qs('#customDate');
+      const timeIn = qs('#customTime');
+      const applyBtn = qs('#applyEventBtn');
+
+      // Selecting a preset immediately sets the countdown
+      select.addEventListener('change', () => {
+        if (!select.value) return;
+        const iso = nextOccurrenceISO(select.value, timeIn.value || '00:00');
+        setTargetISO(iso);
+        // clear custom date field to signal preset is active
+        dateIn.value = '';
+      });
+
+      // Apply button: use custom date if present, else current preset
+      applyBtn.addEventListener('click', () => {
+        if (dateIn.value) {
+          const iso = customISO(dateIn.value, timeIn.value || '00:00');
+          setTargetISO(iso);
+        } else if (select.value) {
+          const iso = nextOccurrenceISO(select.value, timeIn.value || '00:00');
+          setTargetISO(iso);
+        }
+      });
+    }
+
+    // Init controls
+    initAppearance();
+    bindAppearance();
+    bindEvents();
   </script>
 </body>
 </html>
