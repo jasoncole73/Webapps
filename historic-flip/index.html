@@ -17,6 +17,11 @@
       --panel-bg:#3d2811; /* dark brown panels */
       --radius:12px;
       --leading:1.4;
+
+      /* Responsive sizing vars */
+      --digit-min: 2.25rem;   /* smallest digit size on tiny screens */
+      --digit-fluid: 12vw;    /* how fast digits scale with viewport */
+      --digit-max: 7em;       /* cap (your original target) */
     }
 
     * { box-sizing: border-box; }
@@ -51,14 +56,18 @@
     }
     .title{
       text-align:center;
-      font-size:clamp(1.2rem, 2.8vw, 1.7rem);
+      font-size:clamp(1.1rem, 2.8vw, 1.6rem);
       margin:.1rem 0 .25rem;
       color:var(--text);
       min-height:1.6em;
     }
 
     .tick { white-space:nowrap; }
-    .tick-flip, .tick-text-inline { font-size:7em; } /* requested size */
+    /* Responsive digits: scale with viewport but cap at 7em */
+    .tick-flip, .tick-text-inline {
+      font-size: clamp(var(--digit-min), var(--digit-fluid), var(--digit-max));
+    }
+
     .tick-group { margin:0 .35em; text-align:center; }
     .tick-label { margin-top:.7em; font-size:1em; color:var(--text) !important; }
 
@@ -96,14 +105,15 @@
       font-size:.95rem;
       background:#fff;
     }
-    .eventbar .grow{ flex:1; }
-    .eventbar .when{ flex:0 0 220px; }
-    .presetbar .grow{ flex:1; }
+    .eventbar .grow{ flex:1; min-width:9rem; }
+    .eventbar .when{ flex:0 0 220px; min-width:10.5rem; }
+    .presetbar .grow{ flex:1; min-width:9rem; }
 
     .btn{
       border:0; cursor:pointer;
       border-radius:10px; font-weight:600; font-size:.95rem;
       padding:.55rem .9rem;
+      white-space:nowrap;
     }
     .btn.primary{ background:#0f766e; color:#fff; }
     .btn.ghost{ background:#f1f5f9; color:#0f172a; }
@@ -155,6 +165,14 @@
 
     footer{
       text-align:center; color:#94a3b8; font-size:.85rem; padding:.25rem 0 1rem;
+    }
+
+    /* ===== Mobile niceties ===== */
+    @media (max-width: 520px){
+      .tick-group { margin: 0 .2em; }
+      .tick-label { margin-top: .5em; font-size: .95em; }
+      .eventbar, .presetbar { flex-wrap: wrap; }
+      .eventbar .when { flex: 1 1 100%; }
     }
   </style>
 </head>
