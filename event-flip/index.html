@@ -11,7 +11,7 @@
 <style>
   :root{
     /* Theme defaults */
-    --flip-size: 9em;              /* requested default size */
+    --flip-size: 9em;              /* default size */
     --tile-bg:   #3b3b3b;
     --tile-text: #ffffff;
     --label-text:#5a5d63;
@@ -28,24 +28,69 @@
     margin:0;
     min-height:100vh;
     display:grid;
-    grid-template-rows: 1fr auto; /* clock area, then bottom controls */
+    grid-template-rows: auto 1fr auto; /* top badge, stage, bottom controls */
     background: var(--page-bg) !important;
     font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   }
 
-  .wrap{
+  /* ===== Target badge (moved up & separated) ===== */
+  .target-wrap{
     display:grid;
-    gap:.5rem;
-    place-content:center;
-    padding: clamp(12px,2vw,24px);
+    place-items:center;
+    padding: clamp(10px, 2vw, 18px) 1rem 0;
   }
-  .target-line{
-    font-size:.95rem;
-    color:#555;
+  .target-badge{
+    font: 600 clamp(.9rem, 2.2vw, 1.05rem)/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    color:#2f3131;
+    background:#ffffff;
+    border:1px solid rgba(0,0,0,.08);
+    border-radius: 999px;
+    padding: .55rem 1rem;
+    box-shadow: 0 6px 22px rgba(0,0,0,.08);
     text-align:center;
+    white-space: nowrap;
   }
 
-  /* Panels container at bottom */
+  /* ===== Stage (fullscreenable) ===== */
+  #stage{
+    position: relative;
+    display:grid;
+    place-items:center;
+    padding: clamp(8px, 2vw, 24px);
+    gap:.75rem;
+  }
+  #fsBtn{
+    position:absolute;
+    top: clamp(8px, 2vw, 16px);
+    right: clamp(8px, 2vw, 16px);
+    z-index: 5;
+    border: 1px solid rgba(0,0,0,.18);
+    background: rgba(255,255,255,.85);
+    backdrop-filter: blur(4px);
+    border-radius: 10px;
+    padding: .45rem .7rem;
+    cursor: pointer;
+    font-size: .9rem;
+  }
+  #stage.is-fullscreen{ padding-top: 8vh; } /* nudge clock down a bit in FS */
+
+  /* ===== Flip styles wired to CSS vars ===== */
+  .tick { font-size:1rem; white-space:nowrap; font-family:arial, sans-serif; }
+  .tick-flip, .tick-text-inline { font-size: var(--flip-size); }
+  .tick-label { margin-top:1em; font-size:1em; color: var(--label-text) !important; }
+  .tick-char { width:1.5em; }
+  .tick-text-inline { display:inline-block; text-align:center; min-width:1em; color: var(--inline-text) !important; }
+  .tick-text-inline + .tick-text-inline { margin-left:-.325em; }
+  .tick-group { margin:0 .5em; text-align:center; }
+  .tick-flip { font-family: inherit !important; }
+  .tick-flip-panel {
+    background-color: var(--tile-bg) !important;
+    color: var(--tile-text) !important;
+    border-radius: var(--tile-radius) !important;
+  }
+  .tick-flip-panel-text-wrapper { line-height:1.45 !important; color: var(--tile-text) !important; }
+
+  /* ===== Bottom controls (hidden automatically in fullscreen since not inside #stage) ===== */
   .bottom{
     display:grid;
     gap:1rem;
@@ -65,7 +110,6 @@
     color:#3b3d3b;
     margin:0 0 .75rem;
   }
-
   .row{
     display:grid;
     grid-template-columns: repeat(6, minmax(0,1fr));
@@ -105,7 +149,7 @@
     cursor:pointer;
   }
 
-  /* Details (collapsible appearance) */
+  /* Collapsible Appearance */
   details.panel summary{
     list-style:none;
     cursor:pointer;
@@ -117,28 +161,8 @@
     user-select:none;
   }
   details.panel summary::-webkit-details-marker{ display:none; }
-  .chev{
-    inline-size: .8em;
-    transform: rotate(0deg);
-    transition: transform .2s ease;
-  }
+  .chev{ inline-size: .8em; transform: rotate(0deg); transition: transform .2s ease; }
   details[open] .chev{ transform: rotate(90deg); }
-
-  /* ===== Flip styles wired to CSS vars ===== */
-  .tick { font-size:1rem; white-space:nowrap; font-family:arial, sans-serif; }
-  .tick-flip, .tick-text-inline { font-size: var(--flip-size); }
-  .tick-label { margin-top:1em; font-size:1em; color: var(--label-text) !important; }
-  .tick-char { width:1.5em; }
-  .tick-text-inline { display:inline-block; text-align:center; min-width:1em; color: var(--inline-text) !important; }
-  .tick-text-inline + .tick-text-inline { margin-left:-.325em; }
-  .tick-group { margin:0 .5em; text-align:center; }
-  .tick-flip { font-family: inherit !important; }
-  .tick-flip-panel {
-    background-color: var(--tile-bg) !important;
-    color: var(--tile-text) !important;
-    border-radius: var(--tile-radius) !important;
-  }
-  .tick-flip-panel-text-wrapper { line-height:1.45 !important; color: var(--tile-text) !important; }
 
   /* Responsive */
   @media (max-width: 900px){
@@ -152,9 +176,14 @@
 </head>
 <body>
 
-  <!-- CLOCK AREA -->
-  <div class="wrap">
-    <div class="target-line" id="targetLine">Target: Christmas 2025 • 12:00 AM</div>
+  <!-- Target date moved up & separated -->
+  <div class="target-wrap">
+    <div class="target-badge" id="targetBadge">Target: Christmas 2025 • 12:00 AM</div>
+  </div>
+
+  <!-- Fullscreen stage (only this goes fullscreen so controls disappear) -->
+  <section id="stage" aria-label="Countdown stage">
+    <button id="fsBtn" type="button" aria-label="Enter full screen">⤢ Full Screen</button>
 
     <div class="tick" data-did-init="handleTickInit">
       <div data-repeat="true" data-layout="horizontal fit" data-transform="preset(d, h, m, s) -> delay">
@@ -170,11 +199,11 @@
     <div class="tick-onended-message" style="display:none">
       <p class="title" style="color:#3b3d3b;text-align:center">Time's up</p>
     </div>
-  </div>
+  </section>
 
-  <!-- CONTROLS AT THE BOTTOM -->
+  <!-- Controls at the bottom -->
   <div class="bottom">
-    <!-- Event panel (visible) -->
+    <!-- Event panel -->
     <section class="panel">
       <h2 class="title">Event</h2>
       <div class="row">
@@ -202,7 +231,7 @@
       </div>
     </section>
 
-    <!-- Appearance panel (collapsible) -->
+    <!-- Appearance panel (collapsible; CLOSED by default) -->
     <details class="panel" id="appearancePanel">
       <summary><span class="chev">▶</span> Appearance</summary>
       <div style="margin-top:.75rem">
@@ -304,17 +333,17 @@
         const msg = document.querySelector('.tick-onended-message');
         if (msg) msg.style.display = '';
       };
-      // show target under clock
-      const targetLine = document.getElementById('targetLine');
+
+      // update top badge
       const when = new Date(iso);
-      targetLine.textContent = 'Target: ' + fmtLocal(when);
-      tickInstance.root.style.display = ''; // in case it was hidden previously
+      document.getElementById('targetBadge').textContent = 'Target: ' + fmtLocal(when);
+      tickInstance.root.style.display = ''; // in case hidden previously
     }
 
     function handleTickInit(tick) {
       tickInstance = tick;
 
-      // Default event: Christmas 2025 @ 00:00 (local)
+      // Default: Christmas 2025 @ 00:00 (local)
       const defaultISO = new Date(2025, 11, 25, 0, 0, 0, 0).toISOString();
       setTargetISO(defaultISO);
 
@@ -379,7 +408,6 @@
 
       select.addEventListener('change', () => {
         if (!select.value) return;
-        // next occurrence of the preset (respects current year)
         const iso = nextOccurrenceISO(select.value, timeIn.value || '00:00');
         setTargetISO(iso);
         dateIn.value = ''; // clear custom when preset chosen
@@ -395,6 +423,35 @@
         }
       });
     }
+
+    /* ========= Fullscreen ========= */
+    (function(){
+      const stage = document.getElementById('stage');
+      const btn = document.getElementById('fsBtn');
+
+      function updateFsBtn(){
+        const fs = document.fullscreenElement === stage;
+        stage.classList.toggle('is-fullscreen', fs);
+        btn.textContent = fs ? '⤡ Exit Full Screen' : '⤢ Full Screen';
+        btn.setAttribute('aria-label', fs ? 'Exit full screen' : 'Enter full screen');
+      }
+      async function toggleFullscreen(){
+        try{
+          if (document.fullscreenElement === stage) {
+            await document.exitFullscreen();
+          } else {
+            await stage.requestFullscreen({ navigationUI: "hide" });
+          }
+        } catch(e){ /* ignore */ }
+      }
+      btn.addEventListener('click', toggleFullscreen);
+      document.addEventListener('fullscreenchange', updateFsBtn);
+      // keyboard: press "f" to toggle
+      document.addEventListener('keydown', (e)=>{
+        if (e.key.toLowerCase() === 'f') toggleFullscreen();
+      });
+      updateFsBtn();
+    })();
 
     // Init controls
     initAppearance();
