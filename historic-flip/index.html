@@ -134,6 +134,7 @@
       background:#fff;
       padding:.8rem;
       display:flex; flex-wrap:wrap; gap:.75rem 1rem;
+      align-items:center;
     }
     .chip{
       display:flex; align-items:center; gap:.5rem;
@@ -141,6 +142,7 @@
       border-radius:999px;
       padding:.25rem .6rem;
       background:#fff;
+      white-space:nowrap;
     }
     .chip label{ font-size:.9rem; }
     .chip input[type="color"]{ width:36px; height:28px; border:1px solid #cbd5e1; border-radius:8px; }
@@ -209,6 +211,11 @@
       <div class="chip"><label>Leading</label><input id="leading" type="range" min="1.0" max="2.0" step="0.05" value="1.4"></div>
       <div class="chip"><label>Panel</label><input id="panelBg" type="color" value="#ba7630"></div>
       <div class="chip"><label>Radius</label><input id="cornerRadius" type="range" min="0" max="32" step="1" value="12"></div>
+
+      <!-- Reset Colors Button -->
+      <div class="chip">
+        <button id="resetColors" class="btn ghost" type="button" title="Restore default colors and styles">Reset Colors</button>
+      </div>
     </div>
   </details>
 
@@ -232,12 +239,21 @@
     const LS_EVENT = 'historicFlipEvent';
     const LS_STYLE = 'historicFlipStyle';
 
-    // If input has seconds truncated (yyyy-mm-ddThh:mm), keep it local by NOT adding a timezone.
+    // Defaults for Reset Colors
+    const DEFAULT_STYLE = {
+      bg:'#ffffff',
+      text:'#0b3b17',
+      value:'#5b2a77',
+      font:"system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+      leading:'1.4',
+      panelBg:'#ba7630',
+      cornerRadius:'12'
+    };
+
     function isoLocalFromInput(v){
       if (!v) return null;                    // empty
       return v.length === 16 ? v + ':00' : v; // "YYYY-MM-DDTHH:MM[:SS]"
     }
-
     function setTitle(t){ qs('titleLine').textContent = t || ''; }
 
     /* ======== Tick lifecycle (prevents multi‑flip) ======== */
@@ -250,7 +266,6 @@
         counter = null;
       }
     }
-
     function startCounter(iso){
       stopCounter();
       counter = Tick.count.up(iso, { format: ['y','M','d','h','m','s'] });
@@ -285,26 +300,20 @@
       const sel = qs('presetSelect');
       sel.innerHTML = PRESETS.map((p, i) => `<option value="${i}">${p.name} — ${p.at}</option>`).join('');
     }
-
     function loadPresetToFields(index){
       const p = PRESETS[Number(index)];
       if (!p) return;
       const hasTZ = /([+-]\d{2}:\d{2}|Z)$/.test(p.at);
       qs('eventName').value = p.name;
-
-      // Show a friendly local-like value in the input (strip seconds),
-      // but store the full ISO with timezone so we can use it on Start.
-      qs('eventStart').value = p.at.slice(0,16);
+      qs('eventStart').value = p.at.slice(0,16);  // display-friendly
       qs('eventStart').dataset.tziso = hasTZ ? p.at : '';
     }
-
     qs('btnLoadPreset').addEventListener('click', () => {
       loadPresetToFields(qs('presetSelect').value);
     });
-
     qs('btnStartPreset').addEventListener('click', () => {
       loadPresetToFields(qs('presetSelect').value);
-      startFromUI(/*preferTZ*/true);
+      startFromUI(true);
     });
 
     /* ======== Event state ======== */
@@ -313,7 +322,7 @@
       if (saved && saved.name && saved.isoLocal){
         qs('eventName').value = saved.name;
         qs('eventStart').value = (saved.isoLocal || '').slice(0,16);
-        qs('eventStart').dataset.tziso = ''; // saved isoLocal is already local
+        qs('eventStart').dataset.tziso = ''; // saved isoLocal is local
         setTitle(saved.name);
         startCounter(saved.isoLocal);
       } else {
@@ -330,7 +339,6 @@
       setTitle(name);
       startCounter(iso);
       localStorage.setItem(LS_EVENT, JSON.stringify({ name, isoLocal: iso }));
-      // Keep URL in sync (useful for sharing if you want to re-enable later)
       const url = new URL(location.href);
       url.searchParams.set('event', name);
       url.searchParams.set('at', iso);
@@ -339,10 +347,7 @@
 
     qs('btnStart').addEventListener('click', () => startFromUI(false));
     qs('btnSave').addEventListener('click', () => { startFromUI(false); });
-    qs('btnClear').addEventListener('click', () => {
-      localStorage.removeItem(LS_EVENT);
-      // Keep current display; just clear storage
-    });
+    qs('btnClear').addEventListener('click', () => { localStorage.removeItem(LS_EVENT); });
 
     /* ======== Style ======== */
     const styleEls = {
@@ -366,14 +371,14 @@
     }
 
     function bootStyle(){
-      const saved = JSON.parse(localStorage.getItem(LS_STYLE) || 'null') || {
-        bg:'#ffffff', text:'#0b3b17', value:'#5b2a77',
-        font:"system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
-        leading:'1.4', panelBg:'#ba7630', cornerRadius:'12'
-      };
+      const saved = JSON.parse(localStorage.getItem(LS_STYLE) || 'null') || DEFAULT_STYLE;
       // set UI from saved
-      styleEls.bg.value = saved.bg; styleEls.text.value = saved.text; styleEls.value.value = saved.value;
-      styleEls.font.value = saved.font; styleEls.leading.value = saved.leading; styleEls.panelBg.value = saved.panelBg;
+      styleEls.bg.value = saved.bg;
+      styleEls.text.value = saved.text;
+      styleEls.value.value = saved.value;
+      styleEls.font.value = saved.font;
+      styleEls.leading.value = saved.leading;
+      styleEls.panelBg.value = saved.panelBg;
       styleEls.cornerRadius.value = saved.cornerRadius;
       applyStyle(saved);
     }
@@ -396,6 +401,22 @@
         applyStyle(s);
         localStorage.setItem(LS_STYLE, JSON.stringify(s));
       });
+    });
+
+    // Reset Colors button
+    document.getElementById('resetColors').addEventListener('click', () => {
+      // Reset UI controls
+      styleEls.bg.value = DEFAULT_STYLE.bg;
+      styleEls.text.value = DEFAULT_STYLE.text;
+      styleEls.value.value = DEFAULT_STYLE.value;
+      styleEls.font.value = DEFAULT_STYLE.font;
+      styleEls.leading.value = DEFAULT_STYLE.leading;
+      styleEls.panelBg.value = DEFAULT_STYLE.panelBg;
+      styleEls.cornerRadius.value = DEFAULT_STYLE.cornerRadius;
+
+      // Apply and save
+      applyStyle(DEFAULT_STYLE);
+      localStorage.setItem(LS_STYLE, JSON.stringify(DEFAULT_STYLE));
     });
   </script>
 </body>
