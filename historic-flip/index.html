@@ -10,7 +10,7 @@
 
   <style>
     :root{
-      /* Your default theme (matches current site) */
+      /* Your default theme */
       --bg:#ffffff;
       --text:#356307;     /* green labels/title */
       --value:#ff2ba3;    /* pink digits */
@@ -66,7 +66,13 @@
       display:grid;
       place-items:center;
       padding: .25rem clamp(.5rem, 3vw, 2rem) .25rem;
+      transition: padding .2s ease;
     }
+    /* Move clock down in full-screen mode */
+    .fs-active .stage{
+      padding-top: 10vh; /* tweak to taste (e.g., 8vh / 12vh) */
+    }
+
     .title{
       text-align:center;
       font-size:clamp(var(--title-min), var(--title-vw), var(--title-max));
