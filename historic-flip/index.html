@@ -26,7 +26,7 @@
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
       color:#0f172a;
       display:grid;
-      grid-template-rows:auto 1fr auto auto;
+      grid-template-rows:auto 1fr auto auto; /* header, CLOCK, bars, footer */
       gap:.25rem;
       transition:background .15s ease;
     }
@@ -42,6 +42,7 @@
       opacity:.75;
     }
 
+    /* CLOCK FIRST */
     .stage{
       display:grid;
       place-items:center;
@@ -56,15 +57,16 @@
     }
 
     .tick { white-space:nowrap; }
-    .tick-flip, .tick-text-inline { font-size:7em; }
+    .tick-flip, .tick-text-inline { font-size:7em; } /* requested size */
     .tick-group { margin:0 .35em; text-align:center; }
     .tick-label { margin-top:.7em; font-size:1em; color:var(--text) !important; }
 
     .tick-flip { border-radius:var(--radius) !important; }
     .tick-flip-panel { background-color:var(--panel-bg) !important; color:var(--value) !important; }
     .tick-flip-panel-text-wrapper { line-height:var(--leading) !important; }
-    .tick-credits{ display:none !important; }
+    .tick-credits{ display:none !important; } /* remove PQINA credit */
 
+    /* Bars under the clock */
     .bar{
       max-width:1200px;
       margin:0 auto;
@@ -106,6 +108,7 @@
     .btn.ghost{ background:#f1f5f9; color:#0f172a; }
     .btn.danger{ background:#ef4444; color:#fff; }
 
+    /* Optional Style panel */
     details.panel{
       max-width:1200px;
       margin:.1rem auto 0;
@@ -155,7 +158,7 @@
 <body>
   <header><h1>Historic Flip — Preset Count-Up</h1></header>
 
-  <!-- Clock -->
+  <!-- CLOCK -->
   <section class="stage">
     <div class="title" id="titleLine"></div>
     <div class="tick" data-did-init="handleTickInit">
@@ -170,12 +173,12 @@
     </div>
   </section>
 
-  <!-- Presets & Event Controls -->
+  <!-- PRESETS + EVENT -->
   <div class="bar">
     <div class="presetbar">
-      <select id="presetSelect" class="grow"></select>
-      <button id="btnLoadPreset" class="btn ghost">Load preset</button>
-      <button id="btnStartPreset" class="btn primary">Load & Start</button>
+      <select id="presetSelect" class="grow" title="Choose a historical event to load"></select>
+      <button id="btnLoadPreset" class="btn ghost" title="Load selected preset into the event fields">Load preset</button>
+      <button id="btnStartPreset" class="btn primary" title="Load and start">Load & Start</button>
     </div>
 
     <div class="eventbar">
@@ -187,7 +190,7 @@
     </div>
   </div>
 
-  <!-- Style Panel -->
+  <!-- Optional Style Panel -->
   <details class="panel">
     <summary>Style</summary>
     <div class="panel-body">
@@ -199,17 +202,12 @@
           <option value="system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif">System UI</option>
           <option value="Arial, Helvetica, sans-serif">Arial</option>
           <option value="Georgia, serif">Georgia</option>
+          <option value="'Courier New', monospace">Courier New</option>
+          <option value="'Trebuchet MS', Arial, sans-serif">Trebuchet MS</option>
         </select>
       </div>
       <div class="chip"><label>Leading</label><input id="leading" type="range" min="1.0" max="2.0" step="0.05" value="1.4"></div>
       <div class="chip"><label>Panel</label><input id="panelBg" type="color" value="#ba7630"></div>
-      <div class="chip"><label>Corner</label>
-        <select id="cornerStyle">
-          <option value="square">Square</option>
-          <option value="soft" selected>Soft</option>
-          <option value="round">Rounded</option>
-        </select>
-      </div>
       <div class="chip"><label>Radius</label><input id="cornerRadius" type="range" min="0" max="32" step="1" value="12"></div>
     </div>
   </details>
@@ -218,85 +216,187 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@pqina/flip/dist/flip.min.js"></script>
   <script>
-    const HISTORICAL_PRESETS = [
+    /* ======== Presets (includes your birthdays) ======== */
+    const PRESETS = [
       { name: 'Elizabeth Birthday', at: '2004-03-09T00:00:00' },
       { name: 'Angi Birthday',      at: '1976-08-27T00:00:00' },
       { name: 'Jason Birthday',     at: '1973-11-18T00:00:00' },
       { name: 'Apollo 11 — First step on the Moon', at: '1969-07-21T02:56:15Z' },
-      { name: 'Fall of the Berlin Wall', at: '1989-11-09T22:30:00+01:00' },
-      { name: 'World Wide Web publicly available', at: '1991-08-06T00:00:00Z' },
-      { name: 'Y2K — New Millennium', at: '2000-01-01T00:00:00' }
+      { name: 'Fall of the Berlin Wall',            at: '1989-11-09T22:30:00+01:00' },
+      { name: 'World Wide Web publicly available',  at: '1991-08-06T00:00:00Z' },
+      { name: 'Y2K — New Millennium',               at: '2000-01-01T00:00:00' }
     ];
 
+    /* ======== Helpers ======== */
     const qs = id => document.getElementById(id);
     const LS_EVENT = 'historicFlipEvent';
     const LS_STYLE = 'historicFlipStyle';
 
-    let tickInstance = null, counter = null;
-
-    function safeStopCounter(){
-      if (counter){ counter.onupdate = null; counter.stop(); counter = null; }
-    }
-    function startCounter(isoLocal){
-      safeStopCounter();
-      counter = Tick.count.up(isoLocal, { format: ['y','M','d','h','m','s'] });
-      counter.onupdate = val => { if (tickInstance) tickInstance.value = val; };
+    // If input has seconds truncated (yyyy-mm-ddThh:mm), keep it local by NOT adding a timezone.
+    function isoLocalFromInput(v){
+      if (!v) return null;                    // empty
+      return v.length === 16 ? v + ':00' : v; // "YYYY-MM-DDTHH:MM[:SS]"
     }
 
+    function setTitle(t){ qs('titleLine').textContent = t || ''; }
+
+    /* ======== Tick lifecycle (prevents multi‑flip) ======== */
+    let tickInstance = null;
+    let counter = null;
+
+    function stopCounter(){
+      if (counter){
+        try { counter.onupdate = null; counter.stop(); } catch(e){}
+        counter = null;
+      }
+    }
+
+    function startCounter(iso){
+      stopCounter();
+      counter = Tick.count.up(iso, { format: ['y','M','d','h','m','s'] });
+      counter.onupdate = (value) => { if (tickInstance) tickInstance.value = value; };
+    }
+
+    /* ======== Init from Tick (must be global) ======== */
     function handleTickInit(tick){
       tickInstance = tick;
+
+      // English labels for preset()
+      const locale = {
+        YEAR_PLURAL:'Years', YEAR_SINGULAR:'Year',
+        MONTH_PLURAL:'Months', MONTH_SINGULAR:'Month',
+        WEEK_PLURAL:'Weeks', WEEK_SINGULAR:'Week',
+        DAY_PLURAL:'Days', DAY_SINGULAR:'Day',
+        HOUR_PLURAL:'Hours', HOUR_SINGULAR:'Hour',
+        MINUTE_PLURAL:'Minutes', MINUTE_SINGULAR:'Minute',
+        SECOND_PLURAL:'Seconds', SECOND_SINGULAR:'Second',
+        MILLISECOND_PLURAL:'Milliseconds', MILLISECOND_SINGULAR:'Millisecond'
+      };
+      for (const k in locale) tick.setConstant(k, locale[k]);
+
       populatePresets();
       bootEvent();
       bootStyle();
     }
+    window.handleTickInit = handleTickInit; // ensure global
 
+    /* ======== Presets UI ======== */
     function populatePresets(){
-      qs('presetSelect').innerHTML = HISTORICAL_PRESETS.map((p,i)=>`<option value="${i}">${p.name}</option>`).join('');
+      const sel = qs('presetSelect');
+      sel.innerHTML = PRESETS.map((p, i) => `<option value="${i}">${p.name} — ${p.at}</option>`).join('');
     }
-    function applyPreset(index){
-      const p = HISTORICAL_PRESETS[index];
+
+    function loadPresetToFields(index){
+      const p = PRESETS[Number(index)];
+      if (!p) return;
+      const hasTZ = /([+-]\d{2}:\d{2}|Z)$/.test(p.at);
       qs('eventName').value = p.name;
+
+      // Show a friendly local-like value in the input (strip seconds),
+      // but store the full ISO with timezone so we can use it on Start.
       qs('eventStart').value = p.at.slice(0,16);
+      qs('eventStart').dataset.tziso = hasTZ ? p.at : '';
     }
 
-    qs('btnLoadPreset').onclick = () => applyPreset(qs('presetSelect').value);
-    qs('btnStartPreset').onclick = () => { applyPreset(qs('presetSelect').value); startFromUI(); };
+    qs('btnLoadPreset').addEventListener('click', () => {
+      loadPresetToFields(qs('presetSelect').value);
+    });
 
+    qs('btnStartPreset').addEventListener('click', () => {
+      loadPresetToFields(qs('presetSelect').value);
+      startFromUI(/*preferTZ*/true);
+    });
+
+    /* ======== Event state ======== */
     function bootEvent(){
       const saved = JSON.parse(localStorage.getItem(LS_EVENT) || 'null');
-      if (saved){ qs('eventName').value = saved.name; qs('eventStart').value = saved.isoLocal.slice(0,16); startCounter(saved.isoLocal); }
-      else { applyPreset(0); startFromUI(); }
+      if (saved && saved.name && saved.isoLocal){
+        qs('eventName').value = saved.name;
+        qs('eventStart').value = (saved.isoLocal || '').slice(0,16);
+        qs('eventStart').dataset.tziso = ''; // saved isoLocal is already local
+        setTitle(saved.name);
+        startCounter(saved.isoLocal);
+      } else {
+        // Default to first preset
+        loadPresetToFields(0);
+        startFromUI(true);
+      }
     }
 
-    function startFromUI(){
-      const name = qs('eventName').value;
-      const iso = qs('eventStart').value + ':00';
-      qs('titleLine').textContent = name;
+    function startFromUI(preferTZ=false){
+      const name = (qs('eventName').value || 'Historic Event').trim();
+      const tziso = qs('eventStart').dataset.tziso || '';
+      const iso = (preferTZ && tziso) ? tziso : (isoLocalFromInput(qs('eventStart').value) || '2000-01-01T00:00:00');
+      setTitle(name);
       startCounter(iso);
-      localStorage.setItem(LS_EVENT, JSON.stringify({name, isoLocal: iso}));
+      localStorage.setItem(LS_EVENT, JSON.stringify({ name, isoLocal: iso }));
+      // Keep URL in sync (useful for sharing if you want to re-enable later)
+      const url = new URL(location.href);
+      url.searchParams.set('event', name);
+      url.searchParams.set('at', iso);
+      history.replaceState({}, '', url.toString());
     }
 
-    qs('btnStart').onclick = startFromUI;
-    qs('btnSave').onclick = () => { startFromUI(); alert('Saved'); };
-    qs('btnClear').onclick = () => { localStorage.removeItem(LS_EVENT); alert('Cleared'); };
+    qs('btnStart').addEventListener('click', () => startFromUI(false));
+    qs('btnSave').addEventListener('click', () => { startFromUI(false); });
+    qs('btnClear').addEventListener('click', () => {
+      localStorage.removeItem(LS_EVENT);
+      // Keep current display; just clear storage
+    });
 
-    // Style handling
-    const styleEls = { bg: qs('bgColor'), text: qs('textColor'), value: qs('valueColor'), font: qs('fontFamily'), leading: qs('leading'), panelBg: qs('panelBg'), cornerRadius: qs('cornerRadius') };
+    /* ======== Style ======== */
+    const styleEls = {
+      bg: document.getElementById('bgColor'),
+      text: document.getElementById('textColor'),
+      value: document.getElementById('valueColor'),
+      font: document.getElementById('fontFamily'),
+      leading: document.getElementById('leading'),
+      panelBg: document.getElementById('panelBg'),
+      cornerRadius: document.getElementById('cornerRadius')
+    };
+
     function applyStyle(s){
       document.documentElement.style.setProperty('--bg', s.bg);
       document.documentElement.style.setProperty('--text', s.text);
       document.documentElement.style.setProperty('--value', s.value);
       document.documentElement.style.setProperty('--panel-bg', s.panelBg);
       document.documentElement.style.setProperty('--leading', s.leading);
-      document.documentElement.style.setProperty('--radius', s.cornerRadius+'px');
+      document.documentElement.style.setProperty('--radius', (s.cornerRadius||'12') + 'px');
       document.body.style.fontFamily = s.font;
     }
+
     function bootStyle(){
-      const saved = JSON.parse(localStorage.getItem(LS_STYLE) || 'null') || { bg:'#ffffff', text:'#0b3b17', value:'#5b2a77', font:styleEls.font.value, leading:'1.4', panelBg:'#ba7630', cornerRadius:'12' };
-      Object.keys(styleEls).forEach(k => styleEls[k].value = saved[k] || styleEls[k].value);
+      const saved = JSON.parse(localStorage.getItem(LS_STYLE) || 'null') || {
+        bg:'#ffffff', text:'#0b3b17', value:'#5b2a77',
+        font:"system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+        leading:'1.4', panelBg:'#ba7630', cornerRadius:'12'
+      };
+      // set UI from saved
+      styleEls.bg.value = saved.bg; styleEls.text.value = saved.text; styleEls.value.value = saved.value;
+      styleEls.font.value = saved.font; styleEls.leading.value = saved.leading; styleEls.panelBg.value = saved.panelBg;
+      styleEls.cornerRadius.value = saved.cornerRadius;
       applyStyle(saved);
     }
-    Object.values(styleEls).forEach(el => el.oninput = () => { const s = Object.fromEntries(Object.entries(styleEls).map(([k,e])=>[k,e.value])); applyStyle(s); localStorage.setItem(LS_STYLE, JSON.stringify(s)); });
+
+    function currentStyle(){
+      return {
+        bg: styleEls.bg.value,
+        text: styleEls.text.value,
+        value: styleEls.value.value,
+        font: styleEls.font.value,
+        leading: styleEls.leading.value,
+        panelBg: styleEls.panelBg.value,
+        cornerRadius: styleEls.cornerRadius.value
+      };
+    }
+
+    Object.values(styleEls).forEach(el => {
+      el.addEventListener('input', () => {
+        const s = currentStyle();
+        applyStyle(s);
+        localStorage.setItem(LS_STYLE, JSON.stringify(s));
+      });
+    });
   </script>
 </body>
 </html>
