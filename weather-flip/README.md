@@ -1,1 +1,0 @@
-Daily + hourly forecast build. Upload folder as 'weather-flip/'.
