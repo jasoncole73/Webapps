@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Weather-Flip</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@pqina/flip/dist/flip.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/@pqina/flip/dist/flip.min.js"></script>
+  <link rel="stylesheet" href="./styles.css?v=24" />
+</head>
+<body>
+  <main class="container">
+    <header class="topbar">
+      <div class="actions">
+        <button id="geoBtn" class="btn" title="Use my location">📍 Use my location</button>
+        <button id="fullscreenBtn" class="btn ghost" aria-label="Toggle Fullscreen">⛶ Full screen</button>
+      </div>
+    </header>
+
+    <canvas id="fx" aria-hidden="true"></canvas>
+
+    <section class="clock-wrap">
+      <div class="tick" data-did-init="setupClock">
+        <div class="tick-group" data-repeat="true" data-layout="horizontal center fit" aria-label="clock">
+          <span class="tick-flip" data-view="flip"></span>
+          <span class="tick-text-inline">:</span>
+          <span class="tick-flip" data-view="flip"></span>
+          <span class="tick-text-inline">:</span>
+          <span class="tick-flip" data-view="flip"></span>
+        </div>
+        <div class="sr-only" aria-live="polite"><span id="sr-time"></span></div>
+      </div>
+    </section>
+
+    <section class="panel weather">
+      <div class="row">
+        <div class="metric"><div class="label">Location</div><div id="location" class="value">—</div></div>
+        <div class="metric"><div class="label">Temp</div><div id="temp" class="value">—</div></div>
+        <div class="metric"><div class="label">Condition</div><div id="condition" class="value">—</div></div>
+        <div class="metric icon-hold"><img id="icon" alt="" aria-hidden="true"/></div>
+      </div>
+    </section>
+
+    <section class="panel controls" id="controls">
+      <form id="zipForm" autocomplete="off" novalidate>
+        <label for="zipInput" class="label">ZIP Code</label>
+        <div class="control-row">
+          <input id="zipInput" name="zip" class="input" inputmode="numeric" placeholder="e.g., 27401 or 27401-1234" />
+          <button class="btn primary" type="submit">Update</button>
+        </div>
+        <p class="hint">Enter a 5‑digit US ZIP (or ZIP+4). Auto‑refreshes every 10 minutes.</p>
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <footer class="footnote"><small> </small></footer>
+  </main>
+
+  <script src="./config.js?v=24"></script>
+  <script src="./app.js?v=24"></script>
+</body>
+</html>
