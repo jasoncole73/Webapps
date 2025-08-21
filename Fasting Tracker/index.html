@@ -2,13 +2,29 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+
     <title>Fasting Tracker</title>
-    <meta name="color-scheme" content="light dark">
-    <link rel="icon" href="data:," />
+
+    <!-- PWA / Icons -->
+    <!-- These point to the built site root: https://jasoncole73.github.io/Webapps/ -->
+    <link rel="manifest" href="/Webapps/manifest.json" />
+    <link rel="apple-touch-icon" href="/Webapps/fasting_icon.png" />
+    <link rel="icon" type="image/png" href="/Webapps/fasting_icon.png" />
+    <meta name="theme-color" content="#4A90E2" />
+
+    <!-- iOS nice-to-haves -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   </head>
+
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+
+    <!-- Use a relative path so it works with base '/Webapps/' in dev & build -->
+    <script type="module" src="./src/main.jsx"></script>
   </body>
 </html>
