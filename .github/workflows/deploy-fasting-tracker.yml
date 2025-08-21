@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'Fasting Tracker/**'
+      - 'Fasting-Tracker/**'
       - '.github/workflows/deploy-fasting-tracker.yml'
   workflow_dispatch:
 
@@ -30,17 +30,34 @@ jobs:
           node-version: '20'
 
       - name: Install
-        working-directory: Fasting Tracker
+        working-directory: Fasting-Tracker
         run: npm ci || npm install
 
       - name: Build
-        working-directory: Fasting Tracker
+        working-directory: Fasting-Tracker
         run: npm run build
+
+      # Put the built app under a subfolder, and add a root redirect
+      - name: Prepare Pages artifact with subfolder + root redirect
+        run: |
+          rm -rf public
+          mkdir -p "public/Fasting-Tracker"
+          cp -r "Fasting-Tracker/dist/." "public/Fasting-Tracker/"
+
+          # Root redirect to /Webapps/Fasting-Tracker/
+          cat > public/index.html <<'HTML'
+          <!doctype html>
+          <meta charset="utf-8">
+          <meta http-equiv="refresh" content="0; url=/Webapps/Fasting-Tracker/">
+          <link rel="canonical" href="/Webapps/Fasting-Tracker/">
+          <title>Redirecting…</title>
+          <p>Redirecting to <a href="/Webapps/Fasting-Tracker/">/Webapps/Fasting-Tracker/</a></p>
+          HTML
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'Fasting Tracker/dist'
+          path: public
 
   deploy:
     needs: build
