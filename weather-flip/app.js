@@ -33,7 +33,7 @@ async function fetchForecastByCoords(lat,lon){ if(!window.WEATHER_API_KEY) throw
 /* Apply weather */
 let lastWind=0, lastTempF=0, lastMain='';
 function applyWeather(d){ const {name,main,weather,sys,dt,timezone,wind}=d||{}; const w=(weather&&weather[0])||{};
-  elLoc.textContent=name||'—'; elTemp.textContent=main?Math.round(main.temp)+'°F':'—'; elCond.textContent=w.description?w.description.replace(/\\b\\w/g,c=>c.toUpperCase()):'—';
+  elLoc.textContent=name||'—'; elTemp.textContent=main?Math.round(main.temp)+'°F':'—'; elCond.textContent=w.description?w.description.replace(/\b\w/g,c=>c.toUpperCase()):'—';
   if(w.icon){ elIcon.src=`https://openweathermap.org/img/wn/${w.icon}@2x.png`; elIcon.alt=w.main||''; } else { elIcon.removeAttribute('src'); elIcon.alt=''; }
   lastWind = (wind && wind.speed) ? wind.speed : 0;
   lastTempF = main ? main.temp : 0;
@@ -64,24 +64,23 @@ function fxCloudsDay(){ fxClear(); fxType='CloudsDay'; makeParallaxClouds(); }
 function fxCloudsNight(){ fxClear(); fxType='CloudsNight'; makeParallaxClouds(); if(stars.length===0) stars = Array.from({length:70},()=>({x:Math.random()*canvas.width,y:Math.random()*canvas.height*0.6,a:Math.random()*0.6+0.2,r:Math.random()*1.2+0.5})); }
 function fxRain(){ fxClear(); fxType='Rain'; makeParallaxClouds(); }
 function fxStorm(){ fxClear(); fxType='Storm'; makeParallaxClouds(); lightningTimer=0; }
-function fxSnow(light=false){ fxClear(); fxType= light ? 'Snow' : 'HeavySnow'; makeParallaxClouds(); // heavy uses bigger flakes and gusts
+function fxSnow(light=false){ fxClear(); fxType= light ? 'Snow' : 'HeavySnow'; makeParallaxClouds();
   const count = light ? 140 : 220;
   snowflakes = Array.from({length:count},()=>({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r: light? (1+Math.random()*2) : (1.5+Math.random()*3.5), v:(light? 0.4:0.9)+Math.random()*0.8, drift:Math.random()*2, gust:Math.random()*0.6}));
 }
 function fxFog(){ fxClear(); fxType='Fog'; makeParallaxClouds(); }
 function fxWindy(){ fxClear(); fxType='Wind'; windStreaks = Array.from({length:120},()=>({x:Math.random()*canvas.width,y:Math.random()*canvas.height, l:20+Math.random()*40, s:0.8+Math.random()*1.4})); makeParallaxClouds(); }
-function fxRainbow(){ fxClear(); fxType='Rainbow'; makeParallaxClouds(); } // rendered in animate()
+function fxRainbow(){ fxClear(); fxType='Rainbow'; makeParallaxClouds(); }
 
 function fxByWeather(main,night,windSpeed,tempF){
   if(night){
     if(main==='Rain'||main==='Drizzle'){ fxRain(); }
     else if(main==='Thunderstorm'){ fxStorm(); }
-    else if(main==='Snow'){ fxSnow(tempF>28); }        // light snow if warmer
+    else if(main==='Snow'){ fxSnow(tempF>28); }
     else if(main==='Mist'||main==='Fog'||main==='Haze'){ fxFog(); }
     else if(main==='Clouds'){ fxCloudsNight(); }
     else { fxMoon(); }
   }else{
-    // daytime rainbow if raining/drizzling
     if(main==='Rain'||main==='Drizzle'){ fxRainbow(); }
     else if(main==='Thunderstorm'){ fxStorm(); }
     else if(main==='Snow'){ fxSnow(tempF>28); }
@@ -89,8 +88,7 @@ function fxByWeather(main,night,windSpeed,tempF){
     else if(main==='Clouds'){ fxCloudsDay(); }
     else { fxSun(); }
   }
-  // windy overlay if strong wind regardless of main
-  if(windSpeed>=10 && fxType!=='Storm'){ fxWindy(); } // if storm, keep storm
+  if(windSpeed>=10 && fxType!=='Storm'){ fxWindy(); }
 }
 
 function drawSoftCloud(x,y,w,h,a){
@@ -110,12 +108,8 @@ function drawRainbow(){
 function animate(){
   requestAnimationFrame(animate);
   ctx.clearRect(0,0,canvas.width,canvas.height);
-
-  // background and sun/moon first
   if(fxType==='Sun') drawSun();
   if(fxType==='Moon') drawMoon();
-
-  // parallax clouds (if any)
   if(['CloudsDay','CloudsNight','Rain','Snow','HeavySnow','Fog','Storm','Wind','Rainbow'].includes(fxType)){
     layers.forEach((lay,idx)=>{
       lay.clouds.forEach(c=>{
@@ -125,11 +119,7 @@ function animate(){
       });
     });
   }
-
-  // stars on night clouds
   if(fxType==='CloudsNight'){ drawMoon(); }
-
-  // precip
   if(fxType==='Rain' || fxType==='Storm' || fxType==='Rainbow'){
     ctx.strokeStyle='rgba(180,200,255,.7)'; ctx.lineWidth=1.1;
     for (let i=0;i<140;i++){
@@ -141,8 +131,6 @@ function animate(){
       ctx.fillStyle='rgba(255,255,255,.45)'; ctx.fillRect(0,0,canvas.width,canvas.height);
     }
   }
-
-  // snow
   if(fxType==='Snow' || fxType==='HeavySnow'){
     ctx.fillStyle='rgba(255,255,255,.95)';
     snowflakes.forEach(s=>{
@@ -151,8 +139,6 @@ function animate(){
       if(s.y>canvas.height){ s.y=-5; s.x=Math.random()*canvas.width; }
     });
   }
-
-  // fog
   if(fxType==='Fog'){
     for (let i=0;i<6;i++){
       const y=40+i*60+Math.sin((Date.now()+i*500)*0.0003)*10;
@@ -161,8 +147,6 @@ function animate(){
       ctx.fillStyle=g; ctx.fillRect(0,y-25,canvas.width,90);
     }
   }
-
-  // wind streaks
   if(fxType==='Wind'){
     ctx.strokeStyle='rgba(255,255,255,.35)'; ctx.lineWidth=1;
     windStreaks.forEach(s=>{
@@ -171,63 +155,20 @@ function animate(){
       if(s.x>canvas.width) { s.x=-20; s.y=Math.random()*canvas.height; }
     });
   }
-
-  // rainbow overlay (after clouds/rain)
-  if(fxType==='Rainbow'){
-    drawRainbow();
-  }
+  if(fxType==='Rainbow'){ drawRainbow(); }
 }
 animate();
 
-/* PoP (chance of precipitation) from forecast */
+/* PoP (chance of precipitation) — highest chance in next 12 hours */
 function applyPoPFromForecast(forecast){
-  try{
-    const list = forecast && forecast.list || [];
-    if(!list.length){ elPrecip.textContent='—'; return; }
-    const now = Date.now()/1000;
-    let best = null, bestDiff = Infinity;
-    list.forEach(item=>{
-      const diff = item.dt - now;
-      if (diff >= -3600 && diff <= 4.5*3600 && Math.abs(diff) < bestDiff) { best = item; bestDiff = Math.abs(diff); }
-    });
-    if(!best) best = list[0];
-    const pop = Math.round((best.pop || 0)*100);
-    elPrecip.textContent = pop + '%';
-  }catch{ elPrecip.textContent='—'; }
-}
-
-/* Controls & refresh */
-async function load(zip){
-  input.value=zip;
-  setStatus('Fetching weather…','warn');
-  try{
-    const [current, forecast] = await Promise.all([fetchWeatherByZip(zip), fetchForecastByZip(zip)]);
-    applyWeather(current);
-    applyPoPFromForecast(forecast);
-    setStatus(`Updated for ${zip}`,'ok');
-  }catch(e){
-    console.error(e);
-    setStatus('Could not fetch weather.','err');
-  }
-}
-input.addEventListener('input', ()=>{ if(/^\d{5}(-\d{4})?$/.test(norm(input.value))) setStatus('', '') });
-form.addEventListener('submit', e=>{ e.preventDefault(); const z=norm(input.value); if(!ZIP_RE.test(z)){ input.focus(); setStatus('Please enter a 5‑digit ZIP (or ZIP+4).','err'); return;} saveZip(z); load(z); });
-geoBtn.addEventListener('click', ()=>{
-  if(!navigator.geolocation){ setStatus('Geolocation not supported.','err'); return; }
-  setStatus('Locating…','warn');
-  navigator.geolocation.getCurrentPosition(async p=>{
-    try{
-      const [cur, fc] = await Promise.all([fetchWeatherByCoords(p.coords.latitude,p.coords.longitude), fetchForecastByCoords(p.coords.latitude,p.coords.longitude)]);
-      applyWeather(cur); applyPoPFromForecast(fc); setStatus('Updated for your location','ok');
-    }catch(e){ console.error(e); setStatus('Could not fetch weather.','err'); }
-  }, err=> setStatus('Location permission denied.','err'), { enableHighAccuracy:false, timeout:8000, maximumAge:60000 });
-});
-setInterval(()=>load(loadZip()), REFRESH_MS);
-
-function toggleFS(){ const r=document.documentElement; if(!document.fullscreenElement){ document.documentElement.requestFullscreen?.(); r.classList.add('fullscreen'); fullscreenBtn.textContent='⛶ Exit full screen'; } else { document.exitFullscreen?.(); r.classList.remove('fullscreen'); fullscreenBtn.textContent='⛶ Full screen'; } }
-fullscreenBtn.addEventListener('click', toggleFS);
-
-function isNight(iconCode, sys, dt, tz){ if(iconCode&&/n$/.test(iconCode)) return true; if(sys&&sys.sunrise&&sys.sunset&&typeof dt==='number'){ const local=dt+(tz||0); return local<sys.sunrise+(tz||0) || local>sys.sunset+(tz||0);} const h=new Date().getHours(); return (h<6||h>=19); }
-
-const initialZip = (function(){try{return localStorage.getItem(STORAGE_KEY)||DEFAULT_ZIP}catch{return DEFAULT_ZIP}})();
-load(initialZip);
+  try {
+    const list = (forecast && forecast.list) || [];
+    if (!list.length) { elPrecip.textContent = '—'; return; }
+    const now = Date.now() / 1000;
+    const next12 = list.filter(it => it.dt >= now && it.dt <= now + 12*3600);
+    const windowList = next12.length ? next12 : list.slice(0, 4);
+    let popMax = 0;
+    windowList.forEach(it => {
+      const p = (typeof it.pop === 'number') ? it.pop : 0;
+      if (p > popMax) popMax = p;
+      const has
